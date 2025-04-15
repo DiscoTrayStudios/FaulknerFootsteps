@@ -222,52 +222,45 @@ class _HistSitePage extends State<HistSitePage> {
                         SwipeImageGallery(
                           context: context,
                           itemBuilder: (context, galleryIndex) {
-                            return FutureBuilder<Uint8List?>(
-                              future: widget.app_state
-                                  .getImage(widget.histSite.imageUrls.first),
-                              builder: (context, snapshot) {
-                                if (widget.histSite.images.length > 0 &&
-                                    widget.histSite.images[0] != null) {
-                                  return Image.memory(
-                                    widget.histSite.images.first!,
-                                    height: 400,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  );
-                                } else if (snapshot.connectionState ==
-                                        ConnectionState.done &&
-                                    snapshot.data != null) {
-                                  return Image.memory(
-                                    snapshot.data!,
-                                    height: 400,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  );
-                                } else {
-                                  return Image.asset(
-                                    'assets/images/faulkner_thumbnail.png',
-                                    height: 400,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  );
-                                }
-                              },
-                            );
+                            return widget.histSite.images[galleryIndex] != null
+                                ? Image.memory(
+                                    widget.histSite.images[galleryIndex]!,
+                                    fit: BoxFit.contain,
+                                  )
+                                : Image.asset(
+                                    "assets/images/faulkner_thumbnail.png",
+                                    fit: BoxFit.contain);
                           },
                           itemCount: widget.histSite.images.length,
                         ).show();
                       },
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: widget.histSite.images[index] != null
-                            ? Image.memory(
-                                widget.histSite.images[index]!,
-                                fit: BoxFit.contain,
-                              )
-                            : Image.asset(
-                                "assets/images/faulkner_thumbnail.png",
-                                fit: BoxFit.contain),
-                      ),
+                          padding: const EdgeInsets.all(8.0),
+                          child: FutureBuilder<Uint8List?>(
+                            future: widget.app_state
+                                .getImage(widget.histSite.imageUrls[index]),
+                            builder: (context, snapshot) {
+                              if (widget.histSite.images.length > 0 &&
+                                  widget.histSite.images[0] != null) {
+                                return Image.memory(
+                                    widget.histSite.images[index]!,
+                                    fit: BoxFit.cover);
+                              } else if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError ||
+                                  !snapshot.hasData) {
+                                return Image.asset(
+                                  'assets/images/faulkner_thumbnail.png',
+                                  fit: BoxFit.cover,
+                                );
+                              } else {
+                                return Image.memory(snapshot.data!,
+                                    fit: BoxFit.cover);
+                              }
+                            },
+                          )),
                     );
                   },
                 ),

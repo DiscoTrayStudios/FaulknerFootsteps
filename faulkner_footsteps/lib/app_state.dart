@@ -68,22 +68,14 @@ class ApplicationState extends ChangeNotifier {
             //TODO: ensure that all sitefilters have a if statement here
 
             List<siteFilter> filters = [];
-            // print("reached!");
+
             for (String filter
                 in List<String>.from(document.data()["filters"])) {
-              // print("Filter: $filter");
-              if (filter.toLowerCase() == "monument")
-                filters.add(siteFilter.Monument);
-              else if (filter.toLowerCase() == "park") {
-                filters.add(siteFilter.Park);
-              } else if (filter.toLowerCase() == "hall") {
-                filters.add(siteFilter.Hall);
-              } else if (filter.toLowerCase() == "other") {
-                filters.add(siteFilter.Other);
-              } else {
-                print(
-                    "Filter not found in siteFilter enum list. Filter: $filter");
-              }
+              filters.add(siteFilter.values.firstWhere((element) {
+                print("STRING NAME: $filter");
+                print("TEST FILTER NAME: ${element.name}");
+                return element.name == filter;
+              }));
             }
             HistSite site = HistSite(
               name: document.data()["name"] as String,
@@ -181,19 +173,11 @@ class ApplicationState extends ChangeNotifier {
     // }
 
     // we need to convert all the filters to strings so they are firestore friendly
+
     List<String> firebaseFriendlyFilterList = [];
 
     for (siteFilter filter in newSite.filters) {
-      if (filter == siteFilter.Hall) {
-        firebaseFriendlyFilterList.add("Hall");
-      } else if (filter == siteFilter.Monument) {
-        firebaseFriendlyFilterList.add("Monument");
-      } else if (filter == siteFilter.Park) {
-        firebaseFriendlyFilterList.add("Park");
-      } else if (filter == siteFilter.Other) {
-        firebaseFriendlyFilterList.add("Other");
-      }
-      //TODO: add all other filter types as they are added...
+      firebaseFriendlyFilterList.add(filter.name);
     }
 
     var data = {

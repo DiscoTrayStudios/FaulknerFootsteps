@@ -69,6 +69,7 @@ class ListItem extends StatelessWidget {
                     builder: (context, snapshot) {
                       if (siteInfo.images.length > 0 &&
                           siteInfo.images[0] != null) {
+                        print("List item if statement executed");
                         return Image.memory(
                           siteInfo.images.first!,
                           height: 400,
@@ -78,13 +79,44 @@ class ListItem extends StatelessWidget {
                       } else if (snapshot.connectionState ==
                               ConnectionState.done &&
                           snapshot.data != null) {
+                        print("List item else if statement reached");
                         return Image.memory(
                           snapshot.data!,
                           height: 400,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         );
+                      } else if (snapshot.connectionState ==
+                              ConnectionState.active &&
+                          siteInfo.images.length > 0 &&
+                          siteInfo.images[0] != null) {
+                        print("Stream is still open, image displayed");
+                        return Image.memory(
+                          siteInfo.images.first!,
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.active) {
+                        print("Connection state is active");
+                        return Image.memory(
+                          siteInfo.images.first!,
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      } else if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        print("Loading cirlce showing");
+                        return Center(
+                            child: Container(
+                                child: CircularProgressIndicator(),
+                                width: double.infinity,
+                                height: 400,
+                                color: Color.fromARGB(255, 107, 79, 79)));
                       } else {
+                        print("List item else statement reached");
                         return Image.asset(
                           'assets/images/faulkner_thumbnail.png',
                           height: 400,
