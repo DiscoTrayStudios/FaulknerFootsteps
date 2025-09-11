@@ -10,8 +10,8 @@ plugins {
 
 android {
     namespace = "com.art.faulkner_footsteps"
-    compileSdk = 35 //flutter.compileSdkVersion
-     ndkVersion = "25.1.8937393"
+    compileSdk = 36 //flutter.compileSdkVersion
+     ndkVersion = "26.1.10909125"
 
 
     compileOptions {
