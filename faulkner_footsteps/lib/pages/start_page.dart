@@ -60,8 +60,10 @@ class _StartPageState extends State<StartPage>
     player.stop(); // Stop the audio
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      print("navigated to list page");
       AppRouter.navigateTo(context, AppRouter.list);
     } else {
+      print("navigated to login page");
       AppRouter.navigateTo(context, AppRouter.loginPage);
     }
   }
