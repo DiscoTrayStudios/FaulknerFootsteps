@@ -60,7 +60,7 @@ class _ListPageState extends State<ListPage> {
     setState(() {});
     if (displaySites.isNotEmpty) {
       updateTimer.cancel();
-      print("update loop");
+      // print("update loop");
     }
   }
 
@@ -224,18 +224,18 @@ class _ListPageState extends State<ListPage> {
       for (HistSite site in displaySites) {
         if (site.name == sorted.keys.elementAt(i)) {
           lst.add(site);
-          print("x: ${site.name}");
-          print("sorted name: ${sorted.keys.elementAt(i)}");
+          // print("x: ${site.name}");
+          // print("sorted name: ${sorted.keys.elementAt(i)}");
         }
       }
       i++;
     }
-    print("Lst: $lst");
+    // print("Lst: $lst");
     displaySites.clear();
     displaySites.addAll(lst);
 
-    print("Sorted: $sorted");
-    print("Display List: $displaySites");
+    // print("Sorted: $sorted");
+    // print("Display List: $displaySites");
   }
 
   void setDisplayItems() {
@@ -243,10 +243,10 @@ class _ListPageState extends State<ListPage> {
       fullSiteList = widget.app_state.historicalSites;
       displaySites.addAll(fullSiteList);
 
-      print("Full Site List: $fullSiteList");
-      print("Display Sites: $displaySites");
+      // print("Full Site List: $fullSiteList");
+      // print("Display Sites: $displaySites");
       activeFilters.addAll(widget.app_state.siteFilters);
-      print("ALL active filters: $activeFilters");
+      // print("ALL active filters: $activeFilters");
     }
     /*
       I want to put the other filter last, so I remove it from th e
@@ -256,7 +256,7 @@ class _ListPageState extends State<ListPage> {
   }
 
   void filterChangedCallback() {
-    print("Filter Changed Callback");
+    // print("Filter Changed Callback");
     List<HistSite> lst = [];
     // print(fullSiteList);
     //TODO: set display items so that only items with the filter will appear in display items list
@@ -367,7 +367,6 @@ class _ListPageState extends State<ListPage> {
                       controller.openView();
                     },
                     onChanged: (query) {
-                      print("here!");
                       controller.closeView(query);
                     },
 

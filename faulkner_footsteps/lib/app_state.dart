@@ -79,12 +79,15 @@ class ApplicationState extends ChangeNotifier {
 
             for (String filter
                 in List<String>.from(document.data()["filters"])) {
-              filters.add(_siteFilters.firstWhere((element) {
-                print("STRING NAME: $filter");
-                print("TEST FILTER NAME: ${element.name}");
-                return element.name == filter;
-              }));
+              filters.add(_siteFilters.firstWhere(
+                  (element) => element.name == filter,
+                  orElse: () => SiteFilter(name: "Other")));
+              // print("STRING NAME: $filter");
+              // print("TEST FILTER NAME: ${element.name}");
+              //return element.name == filter;
             }
+            ;
+
             HistSite site = HistSite(
               name: document.data()["name"] as String,
               description: document.data()["description"] as String,
@@ -201,7 +204,7 @@ class ApplicationState extends ChangeNotifier {
       "lng": -92.1,
     };
 
-    print('Adding site with $data');
+    // print('Adding site with $data');
     FirebaseFirestore.instance.collection("sites").doc(newSite.name).set(data);
     FirebaseFirestore.instance
         .collection("sites")
@@ -233,7 +236,7 @@ class ApplicationState extends ChangeNotifier {
         return 0.0;
       }
     } catch (e) {
-      print("error");
+      // print("error");
       return 0.0;
     }
   }
@@ -320,7 +323,6 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
-  //new stuff TODO: answer comments. do some research on this
   Future<void> loadFilters() async {
     if (!_loggedIn) return;
 
@@ -328,6 +330,7 @@ class ApplicationState extends ChangeNotifier {
     if (userId == null) return;
 
     try {
+      _siteFilters.clear();
       //is this try needed?
       final snapshot =
           await FirebaseFirestore.instance.collection("filters").get();
