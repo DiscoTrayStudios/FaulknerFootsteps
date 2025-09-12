@@ -109,11 +109,12 @@ class LoginPage extends StatelessWidget {
 
                       // Navigate to the list page for all users
                       if (context.mounted) {
-                        Navigator.pushReplacement(
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ListPage(),
                           ),
+                          (route) => false,
                         );
                       }
                     }
@@ -229,11 +230,12 @@ class LoginPage extends StatelessWidget {
     await checkAndStoreAdminStatus(user);
 
     if (context.mounted) {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
           builder: (context) => ListPage(),
         ),
+        (route) => false,
       );
     }
   }
