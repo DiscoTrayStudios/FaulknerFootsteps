@@ -14,6 +14,7 @@ import 'package:faulkner_footsteps/objects/list_item.dart';
 import 'package:faulkner_footsteps/pages/start_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class ListPage extends StatefulWidget {
   ListPage({super.key});
@@ -89,6 +90,14 @@ class _ListPageState extends State<ListPage> {
     _searchController = SearchController();
     super.initState();
   }
+
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   final appState = Provider.of<ApplicationState>(context);
+  //   print("DidChangeDependencies Called!!!!");
+  //   print("Historical Sites in AppState? ${appState.historicalSites.length}");
+  //   setDisplayItems();
+  // }
 
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
@@ -255,6 +264,7 @@ class _ListPageState extends State<ListPage> {
     sortDisplayItems();
   }
 
+  // NOTE: This literally does nothing except call ondisplaysiteschanged
   void filterChangedCallback() {
     // print("Filter Changed Callback");
     List<HistSite> lst = [];
@@ -283,6 +293,7 @@ class _ListPageState extends State<ListPage> {
         // print("Site: $site");
         if (site.filters.contains(filter)) {
           newDisplaySites.add(site);
+          break; // prevents site duplicates from being added
         }
       }
     }
@@ -462,7 +473,7 @@ class _ListPageState extends State<ListPage> {
             child: FittedBox(
               child: Text(
                 _selectedIndex == 0
-                    ? "Historical Sites"
+                    ? "Historical Sites V1.2"
                     : "Map                    ",
                 style: GoogleFonts.ultra(
                     textStyle: const TextStyle(
