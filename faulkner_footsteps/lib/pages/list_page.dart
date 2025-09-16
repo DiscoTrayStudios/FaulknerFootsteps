@@ -91,6 +91,7 @@ class _ListPageState extends State<ListPage> {
     super.initState();
   }
 
+//TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
   // void didChangeDependencies() {
   //   super.didChangeDependencies();
   //   final appState = Provider.of<ApplicationState>(context);
