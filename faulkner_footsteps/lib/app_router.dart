@@ -83,6 +83,9 @@ class AppRouter {
       {Map<String, dynamic>? arguments}) async {
     if (FirebaseAuth.instance.currentUser == null && routeName != loginPage) {
       await Navigator.pushReplacementNamed(context, loginPage);
+    } else if (routeName == AppRouter.list) {
+      print("Reached!!!!");
+      await Navigator.pushReplacementNamed(context, list);
     } else {
       await Navigator.pushNamed(context, routeName, arguments: arguments);
     }
