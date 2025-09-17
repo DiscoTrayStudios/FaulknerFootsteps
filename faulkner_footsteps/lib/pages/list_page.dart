@@ -83,15 +83,22 @@ class _ListPageState extends State<ListPage> {
     updateTimer = Timer.periodic(const Duration(milliseconds: 1000), _update);
     displaySites = widget.app_state.historicalSites;
     fullSiteList = widget.app_state.historicalSites;
+
     // activeFilters.addAll(widget.app_state
     // .siteFilters); //I suspect that this doesn't load quickly enough and that is why active filters starts empty
     searchSites = fullSiteList;
 
     _searchController = SearchController();
+
+    widget.app_state.addListener(() {
+      print("historical sites list has changed!!!");
+      setState(() {});
+    });
     super.initState();
   }
 
 //TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
+//TODO: Also, maybe change the filterchips to be a set so duplicates are removed? That might be an easy solution to that issue
   // void didChangeDependencies() {
   //   super.didChangeDependencies();
   //   final appState = Provider.of<ApplicationState>(context);
@@ -119,6 +126,7 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void dispose() {
+    widget.app_state.dispose();
     super.dispose();
     updateTimer.cancel();
   }
@@ -255,6 +263,8 @@ class _ListPageState extends State<ListPage> {
 
       // print("Full Site List: $fullSiteList");
       // print("Display Sites: $displaySites");
+      print("setDisplayItems is called");
+      activeFilters.clear();
       activeFilters.addAll(widget.app_state.siteFilters);
       // print("ALL active filters: $activeFilters");
     }

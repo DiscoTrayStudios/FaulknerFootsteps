@@ -210,6 +210,8 @@ class ApplicationState extends ChangeNotifier {
         .collection("sites")
         .doc(newSite.name)
         .collection("ratings");
+
+    notifyListeners();
   }
 
   Future<double> getUserRating(String siteName) async {
