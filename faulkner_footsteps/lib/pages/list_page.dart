@@ -92,7 +92,9 @@ class _ListPageState extends State<ListPage> {
 
     widget.app_state.addListener(() {
       print("historical sites list has changed!!!");
-      setState(() {});
+      setState(() {
+        setDisplayItems();
+      });
     });
     super.initState();
   }
@@ -257,17 +259,25 @@ class _ListPageState extends State<ListPage> {
   }
 
   void setDisplayItems() {
-    if (fullSiteList.isEmpty) {
-      fullSiteList = widget.app_state.historicalSites;
-      displaySites.addAll(fullSiteList);
-
-      // print("Full Site List: $fullSiteList");
-      // print("Display Sites: $displaySites");
-      print("setDisplayItems is called");
-      activeFilters.clear();
-      activeFilters.addAll(widget.app_state.siteFilters);
-      // print("ALL active filters: $activeFilters");
+    fullSiteList = widget.app_state.historicalSites;
+    bool shouldAdd = true;
+    for (HistSite site in fullSiteList) {
+      for (HistSite tst in displaySites) {
+        if (tst.name == site.name) {
+          shouldAdd = false;
+          break;
+        }
+      }
+      if (shouldAdd) displaySites.add(site);
+      shouldAdd = true;
     }
+    setState(() {});
+    // print("Full Site List: $fullSiteList");
+    // print("Display Sites: $displaySites");
+    print("setDisplayItems is called");
+    activeFilters.clear();
+    activeFilters.addAll(widget.app_state.siteFilters);
+    // print("ALL active filters: $activeFilters");
     /*
       I want to put the other filter last, so I remove it from th e
     */
@@ -462,7 +472,7 @@ class _ListPageState extends State<ListPage> {
         child: CircularProgressIndicator(),
       );
     }
-    setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
+    //setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 238, 214, 196),
       appBar: AppBar(
@@ -484,7 +494,7 @@ class _ListPageState extends State<ListPage> {
             child: FittedBox(
               child: Text(
                 _selectedIndex == 0
-                    ? "Historical Sites"
+                    ? "Historical Sites V1"
                     : "Map                    ",
                 style: GoogleFonts.ultra(
                     textStyle: const TextStyle(
