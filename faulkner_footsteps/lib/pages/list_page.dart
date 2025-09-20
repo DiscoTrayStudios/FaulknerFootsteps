@@ -494,7 +494,7 @@ class _ListPageState extends State<ListPage> {
             child: FittedBox(
               child: Text(
                 _selectedIndex == 0
-                    ? "Historical Sites V1"
+                    ? "Historical Sites"
                     : "Map                    ",
                 style: GoogleFonts.ultra(
                     textStyle: const TextStyle(
