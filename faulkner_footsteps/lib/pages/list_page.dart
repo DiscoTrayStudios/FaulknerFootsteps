@@ -260,17 +260,22 @@ class _ListPageState extends State<ListPage> {
 
   void setDisplayItems() {
     fullSiteList = widget.app_state.historicalSites;
-    bool shouldAdd = true;
-    for (HistSite site in fullSiteList) {
-      for (HistSite tst in displaySites) {
-        if (tst.name == site.name) {
-          shouldAdd = false;
-          break;
-        }
-      }
-      if (shouldAdd) displaySites.add(site);
-      shouldAdd = true;
-    }
+    displaySites.clear();
+    displaySites.addAll(fullSiteList);
+    // This results in edits not taking place
+
+    // bool shouldAdd = true;
+    // for (HistSite site in fullSiteList) {
+    //   for (HistSite tst in displaySites) {
+    //     if (tst.name == site.name) {
+    //       shouldAdd = false;
+    //       break;
+    //     }
+    //   }
+    //   if (shouldAdd) displaySites.add(site);
+    //   shouldAdd = true;
+    // }
+
     setState(() {});
     // print("Full Site List: $fullSiteList");
     // print("Display Sites: $displaySites");
