@@ -10,8 +10,8 @@ plugins {
 
 android {
     namespace = "com.art.faulkner_footsteps"
-    compileSdk = 35 //flutter.compileSdkVersion
-     ndkVersion = "25.1.8937393"
+    compileSdk = 36 //flutter.compileSdkVersion
+     ndkVersion = "26.1.10909125"
 
 
     compileOptions {
@@ -28,7 +28,7 @@ android {
         applicationId = "com.art.faulkner_footsteps"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

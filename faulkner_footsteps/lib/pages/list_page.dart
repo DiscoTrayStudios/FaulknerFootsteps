@@ -15,6 +15,7 @@ import 'package:faulkner_footsteps/objects/list_item.dart';
 import 'package:faulkner_footsteps/pages/start_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class ListPage extends StatefulWidget {
   ListPage({super.key});
@@ -61,7 +62,7 @@ class _ListPageState extends State<ListPage> {
     setState(() {});
     if (displaySites.isNotEmpty) {
       updateTimer.cancel();
-      print("update loop");
+      // print("update loop");
     }
   }
 
@@ -90,6 +91,15 @@ class _ListPageState extends State<ListPage> {
     _searchController = SearchController();
     super.initState();
   }
+
+//TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   final appState = Provider.of<ApplicationState>(context);
+  //   print("DidChangeDependencies Called!!!!");
+  //   print("Historical Sites in AppState? ${appState.historicalSites.length}");
+  //   setDisplayItems();
+  // }
 
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
@@ -225,18 +235,18 @@ class _ListPageState extends State<ListPage> {
       for (HistSite site in displaySites) {
         if (site.name == sorted.keys.elementAt(i)) {
           lst.add(site);
-          print("x: ${site.name}");
-          print("sorted name: ${sorted.keys.elementAt(i)}");
+          // print("x: ${site.name}");
+          // print("sorted name: ${sorted.keys.elementAt(i)}");
         }
       }
       i++;
     }
-    print("Lst: $lst");
+    // print("Lst: $lst");
     displaySites.clear();
     displaySites.addAll(lst);
 
-    print("Sorted: $sorted");
-    print("Display List: $displaySites");
+    // print("Sorted: $sorted");
+    // print("Display List: $displaySites");
   }
 
   void setDisplayItems() {
@@ -244,10 +254,10 @@ class _ListPageState extends State<ListPage> {
       fullSiteList = widget.app_state.historicalSites;
       displaySites.addAll(fullSiteList);
 
-      print("Full Site List: $fullSiteList");
-      print("Display Sites: $displaySites");
+      // print("Full Site List: $fullSiteList");
+      // print("Display Sites: $displaySites");
       activeFilters.addAll(widget.app_state.siteFilters);
-      print("ALL active filters: $activeFilters");
+      // print("ALL active filters: $activeFilters");
     }
     /*
       I want to put the other filter last, so I remove it from th e
@@ -256,8 +266,9 @@ class _ListPageState extends State<ListPage> {
     sortDisplayItems();
   }
 
+  // NOTE: This literally does nothing except call ondisplaysiteschanged
   void filterChangedCallback() {
-    print("Filter Changed Callback");
+    // print("Filter Changed Callback");
     List<HistSite> lst = [];
     // print(fullSiteList);
     //TODO: set display items so that only items with the filter will appear in display items list
@@ -276,7 +287,7 @@ class _ListPageState extends State<ListPage> {
   }
 
   void onDisplaySitesChanged() {
-    List<HistSite> newDisplaySites = [];
+    Set<HistSite> newDisplaySites = {};
 
     for (HistSite site in searchSites) {
       for (SiteFilter filter in activeFilters) {
@@ -284,6 +295,7 @@ class _ListPageState extends State<ListPage> {
         // print("Site: $site");
         if (site.filters.contains(filter)) {
           newDisplaySites.add(site);
+          break; // prevents site duplicates from being added
         }
       }
     }
@@ -295,7 +307,7 @@ class _ListPageState extends State<ListPage> {
     
 
     setState(() {
-      displaySites = newDisplaySites;
+      displaySites = newDisplaySites.toList();
     });
     // sortDisplayItems();
   }
@@ -369,7 +381,6 @@ class _ListPageState extends State<ListPage> {
                       controller.openView();
                     },
                     onChanged: (query) {
-                      print("here!");
                       controller.closeView(query);
                     },
 
@@ -447,9 +458,6 @@ class _ListPageState extends State<ListPage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 238, 214, 196),
       appBar: AppBar(
-          leading: BackButton(
-            color: Color.fromARGB(255, 255, 243, 228),
-          ),
           backgroundColor: const Color.fromARGB(255, 107, 79, 79),
           elevation: 5.0,
           actions: [
