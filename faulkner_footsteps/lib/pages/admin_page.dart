@@ -912,183 +912,184 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<void> _showEditSiteImagesDialog(
-      List<Uint8List?> siteImages, List<String> siteImageURLs) {
-    List<Uint8List> listOfSelectedImages = [];
-    List<Uint8List> markedForRemoval = [];
-    List<Uint8List?> copyOfOriginalList = [];
-    List<String> copyOfOriginalURLList = [];
-    copyOfOriginalList.addAll(siteImages);
-    copyOfOriginalURLList.addAll(siteImageURLs);
-    return showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              // actionsAlignment: MainAxisAlignment.spaceBetween,
-              actionsOverflowAlignment: OverflowBarAlignment.center,
-              actionsOverflowDirection: VerticalDirection.down,
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                "Edit Images",
-                style: GoogleFonts.ultra(
-                    textStyle:
-                        const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
-              ),
-              content: Column(children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  width: MediaQuery.of(context).size.width * 0.75,
-                  child: ReorderableListView.builder(
-                      proxyDecorator: (child, index, animation) {
-                        return AnimatedBuilder(
-                          animation: animation,
-                          builder: (BuildContext context, Widget? child) {
-                            final double animValue =
-                                Curves.easeInOut.transform(animation.value);
-                            final double elevation =
-                                lerpDouble(1, 20, animValue)!;
-                            final double scale = lerpDouble(1, 1.1, animValue)!;
-                            return Transform.scale(
-                              scale: scale,
-                              // Create a Card based on the color and the content of the dragged one
-                              // and set its elevation to the animated value.
-                              child: Card(
-                                  elevation: elevation,
-                                  color: Color.fromARGB(255, 255, 243, 228),
-                                  child: child),
-                            );
-                          },
-                          child: child,
-                        );
-                      },
-                      buildDefaultDragHandles: false,
-                      scrollDirection: Axis.vertical,
-                      itemCount: siteImages.length,
-                      onReorder: (int oldIndex, int newIndex) {
-                        setState(() {
-                          if (oldIndex < newIndex) {
-                            newIndex -= 1;
-                          }
-                          final Uint8List? item = siteImages.removeAt(oldIndex);
-                          siteImages.insert(newIndex, item);
-
-                          final String URLItem =
-                              siteImageURLs.removeAt(oldIndex);
-                          siteImageURLs.insert(newIndex, URLItem);
-
-                          print("Old Index: $oldIndex");
-                          print("New Index: $newIndex");
-                        });
-                      },
-                      itemBuilder: (BuildContext context, int index) {
-                        return Card(
-                          elevation: 8,
-                          shadowColor: Color.fromARGB(255, 107, 79, 79),
-                          key: Key('$index'),
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          color: const Color.fromARGB(255, 238, 214, 196),
-                          child: ListTile(
-                            leading: Checkbox(
-                                activeColor:
-                                    const Color.fromARGB(255, 107, 79, 79),
-                                value: listOfSelectedImages
-                                    .contains(siteImages[index]),
-                                onChanged: (bool? value) {
-                                  print("Image checkbox checked!!");
-                                  setState(() {
-                                    if (!value!) {
-                                      listOfSelectedImages
-                                          .remove(siteImages[index]);
-                                    } else {
-                                      listOfSelectedImages
-                                          .add(siteImages[index]!);
-                                    }
-                                  });
-                                }),
-                            title: Image.memory(siteImages[index]!,
-                                fit: BoxFit.contain),
-                            trailing: ReorderableDragStartListener(
-                                index: siteImages.indexOf(siteImages[index]),
-                                child: Icon(Icons.drag_handle)),
-                          ),
-                        );
-                      }),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 218, 186, 130)),
-                        onPressed: () {
-                          for (Uint8List? item in listOfSelectedImages) {
-                            if (item != null) {
-                              markedForRemoval.add(item);
-                            }
-                          }
+    List<Uint8List?> siteImages, List<String> siteImageURLs) {
+  List<Uint8List> listOfSelectedImages = [];
+  List<Uint8List> markedForRemoval = [];
+  List<Uint8List?> copyOfOriginalList = [];
+  List<String> copyOfOriginalURLList = [];
+  copyOfOriginalList.addAll(siteImages);
+  copyOfOriginalURLList.addAll(siteImageURLs);
+  return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            actionsOverflowAlignment: OverflowBarAlignment.center,
+            actionsOverflowDirection: VerticalDirection.down,
+            backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+            title: Text(
+              "Edit Images",
+              style: GoogleFonts.ultra(
+                  textStyle:
+                      const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
+            ),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.75,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: ReorderableListView.builder(
+                        proxyDecorator: (child, index, animation) {
+                          return AnimatedBuilder(
+                            animation: animation,
+                            builder: (BuildContext context, Widget? child) {
+                              final double animValue =
+                                  Curves.easeInOut.transform(animation.value);
+                              final double elevation =
+                                  lerpDouble(1, 20, animValue)!;
+                              final double scale = lerpDouble(1, 1.1, animValue)!;
+                              return Transform.scale(
+                                scale: scale,
+                                child: Card(
+                                    elevation: elevation,
+                                    color: Color.fromARGB(255, 255, 243, 228),
+                                    child: child),
+                              );
+                            },
+                            child: child,
+                          );
+                        },
+                        buildDefaultDragHandles: false,
+                        scrollDirection: Axis.vertical,
+                        itemCount: siteImages.length,
+                        onReorder: (int oldIndex, int newIndex) {
                           setState(() {
-                            siteImages.removeWhere(
-                                (test) => markedForRemoval.contains(test));
-                          });
-                          markedForRemoval.clear();
-                          print("Delete Images button is pressed");
-                        },
-                        child: const Text("Delete Images")),
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 218, 186, 130)),
-                        onPressed: () async {
-                          List<File> newImages = [];
-                          await pickImages();
-                          if (images != null) {
-                            newImages = images!;
-                          }
-                          List<Uint8List> newInt8List = [];
+                            if (oldIndex < newIndex) {
+                              newIndex -= 1;
+                            }
+                            final Uint8List? item = siteImages.removeAt(oldIndex);
+                            siteImages.insert(newIndex, item);
 
-                          // turn file images into UInt8List
-                          for (File i in newImages) {
-                            Uint8List newFile = await i.readAsBytes();
-                            newInt8List.add(newFile);
-                          }
-                          siteImages.addAll(newInt8List);
-                          setState(() {});
+                            final String URLItem =
+                                siteImageURLs.removeAt(oldIndex);
+                            siteImageURLs.insert(newIndex, URLItem);
+                          });
                         },
-                        child: const Text("Add Images")),
-                  ],
-                )
-              ]),
-              actions: [
-                TextButton(
+                        itemBuilder: (BuildContext context, int index) {
+                          return Card(
+                            elevation: 8,
+                            shadowColor: Color.fromARGB(255, 107, 79, 79),
+                            key: Key('$index'),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            color: const Color.fromARGB(255, 238, 214, 196),
+                            child: ListTile(
+                              leading: Checkbox(
+                                  activeColor:
+                                      const Color.fromARGB(255, 107, 79, 79),
+                                  value: listOfSelectedImages
+                                      .contains(siteImages[index]),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (!value!) {
+                                        listOfSelectedImages
+                                            .remove(siteImages[index]);
+                                      } else {
+                                        listOfSelectedImages
+                                            .add(siteImages[index]!);
+                                      }
+                                    });
+                                  }),
+                              title: Image.memory(siteImages[index]!,
+                                  fit: BoxFit.contain),
+                              trailing: ReorderableDragStartListener(
+                                  index: siteImages.indexOf(siteImages[index]),
+                                  child: Icon(Icons.drag_handle)),
+                            ),
+                          );
+                        }),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                      child : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 218, 186, 130)),
+                          onPressed: () {
+                            for (Uint8List? item in listOfSelectedImages) {
+                              if (item != null) {
+                                markedForRemoval.add(item);
+                              }
+                            }
+                            setState(() {
+                              siteImages.removeWhere(
+                                  (test) => markedForRemoval.contains(test));
+                            });
+                            markedForRemoval.clear();
+                          },
+                          child: const Text("Delete")),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child:
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 218, 186, 130)),
+                          onPressed: () async {
+                            List<File> newImages = [];
+                            await pickImages();
+                            if (images != null) {
+                              newImages = images!;
+                            }
+                            List<Uint8List> newInt8List = [];
+                            for (File i in newImages) {
+                              Uint8List newFile = await i.readAsBytes();
+                              newInt8List.add(newFile);
+                            }
+                            siteImages.addAll(newInt8List);
+                            setState(() {});
+                          },
+                          child: const Text("Add Images")),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    siteImages.clear();
+                    siteImages.addAll(copyOfOriginalList); //reset the list
+                    siteImageURLs.clear();
+                    siteImageURLs.addAll(copyOfOriginalURLList);
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color.fromARGB(255, 218, 186, 130)),
                   onPressed: () {
-                    setState(() {
-                      siteImages.clear();
-                      siteImages.addAll(copyOfOriginalList); //reset the list
-                      siteImageURLs.clear();
-                      siteImageURLs.addAll(copyOfOriginalURLList);
-                    });
-                    print("Length: ${siteImages.length}");
                     Navigator.pop(context);
                   },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130)),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Submit Changes"))
-              ],
-            );
-          });
+                  child: const Text("Submit Changes"))
+            ],
+          );
         });
-  }
+      });
+}
 
   Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
     final titleController = TextEditingController(text: blurbs[index].title);
