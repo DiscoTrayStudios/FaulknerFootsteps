@@ -45,6 +45,14 @@ class _AdminListPageState extends State<AdminListPage> {
     // acceptableFilters.addAll(siteFilter.values);
     // acceptableFilters.remove(siteFilter.Other);
     acceptableFilters = widget.app_state.siteFilters;
+
+    widget.app_state.addListener(() {
+      print("Appstate has changed!");
+      setState(() {
+        acceptableFilters =
+            widget.app_state.siteFilters; // Might be necessary, idk really
+      });
+    });
   }
 
   void _update(Timer timer) {
