@@ -84,15 +84,24 @@ class _ListPageState extends State<ListPage> {
     updateTimer = Timer.periodic(const Duration(milliseconds: 1000), _update);
     displaySites = widget.app_state.historicalSites;
     fullSiteList = widget.app_state.historicalSites;
+
     // activeFilters.addAll(widget.app_state
     // .siteFilters); //I suspect that this doesn't load quickly enough and that is why active filters starts empty
     searchSites = fullSiteList;
 
     _searchController = SearchController();
+
+    widget.app_state.addListener(() {
+      print("historical sites list has changed!!!");
+      setState(() {
+        setDisplayItems();
+      });
+    });
     super.initState();
   }
 
 //TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
+//TODO: Also, maybe change the filterchips to be a set so duplicates are removed? That might be an easy solution to that issue
   // void didChangeDependencies() {
   //   super.didChangeDependencies();
   //   final appState = Provider.of<ApplicationState>(context);
@@ -120,6 +129,7 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void dispose() {
+    widget.app_state.dispose();
     super.dispose();
     updateTimer.cancel();
   }
@@ -250,15 +260,30 @@ class _ListPageState extends State<ListPage> {
   }
 
   void setDisplayItems() {
-    if (fullSiteList.isEmpty) {
-      fullSiteList = widget.app_state.historicalSites;
-      displaySites.addAll(fullSiteList);
+    fullSiteList = widget.app_state.historicalSites;
+    displaySites.clear();
+    displaySites.addAll(fullSiteList);
+    // This results in edits not taking place
 
-      // print("Full Site List: $fullSiteList");
-      // print("Display Sites: $displaySites");
-      activeFilters.addAll(widget.app_state.siteFilters);
-      // print("ALL active filters: $activeFilters");
-    }
+    // bool shouldAdd = true;
+    // for (HistSite site in fullSiteList) {
+    //   for (HistSite tst in displaySites) {
+    //     if (tst.name == site.name) {
+    //       shouldAdd = false;
+    //       break;
+    //     }
+    //   }
+    //   if (shouldAdd) displaySites.add(site);
+    //   shouldAdd = true;
+    // }
+
+    setState(() {});
+    // print("Full Site List: $fullSiteList");
+    // print("Display Sites: $displaySites");
+    print("setDisplayItems is called");
+    activeFilters.clear();
+    activeFilters.addAll(widget.app_state.siteFilters);
+    // print("ALL active filters: $activeFilters");
     /*
       I want to put the other filter last, so I remove it from th e
     */
@@ -454,7 +479,7 @@ class _ListPageState extends State<ListPage> {
         child: CircularProgressIndicator(),
       );
     }
-    setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
+    //setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 238, 214, 196),
       appBar: AppBar(
