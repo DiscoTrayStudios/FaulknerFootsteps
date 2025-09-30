@@ -1087,6 +1087,7 @@ class _AdminListPageState extends State<AdminListPage> {
                               if (siteImageURLs[i] == (markedForRemoval[i])) {
                                 siteImageURLs.removeAt(i);
                                 siteImages.removeAt(i);
+                                print("yay");
                               }
                             }
                           });
