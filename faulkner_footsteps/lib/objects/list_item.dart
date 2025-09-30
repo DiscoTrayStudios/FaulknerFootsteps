@@ -10,15 +10,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class ListItem extends StatelessWidget {
-  ListItem(
-      {super.key,
-      required this.siteInfo,
-      required this.app_state,
-      required this.currentPosition});
+  ListItem({super.key, required this.siteInfo, required this.currentPosition});
   final HistSite siteInfo;
-  final ApplicationState app_state;
   final LatLng currentPosition;
 
   final _distance = new Distance();
@@ -26,6 +22,7 @@ class ListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // setImages();
+    final app_state = Provider.of<ApplicationState>(context, listen: false);
     String siteDistance = (_distance.as(LengthUnit.Meter,
                 LatLng(siteInfo.lat, siteInfo.lng), currentPosition) /
             1609.344)
