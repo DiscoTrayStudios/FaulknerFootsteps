@@ -942,8 +942,7 @@ Future<void> _showEditSiteImagesDialog(
   );
 }
 Future<void> _showEditFiltersDialog() {
-  // Capture original state before opening dialog
-  List<SiteFilter> originalFilters = List.from(widget.app_state.siteFilters);
+    List<SiteFilter> originalFilters = List.from(widget.app_state.siteFilters);
   
   return showDialog(
     barrierDismissible: false,
@@ -967,20 +966,14 @@ Future<void> _showEditFiltersDialog() {
           await showAddFilterDialog();
         },
         onSubmit: () async {
-          // At this point, widget.app_state.siteFilters has been updated by ListEdit
-          // Compare with original to find deletions
           List<SiteFilter> deletedFilters = originalFilters
               .where((original) => !widget.app_state.siteFilters
                   .any((current) => current.name == original.name))
               .toList();
           
-          // Remove deleted filters from Firestore
           for (SiteFilter filter in deletedFilters) {
             await widget.app_state.removeFilter(filter.name);
           }
-          
-          // Additions are already in Firestore because showAddFilterDialog
-          // calls addFilter() immediately
         },
       );
     },
@@ -1113,7 +1106,7 @@ Future<void> _showEditFiltersDialog() {
             );
           });
         });
-  }
+  } 
 
   Widget _buildAdminContent() {
     return Column(
@@ -1143,7 +1136,7 @@ Future<void> _showEditFiltersDialog() {
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
             onPressed: _showEditFiltersDialog,
             child: Text(
-              "Add New Filter Type",
+              "Edit Filters",
               style: GoogleFonts.ultra(
                   textStyle:
                       const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
