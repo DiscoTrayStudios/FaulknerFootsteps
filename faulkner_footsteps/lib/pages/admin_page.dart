@@ -1105,59 +1105,135 @@ class _AdminListPageState extends State<AdminListPage> {
                           });
                           markedForRemoval.clear();
                           print("Delete Images button is pressed");
-                        },
-                        child: const Text("Delete Images")),
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 218, 186, 130)),
-                        onPressed: () async {
-                          List<File> newImages = [];
-                          await pickImages();
-                          if (images != null) {
-                            newImages = images!;
-                          }
-                          List<Uint8List> newInt8List = [];
 
-                          // turn file images into UInt8List
-                          for (File i in newImages) {
-                            Uint8List newFile = await i.readAsBytes();
-                            newInt8List.add(newFile);
-                          }
-                          siteImages.addAll(newInt8List);
-                          setState(() {});
                         },
-                        child: const Text("Add Images")),
-                  ],
-                )
-              ]),
-              actions: [
-                TextButton(
+                        buildDefaultDragHandles: false,
+                        scrollDirection: Axis.vertical,
+                        itemCount: siteImages.length,
+                        onReorder: (int oldIndex, int newIndex) {
+                          setState(() {
+                            if (oldIndex < newIndex) {
+                              newIndex -= 1;
+                            }
+                            final Uint8List? item = siteImages.removeAt(oldIndex);
+                            siteImages.insert(newIndex, item);
+
+                            final String URLItem =
+                                siteImageURLs.removeAt(oldIndex);
+                            siteImageURLs.insert(newIndex, URLItem);
+                          });
+                        },
+                        itemBuilder: (BuildContext context, int index) {
+                          return Card(
+                            elevation: 8,
+                            shadowColor: Color.fromARGB(255, 107, 79, 79),
+                            key: Key('$index'),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            color: const Color.fromARGB(255, 238, 214, 196),
+                            child: ListTile(
+                              leading: Checkbox(
+                                  activeColor:
+                                      const Color.fromARGB(255, 107, 79, 79),
+                                  value: listOfSelectedImages
+                                      .contains(siteImages[index]),
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (!value!) {
+                                        listOfSelectedImages
+                                            .remove(siteImages[index]);
+                                      } else {
+                                        listOfSelectedImages
+                                            .add(siteImages[index]!);
+                                      }
+                                    });
+                                  }),
+                              title: Image.memory(siteImages[index]!,
+                                  fit: BoxFit.contain),
+                              trailing: ReorderableDragStartListener(
+                                  index: siteImages.indexOf(siteImages[index]),
+                                  child: Icon(Icons.drag_handle)),
+                            ),
+                          );
+                        }),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                      child : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 218, 186, 130)),
+                          onPressed: () {
+                            for (Uint8List? item in listOfSelectedImages) {
+                              if (item != null) {
+                                markedForRemoval.add(item);
+                              }
+                            }
+                            setState(() {
+                              siteImages.removeWhere(
+                                  (test) => markedForRemoval.contains(test));
+                            });
+                            markedForRemoval.clear();
+                          },
+                          child: const Text("Delete")),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child:
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 218, 186, 130)),
+                          onPressed: () async {
+                            List<File> newImages = [];
+                            await pickImages();
+                            if (images != null) {
+                              newImages = images!;
+                            }
+                            List<Uint8List> newInt8List = [];
+                            for (File i in newImages) {
+                              Uint8List newFile = await i.readAsBytes();
+                              newInt8List.add(newFile);
+                            }
+                            siteImages.addAll(newInt8List);
+                            setState(() {});
+                          },
+                          child: const Text("Add Images")),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    siteImages.clear();
+                    siteImages.addAll(copyOfOriginalList); //reset the list
+                    siteImageURLs.clear();
+                    siteImageURLs.addAll(copyOfOriginalURLList);
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color.fromARGB(255, 218, 186, 130)),
                   onPressed: () {
-                    setState(() {
-                      siteImages.clear();
-                      siteImages.addAll(copyOfOriginalList); //reset the list
-                      siteImageURLs.clear();
-                      siteImageURLs.addAll(copyOfOriginalURLList);
-                    });
-                    print("Length: ${siteImages.length}");
                     Navigator.pop(context);
                   },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130)),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Submit Changes"))
-              ],
-            );
-          });
+                  child: const Text("Submit Changes"))
+            ],
+          );
         });
-  }
+      });
+}
 
   Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
     final titleController = TextEditingController(text: blurbs[index].title);
