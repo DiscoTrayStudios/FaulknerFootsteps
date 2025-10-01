@@ -20,13 +20,12 @@ import 'package:provider/provider.dart';
 class ListPage extends StatefulWidget {
   ListPage({super.key});
 
-  ApplicationState app_state = ApplicationState();
-
   @override
   State<ListPage> createState() => _ListPageState();
 }
 
 class _ListPageState extends State<ListPage> {
+  late ApplicationState app_state;
   static LatLng? _currentPosition;
   void getlocation() async {
     bool serviceEnabled;
@@ -58,15 +57,6 @@ class _ListPageState extends State<ListPage> {
     });
 }
 
-  void _update(Timer timer) {
-    setState(() {});
-    if (displaySites.isNotEmpty) {
-      updateTimer.cancel();
-      // print("update loop");
-    }
-  }
-
-  late Timer updateTimer;
   late List<HistSite> fullSiteList;
   late List<HistSite> displaySites;
   late SearchController _searchController;
@@ -80,35 +70,35 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void initState() {
+    //TODO: move all appstate references in initstate to didchangedependencies. Do this in every file
     getlocation();
-    updateTimer = Timer.periodic(const Duration(milliseconds: 1000), _update);
-    displaySites = widget.app_state.historicalSites;
-    fullSiteList = widget.app_state.historicalSites;
 
-    // activeFilters.addAll(widget.app_state
+    // activeFilters.addAll(app_state
     // .siteFilters); //I suspect that this doesn't load quickly enough and that is why active filters starts empty
-    searchSites = fullSiteList;
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    app_state = Provider.of<ApplicationState>(context, listen: false);
+    setState(() {
+      displaySites = app_state.historicalSites;
+      fullSiteList = app_state.historicalSites;
+      searchSites = fullSiteList;
+      activeFilters.clear();
+      activeFilters.addAll(app_state.siteFilters);
+    });
 
     _searchController = SearchController();
 
-    widget.app_state.addListener(() {
+    app_state.addListener(() {
       print("historical sites list has changed!!!");
       setState(() {
         setDisplayItems();
       });
     });
-    super.initState();
   }
-
-//TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
-//TODO: Also, maybe change the filterchips to be a set so duplicates are removed? That might be an easy solution to that issue
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   final appState = Provider.of<ApplicationState>(context);
-  //   print("DidChangeDependencies Called!!!!");
-  //   print("Historical Sites in AppState? ${appState.historicalSites.length}");
-  //   setDisplayItems();
-  // }
 
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
@@ -129,9 +119,8 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void dispose() {
-    widget.app_state.dispose();
+    app_state.dispose();
     super.dispose();
-    updateTimer.cancel();
   }
 
   Widget _buildHomeContent() {
@@ -147,11 +136,10 @@ class _ListPageState extends State<ListPage> {
                   height: MediaQuery.of(context).size.height / 9,
                   child: Stack(children: [
                     ListView.builder(
-                      itemCount: widget.app_state.siteFilters.length,
+                      itemCount: app_state.siteFilters.length,
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
-                        SiteFilter currentFilter =
-                            widget.app_state.siteFilters[index];
+                        SiteFilter currentFilter = app_state.siteFilters[index];
                         return Padding(
                           padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
                           // padding: EdgeInsets.all(8),
@@ -223,7 +211,6 @@ class _ListPageState extends State<ListPage> {
                 HistSite site = displaySites[index - 1];
 
                 return ListItem(
-                    app_state: widget.app_state,
                     siteInfo: site,
                     currentPosition: _currentPosition ?? LatLng(0, 0));
               }
@@ -236,7 +223,7 @@ class _ListPageState extends State<ListPage> {
 
   void sortDisplayItems() {
     List<HistSite> lst = [];
-    siteLocations = widget.app_state.getLocations();
+    siteLocations = app_state.getLocations();
     siteDistances = getDistances(siteLocations);
     sorted = Map.fromEntries(siteDistances.entries.toList()
       ..sort((e1, e2) => e1.value.compareTo(e2.value)));
@@ -260,7 +247,7 @@ class _ListPageState extends State<ListPage> {
   }
 
   void setDisplayItems() {
-    fullSiteList = widget.app_state.historicalSites;
+    fullSiteList = app_state.historicalSites;
     displaySites.clear();
     displaySites.addAll(fullSiteList);
     // This results in edits not taking place
@@ -282,7 +269,7 @@ class _ListPageState extends State<ListPage> {
     // print("Display Sites: $displaySites");
     print("setDisplayItems is called");
     activeFilters.clear();
-    activeFilters.addAll(widget.app_state.siteFilters);
+    activeFilters.addAll(app_state.siteFilters);
     // print("ALL active filters: $activeFilters");
     /*
       I want to put the other filter last, so I remove it from th e
@@ -515,7 +502,6 @@ class _ListPageState extends State<ListPage> {
           : MapDisplay(
               currentPosition: _currentPosition!,
               initialPosition: _currentPosition!,
-              appState: widget.app_state,
             ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 107, 79, 79),

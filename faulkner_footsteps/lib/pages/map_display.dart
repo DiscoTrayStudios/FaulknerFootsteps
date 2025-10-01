@@ -14,12 +14,10 @@ import 'package:provider/provider.dart';
 
 class MapDisplay extends StatefulWidget {
   final LatLng currentPosition;
-  final ApplicationState appState;
   final LatLng? centerPosition;
   const MapDisplay(
       {super.key,
       required this.currentPosition,
-      required this.appState,
       required LatLng initialPosition,
       this.centerPosition});
 
@@ -28,22 +26,18 @@ class MapDisplay extends StatefulWidget {
 }
 
 class _MapDisplayState extends State<MapDisplay> {
+  late ApplicationState appState;
   bool visited = false;
   final Distance distance = Distance();
-  late Map<String, LatLng> siteLocations = widget.appState.getLocations();
-  late Map<String, double> siteDistances = getDistances(siteLocations);
-  late var sorted = Map.fromEntries(siteDistances.entries.toList()
-    ..sort((e1, e2) => e1.value.compareTo(e2.value)));
-  late var sortedlist = sorted.values.toList();
   int _selectedIndex = 0;
   final MapController _mapController = MapController();
+  late Map<String, LatLng> siteLocations;
+  late Map<String, double> siteDistances;
+  late var sorted;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      locationDialog(context);
-    });
   }
 
   void _onItemTapped(int index) {
@@ -53,7 +47,7 @@ class _MapDisplayState extends State<MapDisplay> {
   }
 
   void locationDialog(context) {
-    final appState = Provider.of<ApplicationState>(context, listen: false);
+    // final appState = Provider.of<ApplicationState>(context, listen: false);
 
     // First, check if there are any sites close enough
     if (sorted.isEmpty || sorted.values.first >= 30000.0) {
@@ -65,13 +59,13 @@ class _MapDisplayState extends State<MapDisplay> {
     String closestSiteName = sorted.keys.first;
 
     // Check if the user has already visited this site
-    if (widget.appState.hasVisited(closestSiteName)) {
+    if (appState.hasVisited(closestSiteName)) {
       // Already visited, don't show dialog
       return;
     }
 
     // Find the site information
-    HistSite? selectedSite = widget.appState.historicalSites.firstWhere(
+    HistSite? selectedSite = appState.historicalSites.firstWhere(
       (site) => site.name == closestSiteName,
       orElse: () => HistSite(
         name: closestSiteName,
@@ -190,7 +184,6 @@ class _MapDisplayState extends State<MapDisplay> {
                             MaterialPageRoute(
                               builder: (context) => HistSitePage(
                                 histSite: selectedSite,
-                                app_state: widget.appState,
                                 currentPosition: widget.currentPosition,
                               ),
                             ),
@@ -303,6 +296,17 @@ class _MapDisplayState extends State<MapDisplay> {
 
   void didChangeDependencies() {
     super.didChangeDependencies();
+    appState = Provider.of<ApplicationState>(context, listen: false);
+
+    siteLocations = appState.getLocations();
+    Map<String, double> siteDistances = getDistances(siteLocations);
+    sorted = Map.fromEntries(siteDistances.entries.toList()
+      ..sort((e1, e2) => e1.value.compareTo(e2.value)));
+    late var sortedlist = sorted.values.toList();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      locationDialog(context);
+    });
 
     // Only run this once
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -332,7 +336,6 @@ class _MapDisplayState extends State<MapDisplay> {
                   builder: (BuildContext context) {
                     return PinDialog(
                       siteName: entry.key,
-                      appState: appState,
                       currentPosition: widget.currentPosition,
                     );
                   },
