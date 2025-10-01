@@ -948,12 +948,14 @@ class _AdminListPageState extends State<AdminListPage> {
     List<String> copyOfOriginalURLList = [];
     copyOfOriginalList.addAll(siteImages);
     copyOfOriginalURLList.addAll(siteImageURLs);
+    bool siteImagesLoaded = false;
     Map<String, Future<Uint8List?>> imageFutures = {};
     for (final url in siteImageURLs) {
       imageFutures[url] = app_state.getImage(url);
     }
 
     Widget buildImage(String url) {
+      siteImagesLoaded = false;
       return FutureBuilder(
           future: imageFutures[url],
           builder: (context, snapshot) {
@@ -968,6 +970,11 @@ class _AdminListPageState extends State<AdminListPage> {
               return Image.memory(snapshot.data!, fit: BoxFit.contain);
             }
           });
+    }
+
+    Widget buildImage2(int index) {
+      siteImagesLoaded = true;
+      return Image.memory(siteImages[index]!, fit: BoxFit.contain);
     }
 
     return showDialog(
@@ -1023,9 +1030,11 @@ class _AdminListPageState extends State<AdminListPage> {
                             if (oldIndex < newIndex) {
                               newIndex -= 1;
                             }
-                            // final Uint8List? item =
-                            //     siteImages.removeAt(oldIndex);
-                            // siteImages.insert(newIndex, item);
+                            if (siteImagesLoaded) {
+                              final Uint8List? item =
+                                  siteImages.removeAt(oldIndex);
+                              siteImages.insert(newIndex, item);
+                            }
 
                             final String URLItem =
                                 siteImageURLs.removeAt(oldIndex);
@@ -1064,8 +1073,7 @@ class _AdminListPageState extends State<AdminListPage> {
                               //TODO! siteimages never changes on reorder. lets make a boolean to see whether we can do this or not?
                               title: !siteImages.isEmpty &&
                                       siteImages[index] != null
-                                  ? Image.memory(siteImages[index]!,
-                                      fit: BoxFit.contain)
+                                  ? buildImage2(index)
                                   : buildImage(siteImageURLs[index]),
                               trailing: ReorderableDragStartListener(
                                   index: index, child: Icon(Icons.drag_handle)),
