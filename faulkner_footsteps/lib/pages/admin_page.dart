@@ -63,6 +63,7 @@ class _AdminListPageState extends State<AdminListPage> {
     acceptableFilters = app_state.siteFilters;
     app_state.addListener(() {
       print("Appstate has changed!");
+      setState(() {});
       // if (mounted) {
       // setState(() {
       //   acceptableFilters =
@@ -947,6 +948,28 @@ class _AdminListPageState extends State<AdminListPage> {
     List<String> copyOfOriginalURLList = [];
     copyOfOriginalList.addAll(siteImages);
     copyOfOriginalURLList.addAll(siteImageURLs);
+    Map<String, Future<Uint8List?>> imageFutures = {};
+    for (final url in siteImageURLs) {
+      imageFutures[url] = app_state.getImage(url);
+    }
+
+    Widget buildImage(String url) {
+      return FutureBuilder(
+          future: imageFutures[url],
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError || !snapshot.hasData) {
+              return Image.asset(
+                'assets/images/faulkner_thumbnail.png',
+                fit: BoxFit.contain,
+              );
+            } else {
+              return Image.memory(snapshot.data!, fit: BoxFit.contain);
+            }
+          });
+    }
+
     return showDialog(
         barrierDismissible: false,
         context: context,
@@ -972,7 +995,8 @@ class _AdminListPageState extends State<AdminListPage> {
                         proxyDecorator: (child, index, animation) {
                           return AnimatedBuilder(
                             animation: animation,
-                            builder: (BuildContext context, Widget? child) {
+                            child: child,
+                            builder: (context, animatedChild) {
                               final double animValue =
                                   Curves.easeInOut.transform(animation.value);
                               final double elevation =
@@ -983,13 +1007,12 @@ class _AdminListPageState extends State<AdminListPage> {
                                 scale: scale,
                                 // Create a Card based on the color and the content of the dragged one
                                 // and set its elevation to the animated value.
-                                child: Card(
+                                child: Material(
                                     elevation: elevation,
                                     color: Color.fromARGB(255, 255, 243, 228),
-                                    child: child),
+                                    child: animatedChild),
                               );
                             },
-                            child: child,
                           );
                         },
                         buildDefaultDragHandles: false,
@@ -1000,9 +1023,9 @@ class _AdminListPageState extends State<AdminListPage> {
                             if (oldIndex < newIndex) {
                               newIndex -= 1;
                             }
-                            final Uint8List? item =
-                                siteImages.removeAt(oldIndex);
-                            siteImages.insert(newIndex, item);
+                            // final Uint8List? item =
+                            //     siteImages.removeAt(oldIndex);
+                            // siteImages.insert(newIndex, item);
 
                             final String URLItem =
                                 siteImageURLs.removeAt(oldIndex);
@@ -1016,7 +1039,7 @@ class _AdminListPageState extends State<AdminListPage> {
                           return Card(
                             elevation: 8,
                             shadowColor: Color.fromARGB(255, 107, 79, 79),
-                            key: Key('$index'),
+                            key: ValueKey(siteImageURLs[index]),
                             margin: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                             color: const Color.fromARGB(255, 238, 214, 196),
@@ -1038,33 +1061,14 @@ class _AdminListPageState extends State<AdminListPage> {
                                       }
                                     });
                                   }),
-                              title: FutureBuilder(
-                                  future:
-                                      app_state.getImage(site.imageUrls[index]),
-                                  builder: (context, snapshot) {
-                                    if (!siteImages.isEmpty &&
-                                        siteImages[index] != null) {
-                                      return Image.memory(siteImages[index]!,
-                                          fit: BoxFit.contain);
-                                    } else if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Center(
-                                          child: CircularProgressIndicator());
-                                    } else if (snapshot.hasError ||
-                                        !snapshot.hasData) {
-                                      return Image.asset(
-                                        'assets/images/faulkner_thumbnail.png',
-                                        fit: BoxFit.contain,
-                                      );
-                                    } else {
-                                      return Image.memory(snapshot.data!,
-                                          fit: BoxFit.contain);
-                                    }
-                                  }),
+                              //TODO! siteimages never changes on reorder. lets make a boolean to see whether we can do this or not?
+                              title: !siteImages.isEmpty &&
+                                      siteImages[index] != null
+                                  ? Image.memory(siteImages[index]!,
+                                      fit: BoxFit.contain)
+                                  : buildImage(siteImageURLs[index]),
                               trailing: ReorderableDragStartListener(
-                                  index: siteImageURLs
-                                      .indexOf(siteImageURLs[index]),
-                                  child: Icon(Icons.drag_handle)),
+                                  index: index, child: Icon(Icons.drag_handle)),
                             ),
                           );
                         })),
