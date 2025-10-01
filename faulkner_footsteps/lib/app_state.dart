@@ -168,7 +168,7 @@ class ApplicationState extends ChangeNotifier {
       print(("ERROR!!! This occured when calling getImage(). Error: $e"));
       print("Error is for $s");
       ByteData bd =
-          await rootBundle.load('assets/images.faulkner_thumbnail.png');
+          await rootBundle.load('assets/images/faulkner_thumbnail.png');
       data = bd.buffer.asUint8List();
     } finally {}
     return data;

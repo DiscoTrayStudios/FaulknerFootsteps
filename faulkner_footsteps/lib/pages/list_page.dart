@@ -5,6 +5,7 @@ import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/achievement.dart';
+import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/widgets/logout_button.dart';
 import 'package:faulkner_footsteps/widgets/profile_button.dart';
@@ -54,7 +55,7 @@ class _ListPageState extends State<ListPage> {
     setState(() {
       _currentPosition = LatLng(lat, long);
     });
-  }
+}
 
   late List<HistSite> fullSiteList;
   late List<HistSite> displaySites;
@@ -315,6 +316,7 @@ class _ListPageState extends State<ListPage> {
     //     newDisplaySites.add(site);
     //   }
     // }
+    
 
     setState(() {
       displaySites = newDisplaySites.toList();
