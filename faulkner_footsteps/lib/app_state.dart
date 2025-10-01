@@ -367,6 +367,21 @@ class ApplicationState extends ChangeNotifier {
       print("Error saving filter: $e");
     }
   }
+  Future<void> removeFilter(String name) async {
+  if (!_loggedIn) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
+  
+  try {
+    
+    await FirebaseFirestore.instance
+        .collection("filters")
+        .doc(name)
+        .delete();
+  } catch (e) {
+    print("Error removing filter: $e");
+  }
+}
 
   Future<void> saveAchievement(String place) async {
     if (!_loggedIn) return;

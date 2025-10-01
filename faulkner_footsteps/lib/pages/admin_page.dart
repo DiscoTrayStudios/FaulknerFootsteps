@@ -8,6 +8,7 @@ import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -911,185 +912,81 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-  Future<void> _showEditSiteImagesDialog(
+Future<void> _showEditSiteImagesDialog(
     List<Uint8List?> siteImages, List<String> siteImageURLs) {
-  List<Uint8List> listOfSelectedImages = [];
-  List<Uint8List> markedForRemoval = [];
-  List<Uint8List?> copyOfOriginalList = [];
-  List<String> copyOfOriginalURLList = [];
-  copyOfOriginalList.addAll(siteImages);
-  copyOfOriginalURLList.addAll(siteImageURLs);
   return showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            actionsOverflowAlignment: OverflowBarAlignment.center,
-            actionsOverflowDirection: VerticalDirection.down,
-            backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-            title: Text(
-              "Edit Images",
-              style: GoogleFonts.ultra(
-                  textStyle:
-                      const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
-            ),
-            content: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.75,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      child: ReorderableListView.builder(
-                        proxyDecorator: (child, index, animation) {
-                          return AnimatedBuilder(
-                            animation: animation,
-                            builder: (BuildContext context, Widget? child) {
-                              final double animValue =
-                                  Curves.easeInOut.transform(animation.value);
-                              final double elevation =
-                                  lerpDouble(1, 20, animValue)!;
-                              final double scale = lerpDouble(1, 1.1, animValue)!;
-                              return Transform.scale(
-                                scale: scale,
-                                child: Card(
-                                    elevation: elevation,
-                                    color: Color.fromARGB(255, 255, 243, 228),
-                                    child: child),
-                              );
-                            },
-                            child: child,
-                          );
-                        },
-                        buildDefaultDragHandles: false,
-                        scrollDirection: Axis.vertical,
-                        itemCount: siteImages.length,
-                        onReorder: (int oldIndex, int newIndex) {
-                          setState(() {
-                            if (oldIndex < newIndex) {
-                              newIndex -= 1;
-                            }
-                            final Uint8List? item = siteImages.removeAt(oldIndex);
-                            siteImages.insert(newIndex, item);
-
-                            final String URLItem =
-                                siteImageURLs.removeAt(oldIndex);
-                            siteImageURLs.insert(newIndex, URLItem);
-                          });
-                        },
-                        itemBuilder: (BuildContext context, int index) {
-                          return Card(
-                            elevation: 8,
-                            shadowColor: Color.fromARGB(255, 107, 79, 79),
-                            key: Key('$index'),
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            color: const Color.fromARGB(255, 238, 214, 196),
-                            child: ListTile(
-                              leading: Checkbox(
-                                  activeColor:
-                                      const Color.fromARGB(255, 107, 79, 79),
-                                  value: listOfSelectedImages
-                                      .contains(siteImages[index]),
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      if (!value!) {
-                                        listOfSelectedImages
-                                            .remove(siteImages[index]);
-                                      } else {
-                                        listOfSelectedImages
-                                            .add(siteImages[index]!);
-                                      }
-                                    });
-                                  }),
-                              title: Image.memory(siteImages[index]!,
-                                  fit: BoxFit.contain),
-                              trailing: ReorderableDragStartListener(
-                                  index: siteImages.indexOf(siteImages[index]),
-                                  child: Icon(Icons.drag_handle)),
-                            ),
-                          );
-                        }),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                      child : ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 218, 186, 130)),
-                          onPressed: () {
-                            for (Uint8List? item in listOfSelectedImages) {
-                              if (item != null) {
-                                markedForRemoval.add(item);
-                              }
-                            }
-                            setState(() {
-                              siteImages.removeWhere(
-                                  (test) => markedForRemoval.contains(test));
-                            });
-                            markedForRemoval.clear();
-                          },
-                          child: const Text("Delete")),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(child:
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 218, 186, 130)),
-                          onPressed: () async {
-                            List<File> newImages = [];
-                            await pickImages();
-                            if (images != null) {
-                              newImages = images!;
-                            }
-                            List<Uint8List> newInt8List = [];
-                            for (File i in newImages) {
-                              Uint8List newFile = await i.readAsBytes();
-                              newInt8List.add(newFile);
-                            }
-                            siteImages.addAll(newInt8List);
-                            setState(() {});
-                          },
-                          child: const Text("Add Images")),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    siteImages.clear();
-                    siteImages.addAll(copyOfOriginalList); //reset the list
-                    siteImageURLs.clear();
-                    siteImageURLs.addAll(copyOfOriginalURLList);
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color.fromARGB(255, 218, 186, 130)),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Submit Changes"))
-            ],
-          );
-        });
-      });
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return ListEdit<Uint8List?>(
+        title: "Edit Images",
+        items: siteImages,
+        itemBuilder: (image) => Image.memory(image!, fit: BoxFit.contain),
+        addButtonText: "Add Images",
+        deleteButtonText: "Delete Images",
+        onAddItem: () async {
+          await pickImages();
+          if (images != null) {
+            List<Uint8List> newInt8List = [];
+            for (File i in images!) {
+              Uint8List newFile = await i.readAsBytes();
+              newInt8List.add(newFile);
+            }
+            siteImages.addAll(newInt8List);
+          }
+        },
+        onSubmit: () async {
+        },
+      );
+    },
+  );
 }
+Future<void> _showEditFiltersDialog() {
+  // Capture original state before opening dialog
+  List<SiteFilter> originalFilters = List.from(widget.app_state.siteFilters);
+  
+  return showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return ListEdit<SiteFilter>(
+        title: "Edit Filters",
+        items: widget.app_state.siteFilters,
+        itemBuilder: (filter) => Text(
+          filter.name,
+          style: GoogleFonts.ultra(
+            textStyle: const TextStyle(
+              color: Color.fromARGB(255, 76, 32, 8),
+              fontSize: 16,
+            ),
+          ),
+        ),
+        addButtonText: "Add Filter",
+        deleteButtonText: "Delete Filters",
+        onAddItem: () async {
+          await showAddFilterDialog();
+        },
+        onSubmit: () async {
+          // At this point, widget.app_state.siteFilters has been updated by ListEdit
+          // Compare with original to find deletions
+          List<SiteFilter> deletedFilters = originalFilters
+              .where((original) => !widget.app_state.siteFilters
+                  .any((current) => current.name == original.name))
+              .toList();
+          
+          // Remove deleted filters from Firestore
+          for (SiteFilter filter in deletedFilters) {
+            await widget.app_state.removeFilter(filter.name);
+          }
+          
+          // Additions are already in Firestore because showAddFilterDialog
+          // calls addFilter() immediately
+        },
+      );
+    },
+  );
+}
+
 
   Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
     final titleController = TextEditingController(text: blurbs[index].title);
@@ -1244,7 +1141,7 @@ class _AdminListPageState extends State<AdminListPage> {
                 backgroundColor: const Color.fromARGB(255, 218, 186, 130),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
-            onPressed: showAddFilterDialog,
+            onPressed: _showEditFiltersDialog,
             child: Text(
               "Add New Filter Type",
               style: GoogleFonts.ultra(
