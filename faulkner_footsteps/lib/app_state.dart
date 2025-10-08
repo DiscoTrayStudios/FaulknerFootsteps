@@ -12,12 +12,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'firebase_options.dart';
 
 class ApplicationState extends ChangeNotifier {
   ApplicationState() {
+    print("ApplicationState constructor called");
     init();
   }
 
@@ -35,7 +37,10 @@ class ApplicationState extends ChangeNotifier {
   List<SiteFilter> _siteFilters = [];
   List<SiteFilter> get siteFilters => _siteFilters;
 
+  final ValueNotifier<bool> adminImagesReady = ValueNotifier(false);
+
   Future<void> init() async {
+    print("App state init called!!!");
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
 
@@ -63,7 +68,10 @@ class ApplicationState extends ChangeNotifier {
             .snapshots()
             .listen((snapshot) async {
           _historicalSites = [];
-          for (final document in snapshot.docs) {
+          for (int i = 0; i < snapshot.docs.length; i++) {
+            QueryDocumentSnapshot<Map<String, dynamic>> document =
+                snapshot.docs[i];
+
             var blurbCont = document.data()["blurbs"];
             List<String> blurbStrings = blurbCont.split("{ListDiv}");
             List<InfoText> newBlurbs = [];
@@ -104,9 +112,13 @@ class ApplicationState extends ChangeNotifier {
                   : 0,
             );
             _historicalSites.add(site);
-            loadImageToHistSite(document, site);
+            loadImageToHistSite(document, site).then((_) {
+              if (i == snapshot.docs.length - 1) {
+                print("Last image loaded");
+                adminImagesReady.value = true;
+              }
+            });
           }
-          //print(historicalSites);
           notifyListeners();
         });
       } else {
@@ -153,6 +165,9 @@ class ApplicationState extends ChangeNotifier {
       // Handle any errors.
       print(("ERROR!!! This occured when calling getImage(). Error: $e"));
       print("Error is for $s");
+      ByteData bd =
+          await rootBundle.load('assets/images/faulkner_thumbnail.png');
+      data = bd.buffer.asUint8List();
     } finally {}
     return data;
   }
@@ -208,6 +223,8 @@ class ApplicationState extends ChangeNotifier {
         .collection("sites")
         .doc(newSite.name)
         .collection("ratings");
+
+    notifyListeners();
   }
 
   Future<double> getUserRating(String siteName) async {

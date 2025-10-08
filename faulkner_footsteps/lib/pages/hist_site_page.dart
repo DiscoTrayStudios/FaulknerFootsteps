@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating/flutter_rating.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import 'package:swipe_image_gallery/swipe_image_gallery.dart';
 
 class HistSitePage extends StatefulWidget {
@@ -16,11 +17,8 @@ class HistSitePage extends StatefulWidget {
   const HistSitePage({
     super.key,
     required this.histSite,
-    required this.app_state,
     required this.currentPosition,
   });
-
-  final ApplicationState app_state;
 
   @override
   State<StatefulWidget> createState() => _HistSitePage();
@@ -29,16 +27,23 @@ class HistSitePage extends StatefulWidget {
 class _HistSitePage extends State<HistSitePage> {
   late double personalRating;
   final Distance _distance = new Distance();
+  late ApplicationState app_state;
 
   @override
   void initState() {
     personalRating = 0.0;
-    getUserRating();
     super.initState();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    app_state = Provider.of<ApplicationState>(context, listen: false);
+    getUserRating();
+  }
+
   void getUserRating() async {
-    personalRating = await widget.app_state.getUserRating(widget.histSite.name);
+    personalRating = await app_state.getUserRating(widget.histSite.name);
     setState(() {});
   }
 
@@ -178,7 +183,6 @@ class _HistSitePage extends State<HistSitePage> {
                                               initialPosition: LatLng(
                                                   widget.histSite.lat,
                                                   widget.histSite.lng),
-                                              appState: widget.app_state,
                                               centerPosition: LatLng(
                                                   widget.histSite.lat,
                                                   widget.histSite.lng),
@@ -236,7 +240,7 @@ class _HistSitePage extends State<HistSitePage> {
                       child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: FutureBuilder<Uint8List?>(
-                            future: widget.app_state
+                            future: app_state
                                 .getImage(widget.histSite.imageUrls[index]),
                             builder: (context, snapshot) {
                               if (widget.histSite.images.length > 0 &&
@@ -316,8 +320,7 @@ class _HistSitePage extends State<HistSitePage> {
                       widget.histSite.updateRating(
                           personalRating, rating, personalRating == 0.0);
                       personalRating = rating;
-                      widget.app_state
-                          .updateSiteRating(widget.histSite.name, rating);
+                      app_state.updateSiteRating(widget.histSite.name, rating);
                     });
                   },
                   borderColor: Colors.amber,
