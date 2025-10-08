@@ -10,17 +10,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:faulkner_footsteps/objects/list_item.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class ListPage extends StatefulWidget {
   ListPage({super.key});
-
-  ApplicationState app_state = ApplicationState();
 
   @override
   State<ListPage> createState() => _ListPageState();
 }
 
 class _ListPageState extends State<ListPage> {
+  late ApplicationState app_state;
   static LatLng? _currentPosition;
   void getlocation() async {
     bool serviceEnabled;
@@ -50,14 +50,6 @@ class _ListPageState extends State<ListPage> {
     setState(() {
       _currentPosition = LatLng(lat, long);
     });
-}
-
-  void _update(Timer timer) {
-    setState(() {});
-    if (displaySites.isNotEmpty) {
-      updateTimer.cancel();
-      // print("update loop");
-    }
   }
 
   late Timer updateTimer;
@@ -75,15 +67,31 @@ class _ListPageState extends State<ListPage> {
   @override
   void initState() {
     getlocation();
-    updateTimer = Timer.periodic(const Duration(milliseconds: 1000), _update);
-    displaySites = widget.app_state.historicalSites;
-    fullSiteList = widget.app_state.historicalSites;
-    // activeFilters.addAll(widget.app_state
-    // .siteFilters); //I suspect that this doesn't load quickly enough and that is why active filters starts empty
-    searchSites = fullSiteList;
+    super.initState();
+    print("reached init state");
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print("reached didchange dependencies");
+    app_state = Provider.of<ApplicationState>(context, listen: false);
+    setState(() {
+      print("reached");
+      displaySites = app_state.historicalSites;
+      fullSiteList = app_state.historicalSites;
+      searchSites = fullSiteList;
+      activeFilters.clear();
+      activeFilters.addAll(app_state.siteFilters);
+    });
 
     _searchController = SearchController();
-    super.initState();
+
+    app_state.addListener(() {
+      print("historical sites list has changed!!!");
+      setState(() {
+        setDisplayItems();
+      });
+    });
   }
 
 //TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
@@ -131,11 +139,10 @@ class _ListPageState extends State<ListPage> {
                   height: MediaQuery.of(context).size.height / 9,
                   child: Stack(children: [
                     ListView.builder(
-                      itemCount: widget.app_state.siteFilters.length,
+                      itemCount: app_state.siteFilters.length,
                       scrollDirection: Axis.horizontal,
                       itemBuilder: (context, index) {
-                        SiteFilter currentFilter =
-                            widget.app_state.siteFilters[index];
+                        SiteFilter currentFilter = app_state.siteFilters[index];
                         return Padding(
                           padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
                           // padding: EdgeInsets.all(8),
@@ -207,7 +214,7 @@ class _ListPageState extends State<ListPage> {
                 HistSite site = displaySites[index - 1];
 
                 return ListItem(
-                    app_state: widget.app_state,
+                    app_state: app_state,
                     siteInfo: site,
                     currentPosition: _currentPosition ?? LatLng(0, 0));
               }
@@ -220,7 +227,7 @@ class _ListPageState extends State<ListPage> {
 
   void sortDisplayItems() {
     List<HistSite> lst = [];
-    siteLocations = widget.app_state.getLocations();
+    siteLocations = app_state.getLocations();
     siteDistances = getDistances(siteLocations);
     sorted = Map.fromEntries(siteDistances.entries.toList()
       ..sort((e1, e2) => e1.value.compareTo(e2.value)));
@@ -244,15 +251,30 @@ class _ListPageState extends State<ListPage> {
   }
 
   void setDisplayItems() {
-    if (fullSiteList.isEmpty) {
-      fullSiteList = widget.app_state.historicalSites;
-      displaySites.addAll(fullSiteList);
+    fullSiteList = app_state.historicalSites;
+    displaySites.clear();
+    displaySites.addAll(fullSiteList);
+    // This results in edits not taking place
 
-      // print("Full Site List: $fullSiteList");
-      // print("Display Sites: $displaySites");
-      activeFilters.addAll(widget.app_state.siteFilters);
-      // print("ALL active filters: $activeFilters");
-    }
+    // bool shouldAdd = true;
+    // for (HistSite site in fullSiteList) {
+    //   for (HistSite tst in displaySites) {
+    //     if (tst.name == site.name) {
+    //       shouldAdd = false;
+    //       break;
+    //     }
+    //   }
+    //   if (shouldAdd) displaySites.add(site);
+    //   shouldAdd = true;
+    // }
+
+    setState(() {});
+    // print("Full Site List: $fullSiteList");
+    // print("Display Sites: $displaySites");
+    print("setDisplayItems is called");
+    activeFilters.clear();
+    activeFilters.addAll(app_state.siteFilters);
+    // print("ALL active filters: $activeFilters");
     /*
       I want to put the other filter last, so I remove it from th e
     */
@@ -298,7 +320,6 @@ class _ListPageState extends State<ListPage> {
     //     newDisplaySites.add(site);
     //   }
     // }
-    
 
     setState(() {
       displaySites = newDisplaySites.toList();
@@ -448,7 +469,7 @@ class _ListPageState extends State<ListPage> {
         child: CircularProgressIndicator(),
       );
     }
-    setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
+    //setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 238, 214, 196),
       appBar: AppBar(
@@ -484,7 +505,6 @@ class _ListPageState extends State<ListPage> {
           : MapDisplay(
               currentPosition: _currentPosition!,
               initialPosition: _currentPosition!,
-              appState: widget.app_state,
             ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 107, 79, 79),
