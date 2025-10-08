@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:ui';
 import 'package:faulkner_footsteps/app_state.dart';
@@ -9,6 +8,7 @@ import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,14 +22,19 @@ import 'package:uuid/uuid.dart';
 
 class AdminListPage extends StatefulWidget {
   AdminListPage({super.key});
-  // final ApplicationState app_state = ApplicationState();
+  final ApplicationState app_state = ApplicationState();
 
   @override
   State<AdminListPage> createState() => _AdminListPageState();
 }
+  class ImageWithUrl {
+  Uint8List? imageData;
+  String url;
+  
+  ImageWithUrl({required this.imageData, required this.url});
+}
 
 class _AdminListPageState extends State<AdminListPage> {
-  late ApplicationState app_state;
   late Timer updateTimer;
   int _selectedIndex = 0;
   File? image;
@@ -43,39 +48,15 @@ class _AdminListPageState extends State<AdminListPage> {
   @override
   void initState() {
     super.initState();
-
-    // app_state.adminImagesReady.addListener(() {
-    //   if (app_state.adminImagesReady.value) {
-    //     setState(() {
-
-    //     });
-    //   }
-    // })
     updateTimer = Timer.periodic(const Duration(milliseconds: 500), _update);
     // acceptableFilters.addAll(siteFilter.values);
     // acceptableFilters.remove(siteFilter.Other);
-  }
-
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    app_state = Provider.of<ApplicationState>(context, listen: false);
-    print("AppState: ${app_state.historicalSites.length}");
-    acceptableFilters = app_state.siteFilters;
-    app_state.addListener(() {
-      print("Appstate has changed!");
-      setState(() {});
-      // if (mounted) {
-      // setState(() {
-      //   acceptableFilters =
-      //       app_state.siteFilters; // Might be necessary, idk really
-      // });
-      // }
-    });
+    acceptableFilters = widget.app_state.siteFilters;
   }
 
   void _update(Timer timer) {
     setState(() {});
-    if (app_state.historicalSites.isNotEmpty) {
+    if (widget.app_state.historicalSites.isNotEmpty) {
       updateTimer.cancel();
     }
   }
@@ -213,6 +194,7 @@ class _AdminListPageState extends State<AdminListPage> {
           builder: (context) => MapDisplay(
             currentPosition: const LatLng(2, 2),
             initialPosition: const LatLng(2, 2),
+            appState: widget.app_state,
           ),
         ),
       );
@@ -498,7 +480,7 @@ class _AdminListPageState extends State<AdminListPage> {
                         lat: double.tryParse(latController.text) ?? 0.0,
                         lng: double.tryParse(lngController.text) ?? 0.0,
                       );
-                      app_state.addSite(newSite);
+                      widget.app_state.addSite(newSite);
                       Navigator.pop(context);
                       setState(() {});
                     }
@@ -777,12 +759,12 @@ class _AdminListPageState extends State<AdminListPage> {
                             const Color.fromARGB(255, 218, 186, 130),
                       ),
                       onPressed: () {
-                        _showEditSiteImagesDialog(site);
+                        _showEditSiteImagesDialog(site.images, site.imageUrls);
                         print("Reached post dialog opening");
                         print("Length p: ${site.images.length}");
-                        // for (Uint8List? s in site.images) {
-                        // //  print("Image: $s");
-                        // }
+                        for (Uint8List? s in site.images) {
+                          print("Image: $s");
+                        }
                       },
                       child: const Text('Edit Images'),
                     ),
@@ -794,9 +776,6 @@ class _AdminListPageState extends State<AdminListPage> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
-
-// beginning of submit button ------------------------------
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 218, 186, 130),
@@ -918,11 +897,11 @@ class _AdminListPageState extends State<AdminListPage> {
                       // If name changed, delete old document and create new one
                       if (originalName != nameController.text) {
                         oldDocRef.delete().then((_) {
-                          app_state.addSite(updatedSite);
+                          widget.app_state.addSite(updatedSite);
                         });
                       } else {
                         // Just update existing document
-                        app_state.addSite(updatedSite);
+                        widget.app_state.addSite(updatedSite);
                       }
 
                       Navigator.pop(context);
@@ -939,301 +918,115 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-  Future<void> _showEditSiteImagesDialog(HistSite site) {
-    List<Uint8List?> siteImages = site.images;
-    List<String> siteImageURLs = site.imageUrls;
-    List<String> listOfSelectedImages = [];
-    List<String> markedForRemoval = [];
-    List<Uint8List?> copyOfOriginalList = [];
-    List<String> copyOfOriginalURLList = [];
-    copyOfOriginalList.addAll(siteImages);
-    copyOfOriginalURLList.addAll(siteImageURLs);
-    bool siteImagesLoaded = false;
-    Map<String, Future<Uint8List?>> imageFutures = {};
-    for (final url in siteImageURLs) {
-      imageFutures[url] = app_state.getImage(url);
-    }
-
-    Widget buildImage(String url) {
-      siteImagesLoaded = false;
-      return FutureBuilder(
-          future: imageFutures[url],
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError || !snapshot.hasData) {
-              return Image.asset(
-                'assets/images/faulkner_thumbnail.png',
-                fit: BoxFit.contain,
-              );
-            } else {
-              return Image.memory(snapshot.data!, fit: BoxFit.contain);
+Future<void> _showEditSiteImagesDialog(
+    List<Uint8List?> siteImages, List<String> siteImageURLs) async {
+  
+  // Create paired list of images with their URLs to maintain the relationship
+  List<ImageWithUrl> pairedImages = [];
+  for (int i = 0; i < siteImages.length; i++) {
+    pairedImages.add(ImageWithUrl(
+      imageData: siteImages[i],
+      url: i < siteImageURLs.length ? siteImageURLs[i] : "",
+    ));
+  }
+  
+  await showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return ListEdit<ImageWithUrl>(
+        title: "Edit Images",
+        items: pairedImages,
+        itemBuilder: (imageWithUrl) => Image.memory(
+          imageWithUrl.imageData!, 
+          fit: BoxFit.contain
+        ),
+        addButtonText: "Add Images",
+        deleteButtonText: "Delete Images",
+        onAddItem: () async {
+          await pickImages();
+          if (images != null) {
+            for (File imageFile in images!) {
+              Uint8List newFile = await imageFile.readAsBytes();
+              pairedImages.add(ImageWithUrl(
+                imageData: newFile,
+                url: "",
+              ));
             }
-          });
-    }
-
-    Widget buildImage2(int index) {
-      siteImagesLoaded = true;
-      return Image.memory(siteImages[index]!, fit: BoxFit.contain);
-    }
-
-    return showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (BuildContext context) {
-          print("URL length: ${siteImageURLs.length}");
-          return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              // actionsAlignment: MainAxisAlignment.spaceBetween,
-              actionsOverflowAlignment: OverflowBarAlignment.center,
-              actionsOverflowDirection: VerticalDirection.down,
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                "Edit Images",
-                style: GoogleFonts.ultra(
-                    textStyle:
-                        const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
-              ),
-              content: Column(children: [
-                SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.6,
-                    width: MediaQuery.of(context).size.width * 0.75,
-                    child: ReorderableListView.builder(
-                        proxyDecorator: (child, index, animation) {
-                          return AnimatedBuilder(
-                            animation: animation,
-                            child: child,
-                            builder: (context, animatedChild) {
-                              final double animValue =
-                                  Curves.easeInOut.transform(animation.value);
-                              final double elevation =
-                                  lerpDouble(1, 20, animValue)!;
-                              final double scale =
-                                  lerpDouble(1, 1.1, animValue)!;
-                              return Transform.scale(
-                                scale: scale,
-                                // Create a Card based on the color and the content of the dragged one
-                                // and set its elevation to the animated value.
-                                child: Material(
-                                    elevation: elevation,
-                                    color: Color.fromARGB(255, 255, 243, 228),
-                                    child: animatedChild),
-                              );
-                            },
-                          );
-                        },
-                        buildDefaultDragHandles: false,
-                        scrollDirection: Axis.vertical,
-                        itemCount: siteImageURLs.length,
-                        onReorder: (int oldIndex, int newIndex) {
-                          setState(() {
-                            if (oldIndex < newIndex) {
-                              newIndex -= 1;
-                            }
-                            if (siteImagesLoaded) {
-                              final Uint8List? item =
-                                  siteImages.removeAt(oldIndex);
-                              siteImages.insert(newIndex, item);
-                            }
-
-                            final String URLItem =
-                                siteImageURLs.removeAt(oldIndex);
-                            siteImageURLs.insert(newIndex, URLItem);
-
-                            print("Old Index: $oldIndex");
-                            print("New Index: $newIndex");
-                          });
-                        },
-                        itemBuilder: (BuildContext context, int index) {
-                          return Card(
-                            elevation: 8,
-                            shadowColor: Color.fromARGB(255, 107, 79, 79),
-                            key: ValueKey(siteImageURLs[index]),
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            color: const Color.fromARGB(255, 238, 214, 196),
-                            child: ListTile(
-                              leading: Checkbox(
-                                  activeColor:
-                                      const Color.fromARGB(255, 107, 79, 79),
-                                  value: listOfSelectedImages
-                                      .contains(siteImageURLs[index]),
-                                  onChanged: (bool? value) {
-                                    print("Image checkbox checked!!");
-                                    setState(() {
-                                      if (!value!) {
-                                        listOfSelectedImages
-                                            .remove(siteImageURLs[index]);
-                                      } else {
-                                        listOfSelectedImages
-                                            .add(siteImageURLs[index]!);
-                                      }
-                                    });
-                                  }),
-                              //TODO! siteimages never changes on reorder. lets make a boolean to see whether we can do this or not?
-                              title: !siteImages.isEmpty &&
-                                      siteImages[index] != null
-                                  ? buildImage2(index)
-                                  : buildImage(siteImageURLs[index]),
-                              trailing: ReorderableDragStartListener(
-                                  index: index, child: Icon(Icons.drag_handle)),
-                            ),
-                          );
-                        })),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 218, 186, 130)),
-                        onPressed: () {
-                          for (String item in listOfSelectedImages) {
-                            if (item != null) {
-                              markedForRemoval.add(item);
-                            }
-                          }
-                          setState(() {
-                            for (int i = 0; i < siteImageURLs.length; i++) {
-                              if (siteImageURLs[i] == (markedForRemoval[i])) {
-                                siteImageURLs.removeAt(i);
-                                siteImages.removeAt(i);
-                                print("yay");
-                              }
-                            }
-                          });
-                          markedForRemoval.clear();
-                          print("Delete Images button is pressed");
-
-                        },
-                        buildDefaultDragHandles: false,
-                        scrollDirection: Axis.vertical,
-                        itemCount: siteImages.length,
-                        onReorder: (int oldIndex, int newIndex) {
-                          setState(() {
-                            if (oldIndex < newIndex) {
-                              newIndex -= 1;
-                            }
-                            final Uint8List? item = siteImages.removeAt(oldIndex);
-                            siteImages.insert(newIndex, item);
-
-                            final String URLItem =
-                                siteImageURLs.removeAt(oldIndex);
-                            siteImageURLs.insert(newIndex, URLItem);
-                          });
-                        },
-                        itemBuilder: (BuildContext context, int index) {
-                          return Card(
-                            elevation: 8,
-                            shadowColor: Color.fromARGB(255, 107, 79, 79),
-                            key: Key('$index'),
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            color: const Color.fromARGB(255, 238, 214, 196),
-                            child: ListTile(
-                              leading: Checkbox(
-                                  activeColor:
-                                      const Color.fromARGB(255, 107, 79, 79),
-                                  value: listOfSelectedImages
-                                      .contains(siteImages[index]),
-                                  onChanged: (bool? value) {
-                                    setState(() {
-                                      if (!value!) {
-                                        listOfSelectedImages
-                                            .remove(siteImages[index]);
-                                      } else {
-                                        listOfSelectedImages
-                                            .add(siteImages[index]!);
-                                      }
-                                    });
-                                  }),
-                              title: Image.memory(siteImages[index]!,
-                                  fit: BoxFit.contain),
-                              trailing: ReorderableDragStartListener(
-                                  index: siteImages.indexOf(siteImages[index]),
-                                  child: Icon(Icons.drag_handle)),
-                            ),
-                          );
-                        }),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                      child : ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 218, 186, 130)),
-                          onPressed: () {
-                            for (Uint8List? item in listOfSelectedImages) {
-                              if (item != null) {
-                                markedForRemoval.add(item);
-                              }
-                            }
-                            setState(() {
-                              siteImages.removeWhere(
-                                  (test) => markedForRemoval.contains(test));
-                            });
-                            markedForRemoval.clear();
-                          },
-                          child: const Text("Delete")),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(child:
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 218, 186, 130)),
-                          onPressed: () async {
-                            List<File> newImages = [];
-                            await pickImages();
-                            if (images != null) {
-                              newImages = images!;
-                            }
-                            List<Uint8List> newInt8List = [];
-                            for (File i in newImages) {
-                              Uint8List newFile = await i.readAsBytes();
-                              newInt8List.add(newFile);
-                            }
-                            siteImages.addAll(newInt8List);
-                            setState(() {});
-                          },
-                          child: const Text("Add Images")),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    siteImages.clear();
-                    siteImages.addAll(copyOfOriginalList); //reset the list
-                    siteImageURLs.clear();
-                    siteImageURLs.addAll(copyOfOriginalURLList);
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color.fromARGB(255, 218, 186, 130)),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Submit Changes"))
-            ],
-          );
-        });
-      });
+            images = null;
+          }
+        },
+        onSubmit: () async {
+          for (String url in siteImageURLs) {
+            bool stillExists = pairedImages.any((img) => img.url == url);
+            if (!stillExists && url.isNotEmpty) {
+              try {
+                await storageRef.child(url).delete();
+              } catch (e) {
+              }
+            }
+          }
+          siteImages.clear();
+          siteImageURLs.clear();
+          for (var pair in pairedImages) {
+            siteImages.add(pair.imageData);
+            siteImageURLs.add(pair.url);
+          }
+          
+        },
+      );
+    },
+  );
+  
+  setState(() {});
 }
+Future<void> _showEditFiltersDialog() async {
+  await showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return ListEdit<SiteFilter>(
+        title: "Edit Filters",
+        items: widget.app_state.siteFilters,
+        itemBuilder: (filter) => Text(
+          filter.name,
+          style: GoogleFonts.ultra(
+            textStyle: const TextStyle(
+              color: Color.fromARGB(255, 76, 32, 8),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        addButtonText: "Add Filter",
+        deleteButtonText: "Delete Filters",
+        onAddItem: () async {
+          await showAddFilterDialog();
+        },
+        onSubmit: () async {
+          final snapshot = await FirebaseFirestore.instance
+              .collection("filters")
+              .get();
+          Set<String> firestoreFilterNames = {};
+          for (var doc in snapshot.docs) {
+            firestoreFilterNames.add(doc.get("name"));
+          }
+          for (String filterName in firestoreFilterNames) {
+            bool stillExists = widget.app_state.siteFilters
+                .any((f) => f.name == filterName);
+            if (!stillExists) {
+              await widget.app_state.removeFilter(filterName);
+              print("Removed filter: $filterName");
+            }
+          }
+          await widget.app_state.saveFilterOrder();
+        },
+      );
+    },
+  );
+  
+  setState(() {});
+}
+
 
   Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
     final titleController = TextEditingController(text: blurbs[index].title);
@@ -1344,13 +1137,13 @@ class _AdminListPageState extends State<AdminListPage> {
                           const Color.fromARGB(255, 218, 186, 130)),
                   onPressed: () async {
                     //do stuff
-                    for (SiteFilter filter in app_state.siteFilters) {
+                    for (SiteFilter filter in widget.app_state.siteFilters) {
                       if (filter.name == nameController.text) {
                         print("Filter is already added!");
                         return;
                       }
                     }
-                    app_state.addFilter(nameController.text);
+                    widget.app_state.addFilter(nameController.text);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -1360,7 +1153,7 @@ class _AdminListPageState extends State<AdminListPage> {
             );
           });
         });
-  }
+  } 
 
   Widget _buildAdminContent() {
     return Column(
@@ -1388,18 +1181,18 @@ class _AdminListPageState extends State<AdminListPage> {
                 backgroundColor: const Color.fromARGB(255, 218, 186, 130),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
-            onPressed: showAddFilterDialog,
+            onPressed: _showEditFiltersDialog,
             child: Text(
-              "Add New Filter Type",
+              "Edit Filters",
               style: GoogleFonts.ultra(
                   textStyle:
                       const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
             )),
         Expanded(
           child: ListView.builder(
-            itemCount: app_state.historicalSites.length,
+            itemCount: widget.app_state.historicalSites.length,
             itemBuilder: (BuildContext context, int index) {
-              final site = app_state.historicalSites[index];
+              final site = widget.app_state.historicalSites[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 color: const Color.fromARGB(255, 238, 214, 196),
@@ -1499,7 +1292,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                                   .doc(site.name)
                                                   .delete();
                                               setState(() {
-                                                app_state.historicalSites
+                                                widget.app_state.historicalSites
                                                     .removeWhere((s) =>
                                                         s.name == site.name);
                                               });
@@ -1548,6 +1341,7 @@ class _AdminListPageState extends State<AdminListPage> {
           : MapDisplay(
               currentPosition: const LatLng(2, 2),
               initialPosition: const LatLng(2, 2),
+              appState: widget.app_state,
             ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 218, 180, 130),
@@ -1572,7 +1366,6 @@ class _AdminListPageState extends State<AdminListPage> {
   @override
   void dispose() {
     updateTimer.cancel();
-
     super.dispose();
   }
 }

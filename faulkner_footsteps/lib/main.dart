@@ -4,7 +4,6 @@ import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/pages/hist_site_page.dart';
-import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:faulkner_footsteps/app_router.dart';
@@ -39,9 +38,9 @@ void main() async {
   // // ···
 
   runApp(
-    ChangeNotifierProvider<ApplicationState>(
+    ChangeNotifierProvider(
       create: (_) => ApplicationState(),
-      child: const MyApp(),
+      child: MyApp(),
     ),
   );
 }
@@ -62,144 +61,146 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
 
-//   final String title;
+  final String title;
 
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-// class _MyHomePageState extends State<MyHomePage> {
-//   ApplicationState app_state = ApplicationState();
-//   List<HistSite> historical_sites = [];
-//   int _counter = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  ApplicationState app_state = ApplicationState();
+  List<HistSite> historical_sites = [];
+  int _counter = 0;
 
-//   void _incrementCounter() {
-//     setState(() {
-//       _counter++;
-//       FirebaseFirestore.instance
-//           .collection('rooms')
-//           .doc('mainroom')
-//           .collection('players');
-//       HistSite newSite = HistSite(
-//         name: "The Big Church",
-//         description: "This is a large church",
-//         blurbs: [
-//           InfoText(
-//               title: "Historical Significance",
-//               value:
-//                   "The big church is a large church with a long history of doing stuff and things beyond the current eternity of existence.",
-//               date: "10/2/34"),
-//           InfoText(
-//               title: "Secondary Elist",
-//               value:
-//                   "This does not have a date but we still exist beyond the current state of human understanding and everything is something to another ellos")
-//         ],
-//         imageUrls: [],
-//         filters: [],
-//         //added ratings here
-//         avgRating: 0.0,
-//         ratingAmount: 0,
-//         lat: 0,
-//         lng: 0,
-//       );
-//       app_state.addSite(newSite);
-//       print(historical_sites);
-//     });
-//   }
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+      FirebaseFirestore.instance
+          .collection('rooms')
+          .doc('mainroom')
+          .collection('players');
+      HistSite newSite = HistSite(
+        name: "The Big Church",
+        description: "This is a large church",
+        blurbs: [
+          InfoText(
+              title: "Historical Significance",
+              value:
+                  "The big church is a large church with a long history of doing stuff and things beyond the current eternity of existence.",
+              date: "10/2/34"),
+          InfoText(
+              title: "Secondary Elist",
+              value:
+                  "This does not have a date but we still exist beyond the current state of human understanding and everything is something to another ellos")
+        ],
+        imageUrls: [],
+        filters: [],
+        //added ratings here
+        avgRating: 0.0,
+        ratingAmount: 0,
+        lat: 0,
+        lng: 0,
+      );
+      app_state.addSite(newSite);
+      print(historical_sites);
+    });
+  }
 
-//   //launches Rating Dialog
-//   Future<void> showRatingDialog(
-//       ApplicationState appState, String newSiteName) async {
-//     await showDialog<double>(
-//       context: context,
-//       builder: (BuildContext context) => RatingDialog(site_name: newSiteName),
-//     );
-//   }
+  //launches Rating Dialog
+  Future<void> showRatingDialog(
+      ApplicationState appState, String newSiteName) async {
+    await showDialog<double>(
+      context: context,
+      builder: (BuildContext context) =>
+          RatingDialog(app_state: appState, site_name: newSiteName),
+    );
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     // Sample HistSite object
-//     HistSite sampleSite = HistSite(
-//       name: "Sample Site",
-//       description: "A simple same site for debugging.",
-//       blurbs: [
-//         InfoText(
-//             title: "Introduction",
-//             value: "This is a sample historical site.",
-//             date: "01/01/2024"),
-//         InfoText(
-//             title: "Significance",
-//             value: "It played a major role in local history."),
-//       ],
-//       imageUrls: [
-//         /*
-//         AssetImage('assets/images/AutobotLogo.png'),
-//         AssetImage('assets/images/AutobotLogo2.png'),
-//         AssetImage('assets/images/AutobotLogo.png'),
-//         */
-//       ], // Add images if available
-//       filters: [],
-//       avgRating: 0.0,
-//       ratingAmount: 0,
-//       lat: 0,
-//       lng: 0,
-//     );
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-//         title: Text(widget.title),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             const Text(
-//               'You have pushed the button this many times:',
-//             ),
-//             Text(
-//               '$_counter',
-//               style: Theme.of(context).textTheme.headlineMedium,
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Navigate to HistSitePage with sampleSite
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(
-//                     builder: (context) => HistSitePage(
-//                       histSite: sampleSite,
-//                       currentPosition: LatLng(0, 0),
-//                     ),
-//                   ),
-//                 );
-//               },
-//               child: const Text("View Sample Site"),
-//             ),
-//             const SizedBox(height: 20),
-//             // Button for launching rating dialog
-//             ElevatedButton(
-//               onPressed: () {},
-//               child: const Text("Rate this spot"),
-//             ),
-//             SizedBox(
-//                 height: 500,
-//                 child: ListView.builder(
-//                     itemCount: app_state.historicalSites.length,
-//                     itemBuilder: (BuildContext context, int index) {
-//                       print("${app_state.historicalSites.length} eldritch");
-//                       HistSite site = app_state.historicalSites[index];
-//                       return TextBlurb(
-//                         site.name,
-//                         site.blurbs.toString(),
-//                         "",
-//                       );
-//                     }))
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    // Sample HistSite object
+    HistSite sampleSite = HistSite(
+      name: "Sample Site",
+      description: "A simple same site for debugging.",
+      blurbs: [
+        InfoText(
+            title: "Introduction",
+            value: "This is a sample historical site.",
+            date: "01/01/2024"),
+        InfoText(
+            title: "Significance",
+            value: "It played a major role in local history."),
+      ],
+      imageUrls: [
+        /*
+        AssetImage('assets/images/AutobotLogo.png'),
+        AssetImage('assets/images/AutobotLogo2.png'),
+        AssetImage('assets/images/AutobotLogo.png'),
+        */
+      ], // Add images if available
+      filters: [],
+      avgRating: 0.0,
+      ratingAmount: 0,
+      lat: 0,
+      lng: 0,
+    );
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text(
+              'You have pushed the button this many times:',
+            ),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to HistSitePage with sampleSite
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HistSitePage(
+                      app_state: app_state,
+                      histSite: sampleSite,
+                      currentPosition: LatLng(0, 0),
+                    ),
+                  ),
+                );
+              },
+              child: const Text("View Sample Site"),
+            ),
+            const SizedBox(height: 20),
+            // Button for launching rating dialog
+            ElevatedButton(
+              onPressed: () {},
+              child: const Text("Rate this spot"),
+            ),
+            SizedBox(
+                height: 500,
+                child: ListView.builder(
+                    itemCount: app_state.historicalSites.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      print("${app_state.historicalSites.length} eldritch");
+                      HistSite site = app_state.historicalSites[index];
+                      return TextBlurb(
+                        site.name,
+                        site.blurbs.toString(),
+                        "",
+                      );
+                    }))
+          ],
+        ),
+      ),
+    );
+  }
+}

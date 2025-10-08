@@ -7,15 +7,11 @@
 
 import 'package:faulkner_footsteps/pages/login_page.dart';
 import 'package:faulkner_footsteps/pages/start_page.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:faulkner_footsteps/main.dart';
 
-import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:faulkner_footsteps/pages/start_page.dart';
-import 'package:faulkner_footsteps/app_state.dart';
 
 void main() {
   // test('Blurbs are converted into readable strings', () async {
