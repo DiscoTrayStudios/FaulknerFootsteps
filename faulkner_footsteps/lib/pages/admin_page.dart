@@ -987,10 +987,8 @@ Future<void> _showEditSiteImagesDialog(
   
   setState(() {}); // Refresh the parent dialog
 }
-Future<void> _showEditFiltersDialog() {
-    List<SiteFilter> originalFilters = List.from(widget.app_state.siteFilters);
-  
-  return showDialog(
+Future<void> _showEditFiltersDialog() async {
+  await showDialog(
     barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
@@ -1012,6 +1010,7 @@ Future<void> _showEditFiltersDialog() {
           await showAddFilterDialog();
         },
         onSubmit: () async {
+          // Get filters that exist in Firestore
           final snapshot = await FirebaseFirestore.instance
               .collection("filters")
               .get();
@@ -1020,19 +1019,25 @@ Future<void> _showEditFiltersDialog() {
           for (var doc in snapshot.docs) {
             firestoreFilterNames.add(doc.get("name"));
           }
-        
+          
+          // Delete filters that are no longer in the local list
           for (String filterName in firestoreFilterNames) {
             bool stillExists = widget.app_state.siteFilters
                 .any((f) => f.name == filterName);
             if (!stillExists) {
               await widget.app_state.removeFilter(filterName);
-              print("Removed filter from Firebase: $filterName");
+              print("Removed filter: $filterName");
             }
           }
+          
+          // Save the new order to Firebase
+          await widget.app_state.saveFilterOrder();
         },
       );
     },
   );
+  
+  setState(() {});
 }
 
 

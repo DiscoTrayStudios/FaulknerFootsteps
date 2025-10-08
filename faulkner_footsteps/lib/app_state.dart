@@ -321,50 +321,79 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
-  Future<void> loadFilters() async {
-    if (!_loggedIn) return;
+Future<void> loadFilters() async {
+  if (!_loggedIn) return;
 
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
 
-    try {
-      _siteFilters.clear();
-      //is this try needed?
-      final snapshot =
-          await FirebaseFirestore.instance.collection("filters").get();
-      for (final document in snapshot.docs) {
-        String name = document.get("name");
-        SiteFilter f = new SiteFilter(name: name);
-        _siteFilters.add(f);
-        print("filter added: $name");
-      }
-      if (!_siteFilters.any((f) => f.name == "Other")) {
-        _siteFilters.add(SiteFilter(name: "Other"));
-      }
-    } catch (e) {
-      print("Error loading filters: $e");
+  try {
+    _siteFilters.clear();
+    
+    final snapshot = await FirebaseFirestore.instance
+        .collection("filters")
+        .orderBy("order") // Sort by order field
+        .get();
+        
+    for (final document in snapshot.docs) {
+      String name = document.get("name");
+      int order = document.data().containsKey("order") 
+          ? document.get("order") 
+          : 0;
+      SiteFilter f = SiteFilter(name: name, order: order);
+      _siteFilters.add(f);
+      print("filter added: $name with order: $order");
     }
+    
+    if (!_siteFilters.any((f) => f.name == "Other")) {
+      _siteFilters.add(SiteFilter(name: "Other", order: 9999));
+    }
+  } catch (e) {
+    print("Error loading filters: $e");
   }
+}
 
   Future<void> addFilter(String name) async {
-    if (!_loggedIn) return;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (!_loggedIn) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
 
-    if (userId == null) return;
+  try {
+    // New filters go at the end
+    int newOrder = _siteFilters.length;
+    _siteFilters.add(SiteFilter(name: name, order: newOrder));
 
-    try {
-      _siteFilters.add(SiteFilter(name: name));
+    var data = {
+      "name": name,
+      "order": newOrder,
+    };
 
-      var data = {"name": name};
-
+    await FirebaseFirestore.instance
+        .collection("filters")
+        .doc(name)
+        .set(data);
+  } catch (e) {
+    print("Error saving filter: $e");
+  }
+}
+Future<void> saveFilterOrder() async {
+  if (!_loggedIn) return;
+  
+  try {
+    // Update the order field for each filter
+    for (int i = 0; i < _siteFilters.length; i++) {
+      _siteFilters[i].order = i;
+      
       await FirebaseFirestore.instance
           .collection("filters")
-          .doc(name)
-          .set(data);
-    } catch (e) {
-      print("Error saving filter: $e");
+          .doc(_siteFilters[i].name)
+          .update({"order": i});
     }
+    print("Filter order saved");
+  } catch (e) {
+    print("Error saving filter order: $e");
   }
+}
   Future<void> removeFilter(String name) async {
   if (!_loggedIn) return;
   final userId = FirebaseAuth.instance.currentUser?.uid;
