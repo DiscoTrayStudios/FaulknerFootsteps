@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:faulkner_footsteps/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:faulkner_footsteps/app_router.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -39,13 +37,6 @@ class _StartPageState extends State<StartPage>
         fadeOutAudio();
       });
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final appState = Provider.of<ApplicationState>(context, listen: false);
-    print("✅ appState loaded in startpage: ${appState.historicalSites.length}");
   }
 
   // Handles the fade out of the Guitar strum
