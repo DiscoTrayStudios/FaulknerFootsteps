@@ -950,27 +950,22 @@ Future<void> _showEditSiteImagesDialog(
               Uint8List newFile = await imageFile.readAsBytes();
               pairedImages.add(ImageWithUrl(
                 imageData: newFile,
-                url: "", // Empty URL for new images that haven't been uploaded yet
+                url: "",
               ));
             }
-            images = null; // Clear the temporary images list
+            images = null;
           }
         },
         onSubmit: () async {
-          // Delete removed images from Firebase Storage
           for (String url in siteImageURLs) {
             bool stillExists = pairedImages.any((img) => img.url == url);
             if (!stillExists && url.isNotEmpty) {
               try {
                 await storageRef.child(url).delete();
-                print("Deleted from storage: $url");
               } catch (e) {
-                print("Error deleting $url: $e");
               }
             }
           }
-          
-          // Update the original lists with the reordered/modified items
           siteImages.clear();
           siteImageURLs.clear();
           for (var pair in pairedImages) {
@@ -978,14 +973,12 @@ Future<void> _showEditSiteImagesDialog(
             siteImageURLs.add(pair.url);
           }
           
-          print("Images after reordering: ${siteImages.length}");
-          print("URLs after reordering: ${siteImageURLs.length}");
         },
       );
     },
   );
   
-  setState(() {}); // Refresh the parent dialog
+  setState(() {});
 }
 Future<void> _showEditFiltersDialog() async {
   await showDialog(
@@ -1000,7 +993,7 @@ Future<void> _showEditFiltersDialog() async {
           style: GoogleFonts.ultra(
             textStyle: const TextStyle(
               color: Color.fromARGB(255, 76, 32, 8),
-              fontSize: 16,
+              fontSize: 12,
             ),
           ),
         ),
@@ -1010,17 +1003,13 @@ Future<void> _showEditFiltersDialog() async {
           await showAddFilterDialog();
         },
         onSubmit: () async {
-          // Get filters that exist in Firestore
           final snapshot = await FirebaseFirestore.instance
               .collection("filters")
               .get();
-          
           Set<String> firestoreFilterNames = {};
           for (var doc in snapshot.docs) {
             firestoreFilterNames.add(doc.get("name"));
           }
-          
-          // Delete filters that are no longer in the local list
           for (String filterName in firestoreFilterNames) {
             bool stillExists = widget.app_state.siteFilters
                 .any((f) => f.name == filterName);
@@ -1029,8 +1018,6 @@ Future<void> _showEditFiltersDialog() async {
               print("Removed filter: $filterName");
             }
           }
-          
-          // Save the new order to Firebase
           await widget.app_state.saveFilterOrder();
         },
       );
