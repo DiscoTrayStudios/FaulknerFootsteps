@@ -1,11 +1,9 @@
 // https://stackoverflow.com/questions/63869555/shadows-in-a-rounded-rectangle-in-flutter
 // -> To add a shadow effect for the listItem, mapDisplay, rating... etc
-import 'dart:convert';
 
 import 'package:faulkner_footsteps/app_router.dart';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

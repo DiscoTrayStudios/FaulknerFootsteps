@@ -1,21 +1,15 @@
 import 'dart:async';
 
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
-import 'package:faulkner_footsteps/pages/achievement.dart';
-import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
-import 'package:faulkner_footsteps/widgets/logout_button.dart';
 import 'package:faulkner_footsteps/widgets/profile_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:faulkner_footsteps/objects/list_item.dart';
-import 'package:faulkner_footsteps/pages/start_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
 
 class ListPage extends StatefulWidget {
   ListPage({super.key});

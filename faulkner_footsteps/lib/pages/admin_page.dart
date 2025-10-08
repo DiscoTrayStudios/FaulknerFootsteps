@@ -27,6 +27,12 @@ class AdminListPage extends StatefulWidget {
   @override
   State<AdminListPage> createState() => _AdminListPageState();
 }
+  class ImageWithUrl {
+  Uint8List? imageData;
+  String url;
+  
+  ImageWithUrl({required this.imageData, required this.url});
+}
 
 class _AdminListPageState extends State<AdminListPage> {
   late Timer updateTimer;
@@ -913,33 +919,73 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
 Future<void> _showEditSiteImagesDialog(
-    List<Uint8List?> siteImages, List<String> siteImageURLs) {
-  return showDialog(
+    List<Uint8List?> siteImages, List<String> siteImageURLs) async {
+  
+  // Create paired list of images with their URLs to maintain the relationship
+  List<ImageWithUrl> pairedImages = [];
+  for (int i = 0; i < siteImages.length; i++) {
+    pairedImages.add(ImageWithUrl(
+      imageData: siteImages[i],
+      url: i < siteImageURLs.length ? siteImageURLs[i] : "",
+    ));
+  }
+  
+  await showDialog(
     barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
-      return ListEdit<Uint8List?>(
+      return ListEdit<ImageWithUrl>(
         title: "Edit Images",
-        items: siteImages,
-        itemBuilder: (image) => Image.memory(image!, fit: BoxFit.contain),
+        items: pairedImages,
+        itemBuilder: (imageWithUrl) => Image.memory(
+          imageWithUrl.imageData!, 
+          fit: BoxFit.contain
+        ),
         addButtonText: "Add Images",
         deleteButtonText: "Delete Images",
         onAddItem: () async {
           await pickImages();
           if (images != null) {
-            List<Uint8List> newInt8List = [];
-            for (File i in images!) {
-              Uint8List newFile = await i.readAsBytes();
-              newInt8List.add(newFile);
+            for (File imageFile in images!) {
+              Uint8List newFile = await imageFile.readAsBytes();
+              pairedImages.add(ImageWithUrl(
+                imageData: newFile,
+                url: "", // Empty URL for new images that haven't been uploaded yet
+              ));
             }
-            siteImages.addAll(newInt8List);
+            images = null; // Clear the temporary images list
           }
         },
         onSubmit: () async {
+          // Delete removed images from Firebase Storage
+          for (String url in siteImageURLs) {
+            bool stillExists = pairedImages.any((img) => img.url == url);
+            if (!stillExists && url.isNotEmpty) {
+              try {
+                await storageRef.child(url).delete();
+                print("Deleted from storage: $url");
+              } catch (e) {
+                print("Error deleting $url: $e");
+              }
+            }
+          }
+          
+          // Update the original lists with the reordered/modified items
+          siteImages.clear();
+          siteImageURLs.clear();
+          for (var pair in pairedImages) {
+            siteImages.add(pair.imageData);
+            siteImageURLs.add(pair.url);
+          }
+          
+          print("Images after reordering: ${siteImages.length}");
+          print("URLs after reordering: ${siteImageURLs.length}");
         },
       );
     },
   );
+  
+  setState(() {}); // Refresh the parent dialog
 }
 Future<void> _showEditFiltersDialog() {
     List<SiteFilter> originalFilters = List.from(widget.app_state.siteFilters);
@@ -966,13 +1012,22 @@ Future<void> _showEditFiltersDialog() {
           await showAddFilterDialog();
         },
         onSubmit: () async {
-          List<SiteFilter> deletedFilters = originalFilters
-              .where((original) => !widget.app_state.siteFilters
-                  .any((current) => current.name == original.name))
-              .toList();
+          final snapshot = await FirebaseFirestore.instance
+              .collection("filters")
+              .get();
           
-          for (SiteFilter filter in deletedFilters) {
-            await widget.app_state.removeFilter(filter.name);
+          Set<String> firestoreFilterNames = {};
+          for (var doc in snapshot.docs) {
+            firestoreFilterNames.add(doc.get("name"));
+          }
+        
+          for (String filterName in firestoreFilterNames) {
+            bool stillExists = widget.app_state.siteFilters
+                .any((f) => f.name == filterName);
+            if (!stillExists) {
+              await widget.app_state.removeFilter(filterName);
+              print("Removed filter from Firebase: $filterName");
+            }
           }
         },
       );
