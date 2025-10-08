@@ -3,6 +3,7 @@ import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
+import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/hist_site_page.dart';
 import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/widgets.dart';
@@ -53,9 +54,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Faulkner Footsteps',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: faulknerFootstepsTheme,
       initialRoute: AppRouter.startPage,
       onGenerateRoute: AppRouter.generateRoute,
     );
