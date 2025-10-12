@@ -58,7 +58,26 @@ class _ReorderableItemListDialogState<T>
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
             width: MediaQuery.of(context).size.width * 0.75,
-            child: ReorderableListView.builder(
+            child: workingList.isEmpty ?
+             Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 16),
+                        Text(
+                          'This site has no images.',
+                          style: GoogleFonts.ultra(
+                            textStyle: TextStyle(
+                              color: Color.fromARGB(255, 76, 32, 8).withOpacity(0.7),
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+            :
+            ReorderableListView.builder(
               proxyDecorator: (child, index, animation) {
                 return AnimatedBuilder(
                   animation: animation,

@@ -64,10 +64,6 @@ class _AdminListPageState extends State<AdminListPage> {
   Future pickImages() async {
     try {
       final images = await ImagePicker().pickMultiImage();
-      if (images == null) {
-        print("This is null!");
-        return;
-      }
       ;
       List<File> t = [];
       for (XFile image in images) {
@@ -759,7 +755,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             const Color.fromARGB(255, 218, 186, 130),
                       ),
                       onPressed: () {
-                        _showEditSiteImagesDialog(site.images, site.imageUrls);
+                        _showEditSiteImagesDialog(site);
                         print("Reached post dialog opening");
                         print("Length p: ${site.images.length}");
                         for (Uint8List? s in site.images) {
@@ -918,18 +914,36 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-Future<void> _showEditSiteImagesDialog(
-    List<Uint8List?> siteImages, List<String> siteImageURLs) async {
-  
-  // Create paired list of images with their URLs to maintain the relationship
+Future<void> _showEditSiteImagesDialog(HistSite site) async {
+  List<Uint8List?> siteImages = site.images;
+  List<String> siteImageURLs = site.imageUrls;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
   List<ImageWithUrl> pairedImages = [];
-  for (int i = 0; i < siteImages.length; i++) {
+  for (int i = 0; i < siteImageURLs.length; i++) {
+    Uint8List? imageData;
+    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
+      imageData = siteImages[i];
+    } else {
+      imageData = await widget.app_state.getImage(siteImageURLs[i]);
+    }
+    if (imageData != null && siteImageURLs[i].isNotEmpty){
     pairedImages.add(ImageWithUrl(
-      imageData: siteImages[i],
-      url: i < siteImageURLs.length ? siteImageURLs[i] : "",
+      imageData: imageData,
+      url: siteImageURLs[i],
     ));
+    }
   }
   
+  // Close loading dialog
+  Navigator.pop(context);
+  
+  // Show the actual edit dialog with ListEdit
   await showDialog(
     barrierDismissible: false,
     context: context,
@@ -937,10 +951,12 @@ Future<void> _showEditSiteImagesDialog(
       return ListEdit<ImageWithUrl>(
         title: "Edit Images",
         items: pairedImages,
-        itemBuilder: (imageWithUrl) => Image.memory(
-          imageWithUrl.imageData!, 
-          fit: BoxFit.contain
-        ),
+        itemBuilder: (imageWithUrl) {
+          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
+            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
+          }
+            return Text("You do not have any Images uplodaed to this site.");
+        },
         addButtonText: "Add Images",
         deleteButtonText: "Delete Images",
         onAddItem: () async {
@@ -978,7 +994,7 @@ Future<void> _showEditSiteImagesDialog(
     },
   );
   
-  setState(() {});
+  setState(() {}); // Refresh the parent dialog
 }
 Future<void> _showEditFiltersDialog() async {
   await showDialog(
@@ -1246,7 +1262,7 @@ Future<void> _showEditFiltersDialog() async {
                                         : null,
                                   ))
                               .toList(),
-                          ButtonBar(
+                          OverflowBar(
                             children: [
                               TextButton.icon(
                                 icon: const Icon(Icons.edit),
