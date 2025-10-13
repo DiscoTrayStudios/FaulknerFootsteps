@@ -210,7 +210,7 @@ class _ListPageState extends State<ListPage> {
                                   ?.copyWith(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onPrimary,
+                                          .secondary,
                                       decoration: TextDecoration.underline),
                             )),
                       ),
@@ -340,46 +340,49 @@ class _ListPageState extends State<ListPage> {
         builder: (context) {
           return AlertDialog(
             title: const Text("Search"),
-            titleTextStyle: const TextStyle(
-                color: Color.fromARGB(255, 72, 52, 52),
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold),
+            titleTextStyle: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(color: Theme.of(context).colorScheme.secondary),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20.0),
                 side: BorderSide(
-                    color: Theme.of(context).colorScheme.outline, width: 2.0)),
+                    color: Theme.of(context).colorScheme.secondary,
+                    width: 2.0)),
             elevation: 8,
-            // backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             alignment: Alignment.topCenter,
             content: SearchAnchor(
-                dividerColor: Color.fromARGB(255, 72, 52, 52),
+                dividerColor: Theme.of(context).colorScheme.secondary,
                 viewSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline, width: 2.0),
+                    color: Theme.of(context).colorScheme.secondary, width: 2.0),
                 viewBackgroundColor: Theme.of(context).colorScheme.primary,
                 isFullScreen: false,
-                headerTextStyle: TextStyle(
-                    color: Color.fromARGB(255, 72, 52, 52),
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold),
+                headerTextStyle: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.secondary),
                 viewConstraints:
                     BoxConstraints(), //this works for some reason despite having no arguments
                 searchController: _searchController,
                 builder: (context, controller) {
                   return SearchBar(
-                    hintStyle: WidgetStatePropertyAll(TextStyle(
-                        color: Color.fromARGB(255, 72, 52, 52),
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold)),
+                    // hintStyle: WidgetStatePropertyAll(TextStyle(
+                    //     color: Color.fromARGB(255, 72, 52, 52),
+                    //     fontSize: 16.0,
+                    // fontWeight: FontWeight.bold)),
 
                     side: WidgetStatePropertyAll(BorderSide(
-                        color: Theme.of(context).colorScheme.outline,
+                        color: Theme.of(context).colorScheme.secondary,
                         width: 2.0)),
-                    textStyle: WidgetStatePropertyAll(TextStyle(
-                        color: Color.fromARGB(255, 72, 52, 52),
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold)),
-                    backgroundColor: WidgetStatePropertyAll(
-                        Theme.of(context).colorScheme.primary),
+                    textStyle: WidgetStatePropertyAll(Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary)),
+                    backgroundColor: WidgetStatePropertyAll(Theme.of(context)
+                        .colorScheme
+                        .primary), //TODO: This might work?
                     leading: Icon(Icons.search),
                     trailing: [
                       IconButton(
@@ -451,10 +454,11 @@ class _ListPageState extends State<ListPage> {
                   // });
                   return filteredItems.map((HistSite filteredSite) {
                     return ListTile(
-                      titleTextStyle: const TextStyle(
-                          color: Color.fromARGB(255, 72, 52, 52),
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold),
+                      titleTextStyle: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary),
                       title: Text(filteredSite.name),
                       onTap: () {
                         setState(() {

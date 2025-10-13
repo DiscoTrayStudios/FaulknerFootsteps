@@ -58,11 +58,12 @@ final ThemeData faulknerFootstepsTheme = ThemeData(
             textStyle: TextStyle(
                 // color: Color.fromARGB(255, 107, 79, 79),
                 fontSize: 20)),
+        bodySmall: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
 
         // for filter chips
-        bodySmall: GoogleFonts.ultra(fontSize: 14),
 
         //label
+        labelLarge: GoogleFonts.ultra(fontSize: 14),
         labelMedium: GoogleFonts.ultra(
           fontSize: 12,
         )),

@@ -70,7 +70,6 @@ class AchievementsPageState extends State<AchievementsPage> {
     List<String> hendrixSites = [];
 
     for (var site in widget.displaySites) {
-
       // Fixed: Changed from siteFilter.Monument to checking filter name
       if (site.filters.any((filter) => filter.name == "Monument")) {
         monuments.add(site.name);
@@ -87,7 +86,6 @@ class AchievementsPageState extends State<AchievementsPage> {
         title: "Monument Explorer",
         description: "Visit all monument sites",
         requiredSites: monuments,
-
         filterType:
             SiteFilter(name: "Monument") // Fixed: Using SiteFilter constructor
         ));
@@ -115,26 +113,26 @@ class AchievementsPageState extends State<AchievementsPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-          title: const Text(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: Text(
             "Achievement Unlocked!",
             style: TextStyle(
-              color: Color.fromARGB(255, 72, 52, 52),
+              color: Theme.of(context).colorScheme.secondary,
             ),
           ),
           content: Text(
             "You have visited $place.",
-            style: const TextStyle(
-              color: Color.fromARGB(255, 72, 52, 52),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.secondary,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
+              child: Text(
                 "OK",
                 style: TextStyle(
-                  color: Color.fromARGB(255, 72, 52, 52),
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
             ),
@@ -158,10 +156,10 @@ class AchievementsPageState extends State<AchievementsPage> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 238, 214, 196),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20.0),
             border: Border.all(
-              color: const Color.fromARGB(255, 107, 79, 79),
+              color: Theme.of(context).colorScheme.onPrimary,
               width: 3.0,
             ),
             boxShadow: [
@@ -182,8 +180,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                 child: Text(
                   achievement.title,
                   style: GoogleFonts.ultra(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 72, 52, 52),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -199,8 +197,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                 child: Text(
                   achievement.description,
                   style: GoogleFonts.rakkas(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 107, 79, 79),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 16,
                     ),
                   ),
@@ -221,7 +219,7 @@ class AchievementsPageState extends State<AchievementsPage> {
                         value: progress,
                         minHeight: 20,
                         backgroundColor:
-                            const Color.fromARGB(255, 255, 243, 228),
+                            Theme.of(context).colorScheme.onSecondary,
                         color: Colors.green,
                       ),
                     ),
@@ -230,12 +228,12 @@ class AchievementsPageState extends State<AchievementsPage> {
                     Text(
                       "${(progress * 100).toInt()}% Complete",
                       style: GoogleFonts.rakkas(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 72, 52, 52),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                          textStyle: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary)),
                     ),
                   ],
                 ),
@@ -250,8 +248,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                     Text(
                       "Required Sites:",
                       style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 72, 52, 52),
+                        textStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
                           fontSize: 16,
                         ),
                       ),
@@ -273,8 +271,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                         : Icons.circle_outlined,
                                     color: visited
                                         ? Colors.green
-                                        : const Color.fromARGB(
-                                            255, 107, 79, 79),
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
@@ -285,8 +284,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                         textStyle: TextStyle(
                                           color: visited
                                               ? Colors.green[800]
-                                              : const Color.fromARGB(
-                                                  255, 72, 52, 52),
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -311,8 +311,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                       ? "Congratulations! You've completed this achievement."
                       : "Visit all the required sites to complete this achievement.",
                   style: GoogleFonts.rakkas(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 107, 79, 79),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 16,
                     ),
                   ),
@@ -329,10 +329,10 @@ class AchievementsPageState extends State<AchievementsPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: const Color.fromARGB(255, 107, 79, 79),
+                      color: Theme.of(context).colorScheme.onPrimary,
                       width: 2.0,
                     ),
-                    color: const Color.fromARGB(255, 255, 243, 228),
+                    color: Theme.of(context).colorScheme.onSecondary,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -351,8 +351,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                         child: Text(
                           "Close",
                           style: GoogleFonts.rakkas(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 107, 79, 79),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
                               fontSize: 16,
                             ),
                           ),
@@ -383,10 +383,10 @@ class AchievementsPageState extends State<AchievementsPage> {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 238, 214, 196),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(20.0),
             border: Border.all(
-              color: const Color.fromARGB(255, 107, 79, 79),
+              color: Theme.of(context).colorScheme.onPrimary,
               width: 3.0,
             ),
             boxShadow: [
@@ -407,8 +407,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                 child: Text(
                   placeName,
                   style: GoogleFonts.ultra(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 72, 52, 52),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
                       fontSize: 22.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -425,12 +425,12 @@ class AchievementsPageState extends State<AchievementsPage> {
                 decoration: BoxDecoration(
                   color: isVisited
                       ? Colors.green[100]
-                      : const Color.fromARGB(255, 255, 243, 228),
+                      : Theme.of(context).colorScheme.onSecondary,
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
                     color: isVisited
                         ? Colors.green
-                        : const Color.fromARGB(255, 107, 79, 79),
+                        : Theme.of(context).colorScheme.onPrimary,
                     width: 2,
                   ),
                 ),
@@ -451,7 +451,7 @@ class AchievementsPageState extends State<AchievementsPage> {
                         textStyle: TextStyle(
                           color: isVisited
                               ? Colors.green[800]
-                              : const Color.fromARGB(255, 72, 52, 52),
+                              : Theme.of(context).colorScheme.secondary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -469,8 +469,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                       ? "You've already discovered this historical site. Great job!"
                       : "To unlock this achievement, you need to visit this historical site in person. Use the map to find and navigate to this location.",
                   style: GoogleFonts.rakkas(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 107, 79, 79),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 16,
                     ),
                   ),
@@ -487,10 +487,10 @@ class AchievementsPageState extends State<AchievementsPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: const Color.fromARGB(255, 107, 79, 79),
+                      color: Theme.of(context).colorScheme.onPrimary,
                       width: 2.0,
                     ),
-                    color: const Color.fromARGB(255, 255, 243, 228),
+                    color: Theme.of(context).colorScheme.onSecondary,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
@@ -509,8 +509,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                         child: Text(
                           "Close",
                           style: GoogleFonts.rakkas(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 107, 79, 79),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
                               fontSize: 16,
                             ),
                           ),
@@ -532,18 +532,18 @@ class AchievementsPageState extends State<AchievementsPage> {
     return Consumer<ApplicationState>(
       builder: (context, appState, _) {
         return Scaffold(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+          // backgroundColor: Theme.of(context).colorScheme.surface,
           appBar: AppBar(
-            leading: BackButton(
-              color: Color.fromARGB(255, 255, 243, 228),
-            ),
-            backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+            // leading: BackButton(
+            //     //   color: Color.fromARGB(255, 255, 243, 228),
+            //     ),
+            //    backgroundColor: const Color.fromARGB(255, 107, 79, 79),
             elevation: 5.0,
             title: Text(
               "Achievements",
               style: GoogleFonts.ultra(
-                textStyle: const TextStyle(
-                  color: Color.fromARGB(255, 255, 243, 228),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSecondary,
                 ),
               ),
             ),
@@ -562,8 +562,8 @@ class AchievementsPageState extends State<AchievementsPage> {
                       child: Text(
                         "Progress Achievements",
                         style: GoogleFonts.ultra(
-                          textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 72, 52, 52),
+                          textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 20.0,
                           ),
                         ),
@@ -584,12 +584,12 @@ class AchievementsPageState extends State<AchievementsPage> {
                               context, achievement, progress, isCompleted),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 255, 243, 228),
+                              color: Theme.of(context).colorScheme.onSecondary,
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(
                                 color: isCompleted
                                     ? Colors.green
-                                    : const Color.fromARGB(255, 107, 79, 79),
+                                    : Theme.of(context).colorScheme.onPrimary,
                                 width: 2,
                               ),
                               boxShadow: [
@@ -617,14 +617,16 @@ class AchievementsPageState extends State<AchievementsPage> {
                                         decoration: BoxDecoration(
                                           color: isCompleted
                                               ? Colors.green[100]
-                                              : Color.fromARGB(
-                                                  255, 238, 214, 196),
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
                                           shape: BoxShape.circle,
                                           border: Border.all(
                                             color: isCompleted
                                                 ? Colors.green
-                                                : Color.fromARGB(
-                                                    255, 107, 79, 79),
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
                                             width: 2,
                                           ),
                                         ),
@@ -634,8 +636,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                               : Icons.stars,
                                           color: isCompleted
                                               ? Colors.green
-                                              : Color.fromARGB(
-                                                  255, 107, 79, 79),
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
                                           size: 24,
                                         ),
                                       ),
@@ -650,8 +653,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                               achievement.title,
                                               style: GoogleFonts.ultra(
                                                 textStyle: TextStyle(
-                                                  color: Color.fromARGB(
-                                                      255, 72, 52, 52),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .secondary,
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -662,8 +666,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                               achievement.description,
                                               style: GoogleFonts.rakkas(
                                                 textStyle: TextStyle(
-                                                  color: Color.fromARGB(
-                                                      255, 107, 79, 79),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -678,8 +683,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                           textStyle: TextStyle(
                                             color: isCompleted
                                                 ? Colors.green[800]
-                                                : Color.fromARGB(
-                                                    255, 72, 52, 52),
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary,
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -698,7 +704,7 @@ class AchievementsPageState extends State<AchievementsPage> {
                                       value: progress,
                                       minHeight: 8,
                                       backgroundColor:
-                                          Color.fromARGB(255, 238, 214, 196),
+                                          Theme.of(context).colorScheme.surface,
                                       color: Colors.green,
                                     ),
                                   ),
@@ -714,7 +720,7 @@ class AchievementsPageState extends State<AchievementsPage> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: Divider(
-                        color: Color.fromARGB(255, 107, 79, 79),
+                        color: Theme.of(context).colorScheme.onPrimary,
                         thickness: 1.5,
                       ),
                     ),
@@ -760,12 +766,12 @@ class AchievementsPageState extends State<AchievementsPage> {
                           decoration: BoxDecoration(
                             color: isVisited
                                 ? Colors.green[100]
-                                : const Color.fromARGB(255, 255, 243, 228),
+                                : Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
                               color: isVisited
                                   ? Colors.green
-                                  : const Color.fromARGB(255, 107, 79, 79),
+                                  : Theme.of(context).colorScheme.onPrimary,
                               width: 2,
                             ),
                             boxShadow: [
@@ -783,12 +789,15 @@ class AchievementsPageState extends State<AchievementsPage> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 15.0),
                                 child: Icon(
-                                  isVisited ? Icons.emoji_events : Icons.place,
-                                  size: 40,
-                                  color: isVisited
-                                      ? Colors.green
-                                      : const Color.fromARGB(255, 143, 6, 6),
-                                ),
+                                    isVisited
+                                        ? Icons.emoji_events
+                                        : Icons.place,
+                                    size: 40,
+                                    color: isVisited
+                                        ? Colors.green
+                                        : const Color.fromARGB(
+                                            255, 143, 6, 6) // custom red color,
+                                    ),
                               ),
 
                               // Middle section with name
@@ -804,7 +813,9 @@ class AchievementsPageState extends State<AchievementsPage> {
                                         fontWeight: FontWeight.bold,
                                         fontSize:
                                             fontSize, // Adaptive font size
-                                        color: Color.fromARGB(255, 72, 52, 52),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                       ),
                                       maxLines: 3, // Increased max lines
                                       overflow: TextOverflow.ellipsis,
