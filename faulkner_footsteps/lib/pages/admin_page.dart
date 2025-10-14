@@ -61,7 +61,7 @@ class _AdminListPageState extends State<AdminListPage> {
     acceptableFilters = app_state.siteFilters;
     app_state.addListener(() {
       print("Appstate has changed!");
-      setState(() {});
+       setState(() {});
       // if (mounted) {
       // setState(() {
       //   acceptableFilters =
@@ -462,45 +462,51 @@ class _AdminListPageState extends State<AdminListPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                  ),
-                  onPressed: () async {
-                    if (chosenFilters.isEmpty) {
-                      chosenFilters.add(SiteFilter(name: "Other"));
-                    }
-                    //I think putting an async here is fine.
-                    if (nameController.text.isNotEmpty &&
-                        descriptionController.text.isNotEmpty) {
-                      List<String> randomNames = [];
-                      int i = 0;
-                      while (i < images!.length) {
-                        randomNames.add(uuid.v4());
-                        print("Random name thing executed");
-                        i += 1;
-                      }
-                      List<String> paths =
-                          await uploadImages(nameController.text, randomNames);
-                      print("Made it past uploading images");
-                      // String randomName = uuid.v4();
-                      // String path =
-                      // await uploadImage(nameController.text, randomName);
-                      final newSite = HistSite(
-                        name: nameController.text,
-                        description: descriptionController.text,
-                        blurbs: blurbs,
-                        imageUrls: paths,
-                        avgRating: 0.0,
-                        ratingAmount: 0,
-                        filters: chosenFilters,
-                        lat: double.tryParse(latController.text) ?? 0.0,
-                        lng: double.tryParse(lngController.text) ?? 0.0,
-                      );
-                      app_state.addSite(newSite);
-                      Navigator.pop(context);
-                      setState(() {});
-                    }
-                  },
+                   style: images == null
+                      ? ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(0, 0, 0, 0))
+                      : ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 218, 186, 130),
+                        ),
+                  onPressed: images == null
+                      ? null
+                      : () async {
+                          if (chosenFilters.isEmpty) {
+                            chosenFilters.add(SiteFilter(name: "Other"));
+                          }
+                          //I think putting an async here is fine.
+                          if (nameController.text.isNotEmpty &&
+                              descriptionController.text.isNotEmpty) {
+                            List<String> randomNames = [];
+                            int i = 0;
+                            while (i < images!.length) {
+                              randomNames.add(uuid.v4());
+                              print("Random name thing executed");
+                              i += 1;
+                            }
+                            List<String> paths = await uploadImages(
+                                nameController.text, randomNames);
+                            print("Made it past uploading images");
+                            // String randomName = uuid.v4();
+                            // String path =
+                            // await uploadImage(nameController.text, randomName);
+                            final newSite = HistSite(
+                              name: nameController.text,
+                              description: descriptionController.text,
+                              blurbs: blurbs,
+                              imageUrls: paths,
+                              avgRating: 0.0,
+                              ratingAmount: 0,
+                              filters: chosenFilters,
+                              lat: double.tryParse(latController.text) ?? 0.0,
+                              lng: double.tryParse(lngController.text) ?? 0.0,
+                            );
+                            app_state.addSite(newSite);
+                            Navigator.pop(context);
+                            setState(() {});
+                          }
+                        },
                   child: const Text('Save Site'),
                 ),
               ],
@@ -588,6 +594,9 @@ class _AdminListPageState extends State<AdminListPage> {
   Future<void> _showEditSiteDialog(HistSite site) async {
     final nameController = TextEditingController(text: site.name);
     final descriptionController = TextEditingController(text: site.description);
+    print(site.getLocation());
+    print(site.lat.toString());
+    print(site.lng.toString());
     final latController = TextEditingController(text: site.lat.toString());
     final lngController = TextEditingController(text: site.lng.toString());
     List<SiteFilter> chosenFilters = site.filters;
@@ -934,64 +943,98 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-  Future<void> _showEditSiteImagesDialog(
-      List<Uint8List?> siteImages, List<String> siteImageURLs) async {
-    // Create paired list of images with their URLs to maintain the relationship
-    List<ImageWithUrl> pairedImages = [];
-    for (int i = 0; i < siteImages.length; i++) {
-      pairedImages.add(ImageWithUrl(
-        imageData: siteImages[i],
-        url: i < siteImageURLs.length ? siteImageURLs[i] : "",
-      ));
+ Future<void> _showEditSiteImagesDialog(HistSite site) async {
+  List<Uint8List?> siteImages = site.images;
+  List<String> siteImageURLs = site.imageUrls;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+  List<ImageWithUrl> pairedImages = [];
+  for (int i = 0; i < siteImageURLs.length; i++) {
+    Uint8List? imageData;
+    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
+      imageData = siteImages[i];
+    } else {
+      imageData = await app_state.getImage(siteImageURLs[i]);
     }
-
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return ListEdit<ImageWithUrl>(
-          title: "Edit Images",
-          items: pairedImages,
-          itemBuilder: (imageWithUrl) =>
-              Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain),
-          addButtonText: "Add Images",
-          deleteButtonText: "Delete Images",
-          onAddItem: () async {
-            await pickImages();
-            if (images != null) {
-              for (File imageFile in images!) {
-                Uint8List newFile = await imageFile.readAsBytes();
-                pairedImages.add(ImageWithUrl(
-                  imageData: newFile,
-                  url: "",
-                ));
-              }
-              images = null;
-            }
-          },
-          onSubmit: () async {
-            for (String url in siteImageURLs) {
-              bool stillExists = pairedImages.any((img) => img.url == url);
-              if (!stillExists && url.isNotEmpty) {
-                try {
-                  await storageRef.child(url).delete();
-                } catch (e) {}
-              }
-            }
-            siteImages.clear();
-            siteImageURLs.clear();
-            for (var pair in pairedImages) {
-              siteImages.add(pair.imageData);
-              siteImageURLs.add(pair.url);
-            }
-          },
-        );
-      },
-    );
-
-    setState(() {});
+    if (imageData != null && siteImageURLs[i].isNotEmpty){
+    pairedImages.add(ImageWithUrl(
+      imageData: imageData,
+      url: siteImageURLs[i],
+    ));
+    }
   }
-
+  Navigator.pop(context);
+  await showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      List<File> newlyAddedFiles = [];
+      return ListEdit<ImageWithUrl>(
+        title: "Edit Images",
+        items: pairedImages,
+        itemBuilder: (imageWithUrl) {
+          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
+            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
+          }
+            return Text("You do not have any Images uplodaed to this site.");
+        },
+        addButtonText: "Add Images",
+        deleteButtonText: "Delete Images",
+        onAddItem: () async {
+          await pickImages();
+          if (images != null) {
+            for (File imageFile in images!) {
+              newlyAddedFiles.add(imageFile);
+              Uint8List newFile = await imageFile.readAsBytes();
+              pairedImages.add(ImageWithUrl(
+                imageData: newFile,
+                url: "",
+              ));
+            }
+            images = null;
+          }
+        },
+        onSubmit: () async {
+          for (String url in siteImageURLs) {
+            bool stillExists = pairedImages.any((img) => img.url == url);
+            if (!stillExists && url.isNotEmpty) {
+              try {
+                await storageRef.child(url).delete();
+              } catch (e) {
+              }
+            }
+          }
+          if (newlyAddedFiles.isNotEmpty) {
+            List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+            final refName = site.name.replaceAll(' ', '');
+            List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
+            int assignIndex = 0;
+            for (int i = 0; i < pairedImages.length; i++) {
+              if (pairedImages[i].url.isEmpty && assignIndex < uploadedPaths.length) {
+                pairedImages[i].url = uploadedPaths[assignIndex];
+                assignIndex++;
+              }
+            }
+          }
+          siteImages.clear();
+          siteImageURLs.clear();
+          for (var pair in pairedImages) {
+            siteImages.add(pair.imageData);
+            siteImageURLs.add(pair.url);
+          }
+          
+        },
+      );
+    },
+  );
+  
+  setState(() {}); // Refresh the parent dialog
+}
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
