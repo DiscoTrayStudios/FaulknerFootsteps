@@ -22,19 +22,20 @@ import 'package:uuid/uuid.dart';
 
 class AdminListPage extends StatefulWidget {
   AdminListPage({super.key});
-  final ApplicationState app_state = ApplicationState();
 
   @override
   State<AdminListPage> createState() => _AdminListPageState();
 }
-  class ImageWithUrl {
+
+class ImageWithUrl {
   Uint8List? imageData;
   String url;
-  
+
   ImageWithUrl({required this.imageData, required this.url});
 }
 
 class _AdminListPageState extends State<AdminListPage> {
+  late ApplicationState app_state;
   late Timer updateTimer;
   int _selectedIndex = 0;
   File? image;
@@ -51,12 +52,28 @@ class _AdminListPageState extends State<AdminListPage> {
     updateTimer = Timer.periodic(const Duration(milliseconds: 500), _update);
     // acceptableFilters.addAll(siteFilter.values);
     // acceptableFilters.remove(siteFilter.Other);
-    acceptableFilters = widget.app_state.siteFilters;
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    app_state = Provider.of<ApplicationState>(context, listen: false);
+    print("AppState: ${app_state.historicalSites.length}");
+    acceptableFilters = app_state.siteFilters;
+    app_state.addListener(() {
+      print("Appstate has changed!");
+      setState(() {});
+      // if (mounted) {
+      // setState(() {
+      //   acceptableFilters =
+      //       app_state.siteFilters; // Might be necessary, idk really
+      // });
+      // }
+    });
   }
 
   void _update(Timer timer) {
     setState(() {});
-    if (widget.app_state.historicalSites.isNotEmpty) {
+    if (app_state.historicalSites.isNotEmpty) {
       updateTimer.cancel();
     }
   }
@@ -94,7 +111,7 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<List<String>> uploadImages(
-      String folderName, List<String> fileNames, {List<File>? files}) async {
+     String folderName, List<String> fileNames, {List<File>? files}) async {
     print("begun uploading images");
     //I want to store a reference to each image and return the list of strings
     final metadata = SettableMetadata(contentType: "image/jpeg");
@@ -106,7 +123,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<UploadTask> uploadTasks = [];
     int count = 0;
     print("prior to for loop");
-    final filesToUpload = files ?? images;
+     final filesToUpload = files ?? images;
     if (filesToUpload == null || filesToUpload.isEmpty) {
       print("No files provided to uploadImages()");
       return paths;
@@ -115,7 +132,6 @@ class _AdminListPageState extends State<AdminListPage> {
       final fileName = fileNames[i];
       final path = "images/$folderName/$fileName.jpg";
       paths.add(path);
-      print("path added: $path");
       final uploadTask = storageRef.child(path).putFile(filesToUpload[i], metadata);
       uploadTasks.add(uploadTask);
       uploadTasks[count].snapshotEvents.listen((TaskSnapshot taskSnapshot) {
@@ -194,10 +210,8 @@ class _AdminListPageState extends State<AdminListPage> {
         context,
         MaterialPageRoute(
           builder: (context) => MapDisplay(
-            currentPosition: const LatLng(2, 2),
-            initialPosition: const LatLng(2, 2),
-            appState: widget.app_state,
-          ),
+              currentPosition: const LatLng(2, 2),
+              initialPosition: const LatLng(2, 2)),
         ),
       );
     } else {
@@ -482,7 +496,7 @@ class _AdminListPageState extends State<AdminListPage> {
                         lat: double.tryParse(latController.text) ?? 0.0,
                         lng: double.tryParse(lngController.text) ?? 0.0,
                       );
-                      widget.app_state.addSite(newSite);
+                      app_state.addSite(newSite);
                       Navigator.pop(context);
                       setState(() {});
                     }
@@ -899,11 +913,11 @@ class _AdminListPageState extends State<AdminListPage> {
                       // If name changed, delete old document and create new one
                       if (originalName != nameController.text) {
                         oldDocRef.delete().then((_) {
-                          widget.app_state.addSite(updatedSite);
+                          app_state.addSite(updatedSite);
                         });
                       } else {
                         // Just update existing document
-                        widget.app_state.addSite(updatedSite);
+                        app_state.addSite(updatedSite);
                       }
 
                       Navigator.pop(context);
@@ -920,7 +934,7 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-Future<void> _showEditSiteImagesDialog(HistSite site) async {
+ Future<void> _showEditSiteImagesDialog(HistSite site) async {
   List<Uint8List?> siteImages = site.images;
   List<String> siteImageURLs = site.imageUrls;
   showDialog(
@@ -936,7 +950,7 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
     if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
       imageData = siteImages[i];
     } else {
-      imageData = await widget.app_state.getImage(siteImageURLs[i]);
+      imageData = await app_state.getImage(siteImageURLs[i]);
     }
     if (imageData != null && siteImageURLs[i].isNotEmpty){
     pairedImages.add(ImageWithUrl(
@@ -945,18 +959,12 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
     ));
     }
   }
-  
-  // Close loading dialog
   Navigator.pop(context);
-  
-  // Show the actual edit dialog with ListEdit
   await showDialog(
     barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
-      // keep a local list of File objects the user adds in this dialog
       List<File> newlyAddedFiles = [];
-
       return ListEdit<ImageWithUrl>(
         title: "Edit Images",
         items: pairedImages,
@@ -992,7 +1000,6 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
               }
             }
           }
-
           if (newlyAddedFiles.isNotEmpty) {
             List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
             final refName = site.name.replaceAll(' ', '');
@@ -1011,6 +1018,7 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
             siteImages.add(pair.imageData);
             siteImageURLs.add(pair.url);
           }
+          
         },
       );
     },
@@ -1018,53 +1026,51 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
   
   setState(() {}); // Refresh the parent dialog
 }
-Future<void> _showEditFiltersDialog() async {
-  await showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      return ListEdit<SiteFilter>(
-        title: "Edit Filters",
-        items: widget.app_state.siteFilters,
-        itemBuilder: (filter) => Text(
-          filter.name,
-          style: GoogleFonts.ultra(
-            textStyle: const TextStyle(
-              color: Color.fromARGB(255, 76, 32, 8),
-              fontSize: 12,
+  Future<void> _showEditFiltersDialog() async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return ListEdit<SiteFilter>(
+          title: "Edit Filters",
+          items: app_state.siteFilters,
+          itemBuilder: (filter) => Text(
+            filter.name,
+            style: GoogleFonts.ultra(
+              textStyle: const TextStyle(
+                color: Color.fromARGB(255, 76, 32, 8),
+                fontSize: 12,
+              ),
             ),
           ),
-        ),
-        addButtonText: "Add Filter",
-        deleteButtonText: "Delete Filters",
-        onAddItem: () async {
-          await showAddFilterDialog();
-        },
-        onSubmit: () async {
-          final snapshot = await FirebaseFirestore.instance
-              .collection("filters")
-              .get();
-          Set<String> firestoreFilterNames = {};
-          for (var doc in snapshot.docs) {
-            firestoreFilterNames.add(doc.get("name"));
-          }
-          for (String filterName in firestoreFilterNames) {
-            bool stillExists = widget.app_state.siteFilters
-                .any((f) => f.name == filterName);
-            if (!stillExists) {
-              await widget.app_state.removeFilter(filterName);
-              print("Removed filter: $filterName");
+          addButtonText: "Add Filter",
+          deleteButtonText: "Delete Filters",
+          onAddItem: () async {
+            await showAddFilterDialog();
+          },
+          onSubmit: () async {
+            final snapshot =
+                await FirebaseFirestore.instance.collection("filters").get();
+            Set<String> firestoreFilterNames = {};
+            for (var doc in snapshot.docs) {
+              firestoreFilterNames.add(doc.get("name"));
             }
-          }
-          await widget.app_state.saveFilterOrder();
-        },
-      );
-    },
-  );
-  
-  setState(() {});
-}
+            for (String filterName in firestoreFilterNames) {
+              bool stillExists =
+                  app_state.siteFilters.any((f) => f.name == filterName);
+              if (!stillExists) {
+                await app_state.removeFilter(filterName);
+                print("Removed filter: $filterName");
+              }
+            }
+            await app_state.saveFilterOrder();
+          },
+        );
+      },
+    );
 
+    setState(() {});
+  }
 
   Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
     final titleController = TextEditingController(text: blurbs[index].title);
@@ -1175,13 +1181,13 @@ Future<void> _showEditFiltersDialog() async {
                           const Color.fromARGB(255, 218, 186, 130)),
                   onPressed: () async {
                     //do stuff
-                    for (SiteFilter filter in widget.app_state.siteFilters) {
+                    for (SiteFilter filter in app_state.siteFilters) {
                       if (filter.name == nameController.text) {
                         print("Filter is already added!");
                         return;
                       }
                     }
-                    widget.app_state.addFilter(nameController.text);
+                    app_state.addFilter(nameController.text);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -1191,7 +1197,7 @@ Future<void> _showEditFiltersDialog() async {
             );
           });
         });
-  } 
+  }
 
   Widget _buildAdminContent() {
     return Column(
@@ -1228,9 +1234,9 @@ Future<void> _showEditFiltersDialog() async {
             )),
         Expanded(
           child: ListView.builder(
-            itemCount: widget.app_state.historicalSites.length,
+            itemCount: app_state.historicalSites.length,
             itemBuilder: (BuildContext context, int index) {
-              final site = widget.app_state.historicalSites[index];
+              final site = app_state.historicalSites[index];
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 color: const Color.fromARGB(255, 238, 214, 196),
@@ -1330,7 +1336,7 @@ Future<void> _showEditFiltersDialog() async {
                                                   .doc(site.name)
                                                   .delete();
                                               setState(() {
-                                                widget.app_state.historicalSites
+                                                app_state.historicalSites
                                                     .removeWhere((s) =>
                                                         s.name == site.name);
                                               });
@@ -1379,7 +1385,6 @@ Future<void> _showEditFiltersDialog() async {
           : MapDisplay(
               currentPosition: const LatLng(2, 2),
               initialPosition: const LatLng(2, 2),
-              appState: widget.app_state,
             ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromARGB(255, 218, 180, 130),

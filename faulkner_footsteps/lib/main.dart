@@ -38,7 +38,7 @@ void main() async {
   // // ···
 
   runApp(
-    ChangeNotifierProvider(
+    ChangeNotifierProvider<ApplicationState>(
       create: (_) => ApplicationState(),
       child: MyApp(),
     ),
@@ -114,8 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ApplicationState appState, String newSiteName) async {
     await showDialog<double>(
       context: context,
-      builder: (BuildContext context) =>
-          RatingDialog(app_state: appState, site_name: newSiteName),
+      builder: (BuildContext context) => RatingDialog(site_name: newSiteName),
     );
   }
 
@@ -170,7 +169,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => HistSitePage(
-                      app_state: app_state,
                       histSite: sampleSite,
                       currentPosition: LatLng(0, 0),
                     ),

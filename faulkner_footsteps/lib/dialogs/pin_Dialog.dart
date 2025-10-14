@@ -4,21 +4,21 @@ import 'package:faulkner_footsteps/pages/hist_site_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class PinDialog extends StatelessWidget {
   final String siteName;
-  final ApplicationState appState;
   final LatLng currentPosition;
 
   const PinDialog({
     super.key,
     required this.siteName,
-    required this.appState,
     required this.currentPosition,
   });
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<ApplicationState>(context, listen: false);
     // Search and find the historical site by name
     HistSite? selectedSite = appState.historicalSites.firstWhere(
       (site) => site.name == siteName,
@@ -79,7 +79,6 @@ class PinDialog extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => HistSitePage(
                     histSite: selectedSite,
-                    app_state: appState,
                     currentPosition: currentPosition,
                   ),
                 ),

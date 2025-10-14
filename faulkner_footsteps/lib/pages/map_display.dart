@@ -1,4 +1,3 @@
-
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/pin_Dialog.dart';
 import 'package:faulkner_footsteps/pages/achievement.dart';
@@ -12,12 +11,10 @@ import 'package:provider/provider.dart';
 
 class MapDisplay extends StatefulWidget {
   final LatLng currentPosition;
-  final ApplicationState appState;
   final LatLng? centerPosition;
   const MapDisplay(
       {super.key,
       required this.currentPosition,
-      required this.appState,
       required LatLng initialPosition,
       this.centerPosition});
 
@@ -26,21 +23,40 @@ class MapDisplay extends StatefulWidget {
 }
 
 class _MapDisplayState extends State<MapDisplay> {
+  late ApplicationState appState;
   bool visited = false;
   final Distance distance = Distance();
-  late Map<String, LatLng> siteLocations = widget.appState.getLocations();
-  late Map<String, double> siteDistances = getDistances(siteLocations);
-  late var sorted = Map.fromEntries(siteDistances.entries.toList()
-    ..sort((e1, e2) => e1.value.compareTo(e2.value)));
-  late var sortedlist = sorted.values.toList();
   int _selectedIndex = 0;
   final MapController _mapController = MapController();
-
+  late Map<String, LatLng> siteLocations;
+  late Map<String, double> siteDistances;
+  late var sorted;
   @override
   void initState() {
     super.initState();
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appState = Provider.of<ApplicationState>(context, listen: false);
+
+    siteLocations = appState.getLocations();
+    Map<String, double> siteDistances = getDistances(siteLocations);
+    sorted = Map.fromEntries(siteDistances.entries.toList()
+      ..sort((e1, e2) => e1.value.compareTo(e2.value)));
+    late var sortedlist = sorted.values.toList();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       locationDialog(context);
+    });
+
+    // Only run this once
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = widget.centerPosition ?? widget.currentPosition;
+      _mapController.move(target, 14.0);
+      print("CenterPosition = ${widget.centerPosition}");
+      print("CurrentPosition = ${widget.currentPosition}");
+      print("Map Reopened? ");
     });
   }
 
@@ -63,13 +79,13 @@ class _MapDisplayState extends State<MapDisplay> {
     String closestSiteName = sorted.keys.first;
 
     // Check if the user has already visited this site
-    if (widget.appState.hasVisited(closestSiteName)) {
+    if (appState.hasVisited(closestSiteName)) {
       // Already visited, don't show dialog
       return;
     }
 
     // Find the site information
-    HistSite? selectedSite = widget.appState.historicalSites.firstWhere(
+    HistSite? selectedSite = appState.historicalSites.firstWhere(
       (site) => site.name == closestSiteName,
       orElse: () => HistSite(
         name: closestSiteName,
@@ -188,7 +204,6 @@ class _MapDisplayState extends State<MapDisplay> {
                             MaterialPageRoute(
                               builder: (context) => HistSitePage(
                                 histSite: selectedSite,
-                                app_state: widget.appState,
                                 currentPosition: widget.currentPosition,
                               ),
                             ),
@@ -299,19 +314,6 @@ class _MapDisplayState extends State<MapDisplay> {
     );
   }
 
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // Only run this once
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = widget.centerPosition ?? widget.currentPosition;
-      _mapController.move(target, 14.0);
-      print("CenterPosition = ${widget.centerPosition}");
-      print("CurrentPosition = ${widget.currentPosition}");
-      print("Map Reopened? ");
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<ApplicationState>(
@@ -330,7 +332,6 @@ class _MapDisplayState extends State<MapDisplay> {
                   builder: (BuildContext context) {
                     return PinDialog(
                       siteName: entry.key,
-                      appState: appState,
                       currentPosition: widget.currentPosition,
                     );
                   },
