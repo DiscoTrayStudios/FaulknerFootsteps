@@ -934,98 +934,64 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
- Future<void> _showEditSiteImagesDialog(HistSite site) async {
-  List<Uint8List?> siteImages = site.images;
-  List<String> siteImageURLs = site.imageUrls;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
-  List<ImageWithUrl> pairedImages = [];
-  for (int i = 0; i < siteImageURLs.length; i++) {
-    Uint8List? imageData;
-    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
-      imageData = siteImages[i];
-    } else {
-      imageData = await app_state.getImage(siteImageURLs[i]);
+  Future<void> _showEditSiteImagesDialog(
+      List<Uint8List?> siteImages, List<String> siteImageURLs) async {
+    // Create paired list of images with their URLs to maintain the relationship
+    List<ImageWithUrl> pairedImages = [];
+    for (int i = 0; i < siteImages.length; i++) {
+      pairedImages.add(ImageWithUrl(
+        imageData: siteImages[i],
+        url: i < siteImageURLs.length ? siteImageURLs[i] : "",
+      ));
     }
-    if (imageData != null && siteImageURLs[i].isNotEmpty){
-    pairedImages.add(ImageWithUrl(
-      imageData: imageData,
-      url: siteImageURLs[i],
-    ));
-    }
+
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return ListEdit<ImageWithUrl>(
+          title: "Edit Images",
+          items: pairedImages,
+          itemBuilder: (imageWithUrl) =>
+              Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain),
+          addButtonText: "Add Images",
+          deleteButtonText: "Delete Images",
+          onAddItem: () async {
+            await pickImages();
+            if (images != null) {
+              for (File imageFile in images!) {
+                Uint8List newFile = await imageFile.readAsBytes();
+                pairedImages.add(ImageWithUrl(
+                  imageData: newFile,
+                  url: "",
+                ));
+              }
+              images = null;
+            }
+          },
+          onSubmit: () async {
+            for (String url in siteImageURLs) {
+              bool stillExists = pairedImages.any((img) => img.url == url);
+              if (!stillExists && url.isNotEmpty) {
+                try {
+                  await storageRef.child(url).delete();
+                } catch (e) {}
+              }
+            }
+            siteImages.clear();
+            siteImageURLs.clear();
+            for (var pair in pairedImages) {
+              siteImages.add(pair.imageData);
+              siteImageURLs.add(pair.url);
+            }
+          },
+        );
+      },
+    );
+
+    setState(() {});
   }
-  Navigator.pop(context);
-  await showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      List<File> newlyAddedFiles = [];
-      return ListEdit<ImageWithUrl>(
-        title: "Edit Images",
-        items: pairedImages,
-        itemBuilder: (imageWithUrl) {
-          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
-            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
-          }
-            return Text("You do not have any Images uplodaed to this site.");
-        },
-        addButtonText: "Add Images",
-        deleteButtonText: "Delete Images",
-        onAddItem: () async {
-          await pickImages();
-          if (images != null) {
-            for (File imageFile in images!) {
-              newlyAddedFiles.add(imageFile);
-              Uint8List newFile = await imageFile.readAsBytes();
-              pairedImages.add(ImageWithUrl(
-                imageData: newFile,
-                url: "",
-              ));
-            }
-            images = null;
-          }
-        },
-        onSubmit: () async {
-          for (String url in siteImageURLs) {
-            bool stillExists = pairedImages.any((img) => img.url == url);
-            if (!stillExists && url.isNotEmpty) {
-              try {
-                await storageRef.child(url).delete();
-              } catch (e) {
-              }
-            }
-          }
-          if (newlyAddedFiles.isNotEmpty) {
-            List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-            final refName = site.name.replaceAll(' ', '');
-            List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
-            int assignIndex = 0;
-            for (int i = 0; i < pairedImages.length; i++) {
-              if (pairedImages[i].url.isEmpty && assignIndex < uploadedPaths.length) {
-                pairedImages[i].url = uploadedPaths[assignIndex];
-                assignIndex++;
-              }
-            }
-          }
-          siteImages.clear();
-          siteImageURLs.clear();
-          for (var pair in pairedImages) {
-            siteImages.add(pair.imageData);
-            siteImageURLs.add(pair.url);
-          }
-          
-        },
-      );
-    },
-  );
-  
-  setState(() {}); // Refresh the parent dialog
-}
+
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
