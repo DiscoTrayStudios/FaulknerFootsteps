@@ -94,7 +94,7 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<List<String>> uploadImages(
-      String folderName, List<String> fileNames) async {
+      String folderName, List<String> fileNames, {List<File>? files}) async {
     print("begun uploading images");
     //I want to store a reference to each image and return the list of strings
     final metadata = SettableMetadata(contentType: "image/jpeg");
@@ -106,12 +106,18 @@ class _AdminListPageState extends State<AdminListPage> {
     List<UploadTask> uploadTasks = [];
     int count = 0;
     print("prior to for loop");
-    for (String fileName in fileNames) {
-      var path = "images/$folderName/$fileName.jpg";
+    final filesToUpload = files ?? images;
+    if (filesToUpload == null || filesToUpload.isEmpty) {
+      print("No files provided to uploadImages()");
+      return paths;
+    }
+    for (int i = 0; i < fileNames.length; i++) {
+      final fileName = fileNames[i];
+      final path = "images/$folderName/$fileName.jpg";
       paths.add(path);
-      print("path added");
-      uploadTasks.add(storageRef.child(path).putFile(images![count]));
-      print("upload task added");
+      print("path added: $path");
+      final uploadTask = storageRef.child(path).putFile(filesToUpload[i], metadata);
+      uploadTasks.add(uploadTask);
       uploadTasks[count].snapshotEvents.listen((TaskSnapshot taskSnapshot) {
         switch (taskSnapshot.state) {
           case TaskState.running:
@@ -948,6 +954,9 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
     barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
+      // keep a local list of File objects the user adds in this dialog
+      List<File> newlyAddedFiles = [];
+
       return ListEdit<ImageWithUrl>(
         title: "Edit Images",
         items: pairedImages,
@@ -963,6 +972,7 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
           await pickImages();
           if (images != null) {
             for (File imageFile in images!) {
+              newlyAddedFiles.add(imageFile);
               Uint8List newFile = await imageFile.readAsBytes();
               pairedImages.add(ImageWithUrl(
                 imageData: newFile,
@@ -982,13 +992,25 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
               }
             }
           }
+
+          if (newlyAddedFiles.isNotEmpty) {
+            List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+            final refName = site.name.replaceAll(' ', '');
+            List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
+            int assignIndex = 0;
+            for (int i = 0; i < pairedImages.length; i++) {
+              if (pairedImages[i].url.isEmpty && assignIndex < uploadedPaths.length) {
+                pairedImages[i].url = uploadedPaths[assignIndex];
+                assignIndex++;
+              }
+            }
+          }
           siteImages.clear();
           siteImageURLs.clear();
           for (var pair in pairedImages) {
             siteImages.add(pair.imageData);
             siteImageURLs.add(pair.url);
           }
-          
         },
       );
     },
