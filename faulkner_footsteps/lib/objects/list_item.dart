@@ -61,7 +61,8 @@ class ListItem extends StatelessWidget {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: FutureBuilder<Uint8List?>(
+                  child: (siteInfo.imageUrls.isNotEmpty) ?
+                  FutureBuilder<Uint8List?>(
                     future: app_state.getImage(siteInfo.imageUrls.first),
                     builder: (context, snapshot) {
                       if (siteInfo.images.length > 0 &&
@@ -123,7 +124,13 @@ class ListItem extends StatelessWidget {
                         );
                       }
                     },
-                  )
+                  ) :
+                    Image.asset(
+                          'assets/images/faulkner_thumbnail.png',
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                   )
 
                   // siteInfo.images.length > 0 && siteInfo.images[0] != null
                   //     ? Image.memory(

@@ -3,7 +3,6 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:faulkner_footsteps/pages/list_page.dart';
-import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatelessWidget {

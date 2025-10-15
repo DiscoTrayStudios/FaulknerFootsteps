@@ -61,7 +61,7 @@ class _AdminListPageState extends State<AdminListPage> {
     acceptableFilters = app_state.siteFilters;
     app_state.addListener(() {
       print("Appstate has changed!");
-      setState(() {});
+       setState(() {});
       // if (mounted) {
       // setState(() {
       //   acceptableFilters =
@@ -81,10 +81,6 @@ class _AdminListPageState extends State<AdminListPage> {
   Future pickImages() async {
     try {
       final images = await ImagePicker().pickMultiImage();
-      if (images == null) {
-        print("This is null!");
-        return;
-      }
       ;
       List<File> t = [];
       for (XFile image in images) {
@@ -115,7 +111,7 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<List<String>> uploadImages(
-      String folderName, List<String> fileNames) async {
+     String folderName, List<String> fileNames, {List<File>? files}) async {
     print("begun uploading images");
     //I want to store a reference to each image and return the list of strings
     final metadata = SettableMetadata(contentType: "image/jpeg");
@@ -127,12 +123,17 @@ class _AdminListPageState extends State<AdminListPage> {
     List<UploadTask> uploadTasks = [];
     int count = 0;
     print("prior to for loop");
-    for (String fileName in fileNames) {
-      var path = "images/$folderName/$fileName.jpg";
+     final filesToUpload = files ?? images;
+    if (filesToUpload == null || filesToUpload.isEmpty) {
+      print("No files provided to uploadImages()");
+      return paths;
+    }
+    for (int i = 0; i < fileNames.length; i++) {
+      final fileName = fileNames[i];
+      final path = "images/$folderName/$fileName.jpg";
       paths.add(path);
-      print("path added");
-      uploadTasks.add(storageRef.child(path).putFile(images![count]));
-      print("upload task added");
+      final uploadTask = storageRef.child(path).putFile(filesToUpload[i], metadata);
+      uploadTasks.add(uploadTask);
       uploadTasks[count].snapshotEvents.listen((TaskSnapshot taskSnapshot) {
         switch (taskSnapshot.state) {
           case TaskState.running:
@@ -593,6 +594,9 @@ class _AdminListPageState extends State<AdminListPage> {
   Future<void> _showEditSiteDialog(HistSite site) async {
     final nameController = TextEditingController(text: site.name);
     final descriptionController = TextEditingController(text: site.description);
+    print(site.getLocation());
+    print(site.lat.toString());
+    print(site.lng.toString());
     final latController = TextEditingController(text: site.lat.toString());
     final lngController = TextEditingController(text: site.lng.toString());
     List<SiteFilter> chosenFilters = site.filters;
@@ -780,7 +784,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             const Color.fromARGB(255, 218, 186, 130),
                       ),
                       onPressed: () {
-                        _showEditSiteImagesDialog(site.images, site.imageUrls);
+                        _showEditSiteImagesDialog(site);
                         print("Reached post dialog opening");
                         print("Length p: ${site.images.length}");
                         for (Uint8List? s in site.images) {
@@ -939,64 +943,98 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-  Future<void> _showEditSiteImagesDialog(
-      List<Uint8List?> siteImages, List<String> siteImageURLs) async {
-    // Create paired list of images with their URLs to maintain the relationship
-    List<ImageWithUrl> pairedImages = [];
-    for (int i = 0; i < siteImages.length; i++) {
-      pairedImages.add(ImageWithUrl(
-        imageData: siteImages[i],
-        url: i < siteImageURLs.length ? siteImageURLs[i] : "",
-      ));
+ Future<void> _showEditSiteImagesDialog(HistSite site) async {
+  List<Uint8List?> siteImages = site.images;
+  List<String> siteImageURLs = site.imageUrls;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+  List<ImageWithUrl> pairedImages = [];
+  for (int i = 0; i < siteImageURLs.length; i++) {
+    Uint8List? imageData;
+    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
+      imageData = siteImages[i];
+    } else {
+      imageData = await app_state.getImage(siteImageURLs[i]);
     }
-
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return ListEdit<ImageWithUrl>(
-          title: "Edit Images",
-          items: pairedImages,
-          itemBuilder: (imageWithUrl) =>
-              Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain),
-          addButtonText: "Add Images",
-          deleteButtonText: "Delete Images",
-          onAddItem: () async {
-            await pickImages();
-            if (images != null) {
-              for (File imageFile in images!) {
-                Uint8List newFile = await imageFile.readAsBytes();
-                pairedImages.add(ImageWithUrl(
-                  imageData: newFile,
-                  url: "",
-                ));
-              }
-              images = null;
-            }
-          },
-          onSubmit: () async {
-            for (String url in siteImageURLs) {
-              bool stillExists = pairedImages.any((img) => img.url == url);
-              if (!stillExists && url.isNotEmpty) {
-                try {
-                  await storageRef.child(url).delete();
-                } catch (e) {}
-              }
-            }
-            siteImages.clear();
-            siteImageURLs.clear();
-            for (var pair in pairedImages) {
-              siteImages.add(pair.imageData);
-              siteImageURLs.add(pair.url);
-            }
-          },
-        );
-      },
-    );
-
-    setState(() {});
+    if (imageData != null && siteImageURLs[i].isNotEmpty){
+    pairedImages.add(ImageWithUrl(
+      imageData: imageData,
+      url: siteImageURLs[i],
+    ));
+    }
   }
-
+  Navigator.pop(context);
+  await showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      List<File> newlyAddedFiles = [];
+      return ListEdit<ImageWithUrl>(
+        title: "Edit Images",
+        items: pairedImages,
+        itemBuilder: (imageWithUrl) {
+          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
+            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
+          }
+            return Text("You do not have any Images uplodaed to this site.");
+        },
+        addButtonText: "Add Images",
+        deleteButtonText: "Delete Images",
+        onAddItem: () async {
+          await pickImages();
+          if (images != null) {
+            for (File imageFile in images!) {
+              newlyAddedFiles.add(imageFile);
+              Uint8List newFile = await imageFile.readAsBytes();
+              pairedImages.add(ImageWithUrl(
+                imageData: newFile,
+                url: "",
+              ));
+            }
+            images = null;
+          }
+        },
+        onSubmit: () async {
+          for (String url in siteImageURLs) {
+            bool stillExists = pairedImages.any((img) => img.url == url);
+            if (!stillExists && url.isNotEmpty) {
+              try {
+                await storageRef.child(url).delete();
+              } catch (e) {
+              }
+            }
+          }
+          if (newlyAddedFiles.isNotEmpty) {
+            List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+            final refName = site.name.replaceAll(' ', '');
+            List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
+            int assignIndex = 0;
+            for (int i = 0; i < pairedImages.length; i++) {
+              if (pairedImages[i].url.isEmpty && assignIndex < uploadedPaths.length) {
+                pairedImages[i].url = uploadedPaths[assignIndex];
+                assignIndex++;
+              }
+            }
+          }
+          siteImages.clear();
+          siteImageURLs.clear();
+          for (var pair in pairedImages) {
+            siteImages.add(pair.imageData);
+            siteImageURLs.add(pair.url);
+          }
+          
+        },
+      );
+    },
+  );
+  
+  setState(() {}); // Refresh the parent dialog
+}
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
@@ -1261,7 +1299,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                         : null,
                                   ))
                               .toList(),
-                          ButtonBar(
+                          OverflowBar(
                             children: [
                               TextButton.icon(
                                 icon: const Icon(Icons.edit),
