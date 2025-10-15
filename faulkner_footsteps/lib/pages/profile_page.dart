@@ -28,7 +28,6 @@ class _ProfilePageState extends State<ProfilePage>
   // Animation controller for the achievement button
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  late Animation<Color?> _colorAnimation;
 
   // Track notification count
   int newAchievementCount = 0;
@@ -52,16 +51,6 @@ class _ProfilePageState extends State<ProfilePage>
       ),
     );
 
-    // Create color animation (glow effect)
-    _colorAnimation = ColorTween(
-      begin: Theme.of(context).colorScheme.onPrimary,
-      end: const Color.fromARGB(255, 76, 175, 80),
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
 
     // Start the animation and make it repeat
     _animationController.repeat(reverse: true);
@@ -178,6 +167,17 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
+     // Create color animation (glow effect)
+    late Animation<Color?> _colorAnimation;
+    _colorAnimation = ColorTween(
+      begin: Theme.of(context).colorScheme.onPrimary,
+      end: const Color.fromARGB(255, 76, 175, 80),
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     final user = FirebaseAuth.instance.currentUser;
     // Get screen width to set explicit width for all cards
     final screenWidth = MediaQuery.of(context).size.width;
