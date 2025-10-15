@@ -243,7 +243,7 @@ class _HistSitePage extends State<HistSitePage> {
                                 .getImage(widget.histSite.imageUrls[index]),
                             builder: (context, snapshot) {
                               if (widget.histSite.images.length > 0 &&
-                                  widget.histSite.images[0] != null) {
+                                  widget.histSite.images[index] != null) {
                                 return Image.memory(
                                     widget.histSite.images[index]!,
                                     fit: BoxFit.cover);

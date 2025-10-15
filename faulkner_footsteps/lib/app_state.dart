@@ -198,8 +198,8 @@ class ApplicationState extends ChangeNotifier {
       "avgRating": newSite.avgRating,
       "ratingCount": newSite.ratingAmount,
       "filters": firebaseFriendlyFilterList,
-      "lat": 35.1,
-      "lng": -92.1,
+      "lat": newSite.lat,
+      "lng": newSite.lng,
     };
 
     // print('Adding site with $data');
