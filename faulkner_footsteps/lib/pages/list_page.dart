@@ -147,18 +147,26 @@ class _ListPageState extends State<ListPage> {
                           padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
                           // padding: EdgeInsets.all(8),
                           child: FilterChip(
-                            backgroundColor: Color.fromARGB(255, 255, 243, 228),
-                            disabledColor: Color.fromARGB(255, 255, 243, 228),
-                            selectedColor: Color.fromARGB(255, 107, 79, 79),
-                            checkmarkColor: Color.fromARGB(255, 255, 243, 228),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            disabledColor:
+                                Theme.of(context).colorScheme.primary,
+                            selectedColor:
+                                Theme.of(context).colorScheme.secondary,
+                            //    checkmarkColor: Color.fromARGB(255, 255, 243, 228),
                             label: Text(currentFilter.name,
-                                style: GoogleFonts.ultra(
-                                    textStyle: TextStyle(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                         color: activeFilters
                                                 .contains(currentFilter)
-                                            ? Color.fromARGB(255, 255, 243, 228)
-                                            : Color.fromARGB(255, 107, 79, 79),
-                                        fontSize: 14))),
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onSecondary
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary)),
                             selected: activeFilters.contains(currentFilter),
                             onSelected: (bool selected) {
                               setState(() {
@@ -199,11 +207,14 @@ class _ListPageState extends State<ListPage> {
                               activeFilters.length > 0
                                   ? "Clear (${activeFilters.length})"
                                   : "",
-                              style: GoogleFonts.ultra(
-                                  textStyle: TextStyle(
-                                      decoration: TextDecoration.underline,
-                                      color: Color.fromARGB(255, 107, 79, 79)),
-                                  fontSize: 14),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                      decoration: TextDecoration.underline),
                             )),
                       ),
                       alignment: Alignment.topRight,
@@ -333,27 +344,28 @@ class _ListPageState extends State<ListPage> {
         builder: (context) {
           return AlertDialog(
             title: const Text("Search"),
-            titleTextStyle: const TextStyle(
-                color: Color.fromARGB(255, 72, 52, 52),
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold),
+            titleTextStyle: Theme.of(context)
+                .textTheme
+                .headlineMedium
+                ?.copyWith(color: Theme.of(context).colorScheme.secondary),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20.0),
                 side: BorderSide(
-                    color: Color.fromARGB(255, 72, 52, 52), width: 2.0)),
+                    color: Theme.of(context).colorScheme.secondary,
+                    width: 2.0)),
             elevation: 8,
-            backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             alignment: Alignment.topCenter,
             content: SearchAnchor(
-                dividerColor: Color.fromARGB(255, 72, 52, 52),
+                dividerColor: Theme.of(context).colorScheme.secondary,
                 viewSide: BorderSide(
-                    color: Color.fromARGB(255, 72, 52, 52), width: 2.0),
-                viewBackgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                    color: Theme.of(context).colorScheme.secondary, width: 2.0),
+                viewBackgroundColor: Theme.of(context).colorScheme.primary,
                 isFullScreen: false,
-                headerTextStyle: TextStyle(
-                    color: Color.fromARGB(255, 72, 52, 52),
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold),
+                headerTextStyle: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.secondary),
                 viewConstraints:
                     BoxConstraints(), //this works for some reason despite having no arguments
                 searchController: _searchController,
@@ -365,13 +377,16 @@ class _ListPageState extends State<ListPage> {
                     // fontWeight: FontWeight.bold)),
 
                     side: WidgetStatePropertyAll(BorderSide(
-                        color: Color.fromARGB(255, 72, 52, 52), width: 2.0)),
-                    textStyle: WidgetStatePropertyAll(TextStyle(
-                        color: Color.fromARGB(255, 72, 52, 52),
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold)),
-                    backgroundColor: WidgetStatePropertyAll(Color.fromARGB(
-                        255, 238, 214, 196)), //TODO: This might work?
+                        color: Theme.of(context).colorScheme.secondary,
+                        width: 2.0)),
+                    textStyle: WidgetStatePropertyAll(Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary)),
+                    backgroundColor: WidgetStatePropertyAll(Theme.of(context)
+                        .colorScheme
+                        .primary), //TODO: This might work?
                     leading: Icon(Icons.search),
                     trailing: [
                       IconButton(
@@ -443,10 +458,11 @@ class _ListPageState extends State<ListPage> {
                   // });
                   return filteredItems.map((HistSite filteredSite) {
                     return ListTile(
-                      titleTextStyle: const TextStyle(
-                          color: Color.fromARGB(255, 72, 52, 52),
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold),
+                      titleTextStyle: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary),
                       title: Text(filteredSite.name),
                       onTap: () {
                         setState(() {
@@ -471,19 +487,16 @@ class _ListPageState extends State<ListPage> {
     }
     //setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+      //backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
-          backgroundColor: const Color.fromARGB(255, 107, 79, 79),
           elevation: 5.0,
           actions: [
             const ProfileButton(),
             IconButton(
-              onPressed: () {
-                openSearchDialog();
-              },
-              icon: const Icon(Icons.search,
-                  color: Color.fromARGB(255, 255, 243, 228)),
-            ),
+                onPressed: () {
+                  openSearchDialog();
+                },
+                icon: const Icon(Icons.search)),
           ],
           title: Container(
             constraints: BoxConstraints(
@@ -493,10 +506,6 @@ class _ListPageState extends State<ListPage> {
                 _selectedIndex == 0
                     ? "Historical Sites"
                     : "Map                    ",
-                style: GoogleFonts.ultra(
-                    textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 255, 243, 228)),
-                    fontSize: 99),
               ),
             ),
           )),
@@ -507,9 +516,7 @@ class _ListPageState extends State<ListPage> {
               initialPosition: _currentPosition!,
             ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 107, 79, 79),
-        selectedItemColor: const Color.fromARGB(255, 238, 214, 196),
-        unselectedItemColor: const Color.fromARGB(200, 238, 214, 196),
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

@@ -32,10 +32,9 @@ class ListItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Color.fromARGB(255, 255, 243,
-              228), //const Color.fromARGB(255, 238, 214, 196). page background color. I think what i have looks better
+          color: Theme.of(context).colorScheme.primary,
           border: Border.all(
-            color: const Color.fromARGB(255, 176, 133, 133),
+            color: Theme.of(context).colorScheme.outline, // good outline color
             width: 3.0,
           ),
           borderRadius: BorderRadius.circular(12.0),
@@ -112,7 +111,8 @@ class ListItem extends StatelessWidget {
                                 child: CircularProgressIndicator(),
                                 width: double.infinity,
                                 height: 400,
-                                color: Color.fromARGB(255, 107, 79, 79)));
+                                color: //Color.fromARGB(255, 107, 79, 79)
+                                    Theme.of(context).colorScheme.secondary));
                       } else {
                         print("List item else statement reached");
                         return Image.asset(
@@ -162,11 +162,16 @@ class ListItem extends StatelessWidget {
                         Flexible(
                           child: Text(
                             siteInfo.name,
-                            style: GoogleFonts.ultra(
-                              fontSize: 18,
-                              color: const Color.fromARGB(255, 107, 79,
-                                  79), // Text color.   const Color.fromARGB(255, 107, 79, 79): Maroon. Previously: Color.fromARGB(255, 72, 52, 52)
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
+                            //const Color.fromARGB(255, 107, 79, 79)
+                            // Text color.   const Color.fromARGB(255, 107, 79, 79): Maroon. Previously: Color.fromARGB(255, 72, 52, 52)
+
                             overflow: TextOverflow
                                 .fade, // Fades text when it overflows
                             softWrap:
@@ -196,9 +201,9 @@ class ListItem extends StatelessWidget {
                                     "currentPosition": currentPosition,
                                   });
                             },
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.arrow_circle_right_outlined,
-                              color: Color.fromARGB(255, 62, 50, 50),
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                         ),
@@ -207,11 +212,11 @@ class ListItem extends StatelessWidget {
                     Align(
                       child: Text(
                         "$siteDistance miles away!",
-                        style: GoogleFonts.ultra(
-                          fontSize: 12,
-                          color: const Color.fromARGB(255, 107, 79,
-                              79), // Text color.   const Color.fromARGB(255, 107, 79, 79): Maroon. Previously: Color.fromARGB(255, 72, 52, 52)
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelMedium
+                            ?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary),
                         overflow:
                             TextOverflow.fade, // Fades text when it overflows
                         softWrap: true,

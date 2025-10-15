@@ -461,45 +461,51 @@ class _AdminListPageState extends State<AdminListPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                  ),
-                  onPressed: () async {
-                    if (chosenFilters.isEmpty) {
-                      chosenFilters.add(SiteFilter(name: "Other"));
-                    }
-                    //I think putting an async here is fine.
-                    if (nameController.text.isNotEmpty &&
-                        descriptionController.text.isNotEmpty) {
-                      List<String> randomNames = [];
-                      int i = 0;
-                      while (i < images!.length) {
-                        randomNames.add(uuid.v4());
-                        print("Random name thing executed");
-                        i += 1;
-                      }
-                      List<String> paths =
-                          await uploadImages(nameController.text, randomNames);
-                      print("Made it past uploading images");
-                      // String randomName = uuid.v4();
-                      // String path =
-                      // await uploadImage(nameController.text, randomName);
-                      final newSite = HistSite(
-                        name: nameController.text,
-                        description: descriptionController.text,
-                        blurbs: blurbs,
-                        imageUrls: paths,
-                        avgRating: 0.0,
-                        ratingAmount: 0,
-                        filters: chosenFilters,
-                        lat: double.tryParse(latController.text) ?? 0.0,
-                        lng: double.tryParse(lngController.text) ?? 0.0,
-                      );
-                      app_state.addSite(newSite);
-                      Navigator.pop(context);
-                      setState(() {});
-                    }
-                  },
+                  style: images == null
+                      ? ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(0, 0, 0, 0))
+                      : ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 218, 186, 130),
+                        ),
+                  onPressed: images == null
+                      ? null
+                      : () async {
+                          if (chosenFilters.isEmpty) {
+                            chosenFilters.add(SiteFilter(name: "Other"));
+                          }
+                          //I think putting an async here is fine.
+                          if (nameController.text.isNotEmpty &&
+                              descriptionController.text.isNotEmpty) {
+                            List<String> randomNames = [];
+                            int i = 0;
+                            while (i < images!.length) {
+                              randomNames.add(uuid.v4());
+                              print("Random name thing executed");
+                              i += 1;
+                            }
+                            List<String> paths = await uploadImages(
+                                nameController.text, randomNames);
+                            print("Made it past uploading images");
+                            // String randomName = uuid.v4();
+                            // String path =
+                            // await uploadImage(nameController.text, randomName);
+                            final newSite = HistSite(
+                              name: nameController.text,
+                              description: descriptionController.text,
+                              blurbs: blurbs,
+                              imageUrls: paths,
+                              avgRating: 0.0,
+                              ratingAmount: 0,
+                              filters: chosenFilters,
+                              lat: double.tryParse(latController.text) ?? 0.0,
+                              lng: double.tryParse(lngController.text) ?? 0.0,
+                            );
+                            app_state.addSite(newSite);
+                            Navigator.pop(context);
+                            setState(() {});
+                          }
+                        },
                   child: const Text('Save Site'),
                 ),
               ],
