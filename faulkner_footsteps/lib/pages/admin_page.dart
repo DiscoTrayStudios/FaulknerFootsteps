@@ -462,7 +462,7 @@ class _AdminListPageState extends State<AdminListPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                   style: images == null
+                  style: images == null
                       ? ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(0, 0, 0, 0))
                       : ElevatedButton.styleFrom(

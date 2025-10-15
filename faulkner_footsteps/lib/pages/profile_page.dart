@@ -16,19 +16,19 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStateMixin {
+class _ProfilePageState extends State<ProfilePage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  
+
   // Animation controller for the achievement button
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  late Animation<Color?> _colorAnimation;
-  
+
   // Track notification count
   int newAchievementCount = 0;
   bool _hasCheckedAchievements = false;
@@ -36,13 +36,13 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    
+
     // Set up animations
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     // Create pulsating animation
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(
@@ -50,38 +50,29 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
         curve: Curves.easeInOut,
       ),
     );
-    
-    // Create color animation (glow effect)
-    _colorAnimation = ColorTween(
-      begin: const Color.fromARGB(255, 107, 79, 79),
-      end: const Color.fromARGB(255, 76, 175, 80),
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    
+
+
     // Start the animation and make it repeat
     _animationController.repeat(reverse: true);
-    
+
     // Check for notification count
     _loadAchievementNotificationStatus();
   }
-  
+
   // Load achievement notification status
   Future<void> _loadAchievementNotificationStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final lastAchievementCount = prefs.getInt('last_achievement_count') ?? 0;
-    final hasViewedAchievements = prefs.getBool('has_viewed_achievements') ?? false;
-    
+    final hasViewedAchievements =
+        prefs.getBool('has_viewed_achievements') ?? false;
+
     // Get current achievements count
     final appState = Provider.of<ApplicationState>(context, listen: false);
     final currentCount = appState.visitedPlaces.length;
-    
+
     setState(() {
       _hasCheckedAchievements = hasViewedAchievements;
-      
+
       // If user has never viewed achievements or has new ones
       if (!hasViewedAchievements || currentCount > lastAchievementCount) {
         newAchievementCount = currentCount - lastAchievementCount;
@@ -94,12 +85,12 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
       }
     });
   }
-  
+
   // Save achievement notification status
   Future<void> _saveAchievementNotificationStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final appState = Provider.of<ApplicationState>(context, listen: false);
-    
+
     await prefs.setInt('last_achievement_count', appState.visitedPlaces.length);
     await prefs.setBool('has_viewed_achievements', true);
   }
@@ -158,10 +149,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     setState(() {
       newAchievementCount = 0;
     });
-    
+
     // Save the current achievement count
     await _saveAchievementNotificationStatus();
-    
+
     // Navigate to achievements page with the app state's historical sites
     final appState = Provider.of<ApplicationState>(context, listen: false);
     Navigator.push(
@@ -176,6 +167,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+     // Create color animation (glow effect)
+    late Animation<Color?> _colorAnimation;
+    _colorAnimation = ColorTween(
+      begin: Theme.of(context).colorScheme.onPrimary,
+      end: const Color.fromARGB(255, 76, 175, 80),
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     final user = FirebaseAuth.instance.currentUser;
     // Get screen width to set explicit width for all cards
     final screenWidth = MediaQuery.of(context).size.width;
@@ -186,17 +188,17 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
     final isAdmin = LoginPage.isAdmin;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 107, 79, 79),
-        iconTheme: const IconThemeData(
-          color: Color.fromARGB(255, 255, 243, 228),
+        backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.primary,
         ),
         title: Text(
           'Profile',
           style: GoogleFonts.ultra(
-            textStyle: const TextStyle(
-              color: Color.fromARGB(255, 255, 243, 228),
+            textStyle: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
@@ -210,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             Container(
               width: cardWidth,
               child: Card(
-                color: const Color.fromARGB(255, 250, 235, 215),
+                color: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -223,8 +225,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       Text(
                         'Email',
                         style: GoogleFonts.ultra(
-                          textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 72, 52, 52),
+                          textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 16,
                           ),
                         ),
@@ -233,8 +235,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       Text(
                         user?.email ?? 'Not signed in',
                         style: GoogleFonts.rakkas(
-                          textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 107, 79, 79),
+                          textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 16,
                           ),
                         ),
@@ -264,8 +266,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                         Text(
                           'Admin Controls',
                           style: GoogleFonts.ultra(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 72, 52, 52),
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
                               fontSize: 16,
                             ),
                           ),
@@ -274,9 +276,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.admin_panel_settings,
-                              color: Color.fromARGB(255, 255, 243, 228),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             onPressed: () {
                               Navigator.push(
@@ -288,14 +290,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
-                                  const Color.fromARGB(255, 107, 79, 79),
+                                  Theme.of(context).colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             label: Text(
                               'Admin Dashboard',
                               style: GoogleFonts.rakkas(
-                                textStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 255, 243, 228),
+                                textStyle: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontSize: 16,
                                 ),
                               ),
@@ -314,7 +316,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             Container(
               width: cardWidth,
               child: Card(
-                color: const Color.fromARGB(255, 250, 235, 215),
+                color: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -330,38 +332,47 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           Text(
                             'My Achievements',
                             style: GoogleFonts.ultra(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 72, 52, 52),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 fontSize: 16,
                               ),
                             ),
                           ),
                           // New achievement button with animation and notification badge
                           Stack(
-                            clipBehavior: Clip.none, // This prevents clipping of child elements
+                            clipBehavior: Clip
+                                .none, // This prevents clipping of child elements
                             children: [
                               // Animated achievement button
                               AnimatedBuilder(
                                 animation: _animationController,
                                 builder: (context, child) {
                                   return Transform.scale(
-                                    scale: newAchievementCount > 0 ? _scaleAnimation.value : 1.0,
+                                    scale: newAchievementCount > 0
+                                        ? _scaleAnimation.value
+                                        : 1.0,
                                     child: Container(
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: newAchievementCount > 0 
+                                        color: newAchievementCount > 0
                                             ? _colorAnimation.value
-                                            : Color.fromARGB(255, 107, 79, 79),
-                                        borderRadius: BorderRadius.circular(8.0),
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
                                         border: Border.all(
-                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                           width: 2.0,
                                         ),
                                         boxShadow: newAchievementCount > 0
                                             ? [
                                                 BoxShadow(
-                                                  color: Colors.green.withOpacity(0.3),
+                                                  color: Colors.green
+                                                      .withOpacity(0.3),
                                                   spreadRadius: 1,
                                                   blurRadius: 6,
                                                   offset: Offset(0, 0),
@@ -372,12 +383,15 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                       child: Material(
                                         color: Colors.transparent,
                                         child: InkWell(
-                                          borderRadius: BorderRadius.circular(8.0),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
                                           onTap: _navigateToAchievementsPage,
                                           child: Center(
                                             child: Icon(
                                               Icons.emoji_events,
-                                              color: Color.fromARGB(255, 255, 243, 228),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
                                               size: 24,
                                             ),
                                           ),
@@ -387,7 +401,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                   );
                                 },
                               ),
-                              
+
                               // Notification badge with adjusted position
                               if (newAchievementCount > 0)
                                 Positioned(
@@ -399,7 +413,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                       color: Colors.red,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: Color.fromARGB(255, 255, 243, 228),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                         width: 1.5,
                                       ),
                                       // Add a bit of margin to ensure visibility
@@ -439,8 +455,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                             return Text(
                               'You haven\'t visited any historical sites yet.',
                               style: GoogleFonts.rakkas(
-                                textStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 107, 79, 79),
+                                textStyle: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -461,8 +478,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 label: Text(
                                   place,
                                   style: GoogleFonts.rakkas(
-                                    textStyle: const TextStyle(
-                                      color: Color.fromARGB(255, 72, 52, 52),
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -484,7 +503,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             Container(
               width: cardWidth,
               child: Card(
-                color: const Color.fromARGB(255, 250, 235, 215),
+                color: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -511,8 +530,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           decoration: InputDecoration(
                             labelText: 'Current Password',
                             labelStyle: GoogleFonts.rakkas(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 107, 79, 79),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
                             border: const OutlineInputBorder(),
@@ -531,8 +550,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           decoration: InputDecoration(
                             labelText: 'New Password',
                             labelStyle: GoogleFonts.rakkas(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 107, 79, 79),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
                             border: const OutlineInputBorder(),
@@ -554,8 +573,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           decoration: InputDecoration(
                             labelText: 'Confirm New Password',
                             labelStyle: GoogleFonts.rakkas(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 107, 79, 79),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             ),
                             border: const OutlineInputBorder(),
@@ -586,7 +605,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                             onPressed: _isLoading ? null : _changePassword,
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
-                                  const Color.fromARGB(255, 107, 79, 79),
+                                  Theme.of(context).colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: _isLoading
@@ -594,9 +613,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                 : Text(
                                     'Update Password',
                                     style: GoogleFonts.rakkas(
-                                      textStyle: const TextStyle(
-                                        color:
-                                            Color.fromARGB(255, 255, 243, 228),
+                                      textStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                         fontSize: 16,
                                       ),
                                     ),
@@ -615,7 +635,7 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
             Container(
               width: cardWidth,
               child: Card(
-                color: const Color.fromARGB(255, 250, 235, 215),
+                color: Theme.of(context).colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -628,8 +648,8 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       Text(
                         'Account Actions',
                         style: GoogleFonts.ultra(
-                          textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 72, 52, 52),
+                          textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 16,
                           ),
                         ),
@@ -638,9 +658,9 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.logout,
-                            color: Color.fromARGB(255, 255, 243, 228),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           onPressed: () async {
                             // Show confirmation dialog
@@ -649,20 +669,24 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   backgroundColor:
-                                      const Color.fromARGB(255, 238, 214, 196),
+                                      Theme.of(context).colorScheme.surface,
                                   title: Text(
                                     'Logout',
                                     style: GoogleFonts.ultra(
-                                      textStyle: const TextStyle(
-                                        color: Color.fromARGB(255, 107, 79, 79),
+                                      textStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                       ),
                                     ),
                                   ),
                                   content: Text(
                                     'Are you sure you want to logout?',
                                     style: GoogleFonts.rakkas(
-                                      textStyle: const TextStyle(
-                                        color: Color.fromARGB(255, 107, 79, 79),
+                                      textStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                       ),
                                     ),
                                   ),
@@ -673,9 +697,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                       child: Text(
                                         'Cancel',
                                         style: GoogleFonts.rakkas(
-                                          textStyle: const TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 107, 79, 79),
+                                          textStyle: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
                                           ),
                                         ),
                                       ),
@@ -686,9 +711,10 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                                       child: Text(
                                         'Logout',
                                         style: GoogleFonts.rakkas(
-                                          textStyle: const TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 107, 79, 79),
+                                          textStyle: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
                                           ),
                                         ),
                                       ),
@@ -712,14 +738,14 @@ class _ProfilePageState extends State<ProfilePage> with SingleTickerProviderStat
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                                const Color.fromARGB(255, 107, 79, 79),
+                                Theme.of(context).colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           label: Text(
                             'Log Out',
                             style: GoogleFonts.rakkas(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 255, 243, 228),
+                              textStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontSize: 16,
                               ),
                             ),

@@ -37,19 +37,19 @@ class PinDialog extends StatelessWidget {
     );
 
     return AlertDialog(
-      backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
         side: BorderSide(
-          color: Color.fromARGB(255, 107, 79, 79),
+          color: Theme.of(context).colorScheme.onPrimary,
           width: 2.0,
         ),
       ),
       title: Text(
         selectedSite.name,
         style: GoogleFonts.ultra(
-          textStyle: const TextStyle(
-            color: Color.fromARGB(255, 72, 52, 52),
+          textStyle: TextStyle(
+            color: Theme.of(context).colorScheme.secondary,
             fontSize: 24.0,
             fontWeight: FontWeight.bold,
           ),
@@ -62,8 +62,8 @@ class PinDialog extends StatelessWidget {
           Text(
             selectedSite.description,
             style: GoogleFonts.rakkas(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 107, 79, 79),
+              textStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontSize: 16,
               ),
             ),
@@ -85,9 +85,9 @@ class PinDialog extends StatelessWidget {
               );
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: Color.fromARGB(255, 107, 79, 79),
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               side: BorderSide(
-                color: Color.fromARGB(255, 107, 79, 79),
+                color: Theme.of(context).colorScheme.onPrimary,
                 width: 1.5,
               ),
               shape: RoundedRectangleBorder(
@@ -98,8 +98,8 @@ class PinDialog extends StatelessWidget {
             child: Text(
               "More Info",
               style: GoogleFonts.rakkas(
-                textStyle: const TextStyle(
-                  color: Color.fromARGB(255, 107, 79, 79),
+                textStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
                   fontSize: 16,
                 ),
               ),

@@ -34,6 +34,8 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Create a custom theme that matches your app's style
+
+    // we have a theme, I am not sure if it is used.
     final customTheme = ThemeData(
       primaryColor: const Color.fromARGB(255, 107, 79, 79),
       scaffoldBackgroundColor: const Color.fromARGB(255, 238, 214, 196),
@@ -83,7 +85,7 @@ class LoginPage extends StatelessWidget {
       child: Scaffold(
         resizeToAvoidBottomInset:
             false, // Prevent resizing when keyboard appears
-        backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+        backgroundColor: Color.fromARGB(255, 238, 214, 196),
         body: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {

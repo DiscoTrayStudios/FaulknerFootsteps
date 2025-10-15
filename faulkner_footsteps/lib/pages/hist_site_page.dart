@@ -103,17 +103,17 @@ class _HistSitePage extends State<HistSitePage> {
             1609.344)
         .toStringAsFixed(2);
     return Scaffold(
-        backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           leading: BackButton(
-            color: Color.fromARGB(255, 255, 243, 228),
-          ),
-          backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+              // color: Color.fromARGB(255, 255, 243, 228),
+              ),
+          backgroundColor: Theme.of(context).colorScheme.onPrimary,
           title: Text(
             "Faulkner Footsteps",
             style: GoogleFonts.ultra(
               textStyle:
-                  const TextStyle(color: Color.fromARGB(255, 255, 243, 228)),
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
             ),
           ),
         ),
@@ -129,8 +129,8 @@ class _HistSitePage extends State<HistSitePage> {
                     Text(
                       widget.histSite.name,
                       style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 72, 52, 52),
+                        textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 32.0,
                             fontWeight: FontWeight.bold),
                       ),
@@ -145,17 +145,19 @@ class _HistSitePage extends State<HistSitePage> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => Scaffold(
-                                            backgroundColor:
-                                                const Color.fromARGB(
-                                                    255, 238, 214, 196),
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .surface,
                                             appBar: AppBar(
                                                 leading: BackButton(
-                                                  color: Color.fromARGB(
-                                                      255, 255, 243, 228),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
                                                 ),
                                                 backgroundColor:
-                                                    const Color.fromARGB(
-                                                        255, 107, 79, 79),
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
                                                 elevation: 5.0,
                                                 title: Container(
                                                   constraints: BoxConstraints(
@@ -164,14 +166,11 @@ class _HistSitePage extends State<HistSitePage> {
                                                     child: Text(
                                                       "Map",
                                                       style: GoogleFonts.ultra(
-                                                          textStyle:
-                                                              const TextStyle(
-                                                                  color: Color
-                                                                      .fromARGB(
-                                                                          255,
-                                                                          255,
-                                                                          243,
-                                                                          228)),
+                                                          textStyle: TextStyle(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .onSecondary),
                                                           fontSize: 26),
                                                     ),
                                                   ),
@@ -196,8 +195,9 @@ class _HistSitePage extends State<HistSitePage> {
                               )),
                           Text("$siteDistance mi",
                               style: GoogleFonts.ultra(
-                                textStyle: const TextStyle(
-                                    color: Color.fromARGB(255, 72, 52, 52),
+                                textStyle: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.secondary,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold),
                               )),
@@ -206,7 +206,7 @@ class _HistSitePage extends State<HistSitePage> {
                 )),
             Container(
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 250, 235, 215),
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(12.0),
               ),
               margin:
@@ -355,8 +355,8 @@ class _HistSitePage extends State<HistSitePage> {
                 // This Updates After Each Reload
                 Text(" (${widget.histSite.avgRating.toStringAsFixed(1)})",
                     style: GoogleFonts.rakkas(
-                        textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 72, 52, 52),
+                        textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 16)))
               ]),
             ),
@@ -370,7 +370,7 @@ class _HistSitePage extends State<HistSitePage> {
                       margin: const EdgeInsets.only(bottom: 16.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0)),
-                      color: const Color.fromARGB(255, 250, 235, 215),
+                      color: Theme.of(context).colorScheme.primary,
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Column(
@@ -378,15 +378,19 @@ class _HistSitePage extends State<HistSitePage> {
                           children: [
                             Text(infoText.title,
                                 style: GoogleFonts.ultra(
-                                    textStyle: const TextStyle(
-                                        color: Color.fromARGB(255, 72, 52, 52),
+                                    textStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                         fontSize: 26,
                                         fontWeight: FontWeight.bold))),
                             const SizedBox(height: 6),
                             Text(infoText.value,
                                 style: GoogleFonts.rakkas(
-                                    textStyle: const TextStyle(
-                                        color: Color.fromARGB(255, 107, 79, 79),
+                                    textStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                         fontSize: 20))),
                             if (infoText.date != "")
                               Padding(
@@ -394,9 +398,10 @@ class _HistSitePage extends State<HistSitePage> {
                                 child: Text(
                                   "Date: ${infoText.date}",
                                   style: GoogleFonts.acme(
-                                      textStyle: const TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 72, 52, 52),
+                                      textStyle: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary,
                                           fontSize: 12)),
                                 ),
                               ),

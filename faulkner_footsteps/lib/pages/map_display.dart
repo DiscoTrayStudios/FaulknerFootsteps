@@ -114,10 +114,10 @@ class _MapDisplayState extends State<MapDisplay> {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 238, 214, 196),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20.0),
               border: Border.all(
-                color: const Color.fromARGB(255, 107, 79, 79),
+                color: Theme.of(context).colorScheme.onPrimary,
                 width: 3.0,
               ),
               boxShadow: [
@@ -139,7 +139,7 @@ class _MapDisplayState extends State<MapDisplay> {
                   child: Container(
                     height: 180,
                     width: double.infinity,
-                    color: const Color.fromARGB(255, 250, 235, 215),
+                    color: Theme.of(context).colorScheme.primary,
                     child: selectedSite.images.isNotEmpty &&
                             selectedSite.images.first != null
                         ? Image.memory(
@@ -159,8 +159,8 @@ class _MapDisplayState extends State<MapDisplay> {
                   child: Text(
                     selectedSite.name,
                     style: GoogleFonts.ultra(
-                      textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 72, 52, 52),
+                      textStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
                         fontSize: 22.0,
                         fontWeight: FontWeight.bold,
                       ),
@@ -176,8 +176,8 @@ class _MapDisplayState extends State<MapDisplay> {
                   child: Text(
                     "You have discovered a historical site!",
                     style: GoogleFonts.rakkas(
-                      textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 107, 79, 79),
+                      textStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 16,
                       ),
                     ),
@@ -266,10 +266,10 @@ class _MapDisplayState extends State<MapDisplay> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: const Color.fromARGB(255, 107, 79, 79),
+          color: Theme.of(context).colorScheme.onPrimary,
           width: 2.0,
         ),
-        color: const Color.fromARGB(255, 255, 243, 228),
+        color: Theme.of(context).colorScheme.onSecondary,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -292,7 +292,7 @@ class _MapDisplayState extends State<MapDisplay> {
                 if (icon != null) ...[
                   Icon(
                     icon,
-                    color: const Color.fromARGB(255, 107, 79, 79),
+                    color: Theme.of(context).colorScheme.onPrimary,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -300,8 +300,8 @@ class _MapDisplayState extends State<MapDisplay> {
                 Text(
                   text,
                   style: GoogleFonts.rakkas(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 107, 79, 79),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontSize: 16,
                     ),
                   ),
@@ -351,7 +351,7 @@ class _MapDisplayState extends State<MapDisplay> {
         ));
 
         return Scaffold(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+          backgroundColor: Theme.of(context).colorScheme.surface,
           body: FlutterMap(
             mapController: _mapController,
             key: ValueKey(widget.centerPosition ??
