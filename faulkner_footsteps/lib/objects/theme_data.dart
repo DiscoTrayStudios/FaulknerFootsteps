@@ -68,3 +68,61 @@ final ThemeData faulknerFootstepsTheme = ThemeData(
           fontSize: 12,
         )),
     iconTheme: IconThemeData());
+
+final ThemeData adminPageTheme = ThemeData(
+  // button color: const Color.fromARGB(255, 218, 186, 130)
+  // text color?: Color.fromARGB(255, 76, 32, 8)
+  colorScheme: const ColorScheme(
+      brightness: Brightness.light,
+      primary: const Color.fromARGB(255, 238, 214, 196),
+      onPrimary: Color.fromARGB(255, 76, 32, 8), // tertiary
+      secondary: const Color.fromARGB(255, 218, 186, 130),
+      onSecondary: const Color.fromARGB(255, 238, 214, 196), // primary
+      tertiary: Color.fromARGB(
+          255, 76, 32, 8), // brownish - red. Mostly used for text
+      error: Colors.red,
+      onError: Colors.black,
+      surface: const Color.fromARGB(255, 219, 196, 166),
+      onSurface: const Color.fromARGB(255, 238, 214, 196) // primary
+      ),
+
+  expansionTileTheme: ExpansionTileThemeData(
+      collapsedIconColor: Colors.deepPurple,
+      collapsedTextColor: Color.fromARGB(255, 76, 32, 8),
+      backgroundColor: Color.fromARGB(255, 238, 214, 196),
+      iconColor: Colors.deepPurple,
+      textColor: Color.fromARGB(255, 76, 32, 8)),
+
+  textButtonTheme: TextButtonThemeData(
+      style: ButtonStyle(
+          foregroundColor: WidgetStatePropertyAll(Colors.deepPurple),
+          textStyle:
+              WidgetStatePropertyAll(TextStyle(color: Colors.deepPurple)),
+          iconColor: WidgetStateProperty.all(Colors.deepPurple))),
+
+  listTileTheme: ListTileThemeData(textColor: Color.fromARGB(255, 76, 32, 8)),
+
+  textTheme: TextTheme(
+      bodySmall: GoogleFonts.rakkas(
+          textStyle: const TextStyle(
+    fontSize: 18,
+  ))).apply(
+      bodyColor: Color.fromARGB(255, 76, 32, 8),
+      displayColor: Color.fromARGB(255, 76, 32, 8)),
+  // elevatedButtonTheme: ElevatedButtonThemeData(
+  //     style: ButtonStyle(
+  //         backgroundColor:
+  //             WidgetStatePropertyAll(adminPageTheme.colorScheme.secondary),
+  //         padding: WidgetStatePropertyAll(
+  //             EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
+  //         textStyle: WidgetStatePropertyAll(GoogleFonts.ultra(
+  //             color: adminPageTheme.colorScheme.tertiary))))
+);
+
+/// TODO: 
+/// Change purple to brown on the buttons
+/// edit and delete blurb should be underneath blurb (taking up too much real estate rn)
+/// editing text should not be bolded. It should be a defaultish serif font. 
+/// Hard to see cancel button. it should have an "outer" button (like the other buttons do)
+/// Change white on the buttons to the nice brown. It will be easier to see and read
+/// 

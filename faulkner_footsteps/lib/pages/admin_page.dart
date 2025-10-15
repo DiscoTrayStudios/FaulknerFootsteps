@@ -7,6 +7,7 @@ import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
+import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -61,7 +62,7 @@ class _AdminListPageState extends State<AdminListPage> {
     acceptableFilters = app_state.siteFilters;
     app_state.addListener(() {
       print("Appstate has changed!");
-       setState(() {});
+      setState(() {});
       // if (mounted) {
       // setState(() {
       //   acceptableFilters =
@@ -110,8 +111,8 @@ class _AdminListPageState extends State<AdminListPage> {
     setState(() {});
   }
 
-  Future<List<String>> uploadImages(
-     String folderName, List<String> fileNames, {List<File>? files}) async {
+  Future<List<String>> uploadImages(String folderName, List<String> fileNames,
+      {List<File>? files}) async {
     print("begun uploading images");
     //I want to store a reference to each image and return the list of strings
     final metadata = SettableMetadata(contentType: "image/jpeg");
@@ -123,7 +124,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<UploadTask> uploadTasks = [];
     int count = 0;
     print("prior to for loop");
-     final filesToUpload = files ?? images;
+    final filesToUpload = files ?? images;
     if (filesToUpload == null || filesToUpload.isEmpty) {
       print("No files provided to uploadImages()");
       return paths;
@@ -132,7 +133,8 @@ class _AdminListPageState extends State<AdminListPage> {
       final fileName = fileNames[i];
       final path = "images/$folderName/$fileName.jpg";
       paths.add(path);
-      final uploadTask = storageRef.child(path).putFile(filesToUpload[i], metadata);
+      final uploadTask =
+          storageRef.child(path).putFile(filesToUpload[i], metadata);
       uploadTasks.add(uploadTask);
       uploadTasks[count].snapshotEvents.listen((TaskSnapshot taskSnapshot) {
         switch (taskSnapshot.state) {
@@ -928,7 +930,7 @@ class _AdminListPageState extends State<AdminListPage> {
                         // Just update existing document
                         app_state.addSite(updatedSite);
                       }
-
+                      setState(() {});
                       Navigator.pop(context);
                       setState(() {});
                     }
@@ -943,98 +945,104 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
- Future<void> _showEditSiteImagesDialog(HistSite site) async {
-  List<Uint8List?> siteImages = site.images;
-  List<String> siteImageURLs = site.imageUrls;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
-  List<ImageWithUrl> pairedImages = [];
-  for (int i = 0; i < siteImageURLs.length; i++) {
-    Uint8List? imageData;
-    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
-      imageData = siteImages[i];
-    } else {
-      imageData = await app_state.getImage(siteImageURLs[i]);
+  Future<void> _showEditSiteImagesDialog(HistSite site) async {
+    List<Uint8List?> siteImages = site.images;
+    List<String> siteImageURLs = site.imageUrls;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+    List<ImageWithUrl> pairedImages = [];
+    for (int i = 0; i < siteImageURLs.length; i++) {
+      Uint8List? imageData;
+      if (i < siteImages.length &&
+          siteImages[i] != null &&
+          siteImages[i]!.isNotEmpty) {
+        imageData = siteImages[i];
+      } else {
+        imageData = await app_state.getImage(siteImageURLs[i]);
+      }
+      if (imageData != null && siteImageURLs[i].isNotEmpty) {
+        pairedImages.add(ImageWithUrl(
+          imageData: imageData,
+          url: siteImageURLs[i],
+        ));
+      }
     }
-    if (imageData != null && siteImageURLs[i].isNotEmpty){
-    pairedImages.add(ImageWithUrl(
-      imageData: imageData,
-      url: siteImageURLs[i],
-    ));
-    }
-  }
-  Navigator.pop(context);
-  await showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      List<File> newlyAddedFiles = [];
-      return ListEdit<ImageWithUrl>(
-        title: "Edit Images",
-        items: pairedImages,
-        itemBuilder: (imageWithUrl) {
-          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
-            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
-          }
+    Navigator.pop(context);
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        List<File> newlyAddedFiles = [];
+        return ListEdit<ImageWithUrl>(
+          title: "Edit Images",
+          items: pairedImages,
+          itemBuilder: (imageWithUrl) {
+            if (imageWithUrl.imageData != null &&
+                imageWithUrl.imageData!.isNotEmpty) {
+              return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
+            }
             return Text("You do not have any Images uplodaed to this site.");
-        },
-        addButtonText: "Add Images",
-        deleteButtonText: "Delete Images",
-        onAddItem: () async {
-          await pickImages();
-          if (images != null) {
-            for (File imageFile in images!) {
-              newlyAddedFiles.add(imageFile);
-              Uint8List newFile = await imageFile.readAsBytes();
-              pairedImages.add(ImageWithUrl(
-                imageData: newFile,
-                url: "",
-              ));
+          },
+          addButtonText: "Add Images",
+          deleteButtonText: "Delete Images",
+          onAddItem: () async {
+            await pickImages();
+            if (images != null) {
+              for (File imageFile in images!) {
+                newlyAddedFiles.add(imageFile);
+                Uint8List newFile = await imageFile.readAsBytes();
+                pairedImages.add(ImageWithUrl(
+                  imageData: newFile,
+                  url: "",
+                ));
+              }
+              images = null;
             }
-            images = null;
-          }
-        },
-        onSubmit: () async {
-          for (String url in siteImageURLs) {
-            bool stillExists = pairedImages.any((img) => img.url == url);
-            if (!stillExists && url.isNotEmpty) {
-              try {
-                await storageRef.child(url).delete();
-              } catch (e) {
+          },
+          onSubmit: () async {
+            for (String url in siteImageURLs) {
+              bool stillExists = pairedImages.any((img) => img.url == url);
+              if (!stillExists && url.isNotEmpty) {
+                try {
+                  await storageRef.child(url).delete();
+                } catch (e) {}
               }
             }
-          }
-          if (newlyAddedFiles.isNotEmpty) {
-            List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-            final refName = site.name.replaceAll(' ', '');
-            List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
-            int assignIndex = 0;
-            for (int i = 0; i < pairedImages.length; i++) {
-              if (pairedImages[i].url.isEmpty && assignIndex < uploadedPaths.length) {
-                pairedImages[i].url = uploadedPaths[assignIndex];
-                assignIndex++;
+            if (newlyAddedFiles.isNotEmpty) {
+              List<String> randomNames =
+                  List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+              final refName = site.name.replaceAll(' ', '');
+              List<String> uploadedPaths = await uploadImages(
+                  refName, randomNames,
+                  files: newlyAddedFiles);
+              int assignIndex = 0;
+              for (int i = 0; i < pairedImages.length; i++) {
+                if (pairedImages[i].url.isEmpty &&
+                    assignIndex < uploadedPaths.length) {
+                  pairedImages[i].url = uploadedPaths[assignIndex];
+                  assignIndex++;
+                }
               }
             }
-          }
-          siteImages.clear();
-          siteImageURLs.clear();
-          for (var pair in pairedImages) {
-            siteImages.add(pair.imageData);
-            siteImageURLs.add(pair.url);
-          }
-          
-        },
-      );
-    },
-  );
-  
-  setState(() {}); // Refresh the parent dialog
-}
+            siteImages.clear();
+            siteImageURLs.clear();
+            for (var pair in pairedImages) {
+              siteImages.add(pair.imageData);
+              siteImageURLs.add(pair.url);
+            }
+          },
+        );
+      },
+    );
+
+    setState(() {}); // Refresh the parent dialog
+  }
+
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
@@ -1258,7 +1266,9 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                     ),
                   ),
-                  subtitle: Text(site.description),
+                  subtitle: Text(
+                    site.description,
+                  ),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -1376,41 +1386,44 @@ class _AdminListPageState extends State<AdminListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 219, 196, 166),
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-        elevation: 12.0,
-        shadowColor: const Color.fromARGB(135, 255, 255, 255),
-        title: Text(
-          _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
-          style: GoogleFonts.ultra(
-            textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+    return Theme(
+      data: adminPageTheme,
+      child: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 219, 196, 166),
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+          elevation: 12.0,
+          shadowColor: const Color.fromARGB(135, 255, 255, 255),
+          title: Text(
+            _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
+            style: GoogleFonts.ultra(
+              textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+            ),
           ),
         ),
-      ),
-      body: _selectedIndex == 0
-          ? _buildAdminContent()
-          : MapDisplay(
-              currentPosition: const LatLng(2, 2),
-              initialPosition: const LatLng(2, 2),
+        body: _selectedIndex == 0
+            ? _buildAdminContent()
+            : MapDisplay(
+                currentPosition: const LatLng(2, 2),
+                initialPosition: const LatLng(2, 2),
+              ),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: const Color.fromARGB(255, 218, 180, 130),
+          selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.admin_panel_settings),
+              label: 'Admin',
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 218, 180, 130),
-        selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-        unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.admin_panel_settings),
-            label: 'Admin',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.map),
+              label: 'Map',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
