@@ -1,6 +1,3 @@
-import 'dart:collection';
-import 'dart:convert';
-
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/pin_Dialog.dart';
 import 'package:faulkner_footsteps/pages/achievement.dart';
@@ -34,7 +31,6 @@ class _MapDisplayState extends State<MapDisplay> {
   late Map<String, LatLng> siteLocations;
   late Map<String, double> siteDistances;
   late var sorted;
-
   @override
   void initState() {
     super.initState();
@@ -71,7 +67,7 @@ class _MapDisplayState extends State<MapDisplay> {
   }
 
   void locationDialog(context) {
-    // final appState = Provider.of<ApplicationState>(context, listen: false);
+    final appState = Provider.of<ApplicationState>(context, listen: false);
 
     // First, check if there are any sites close enough
     if (sorted.isEmpty || sorted.values.first >= 30000.0) {

@@ -2,9 +2,6 @@ import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
-import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AchievementsPage extends StatefulWidget {

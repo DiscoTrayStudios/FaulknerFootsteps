@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +35,6 @@ class _HistSitePage extends State<HistSitePage> {
     super.initState();
   }
 
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     app_state = Provider.of<ApplicationState>(context, listen: false);
@@ -53,7 +50,7 @@ class _HistSitePage extends State<HistSitePage> {
   //   final double? userRating = await showDialog<double>(
   //     context: context,
   //     builder: (BuildContext context) => RatingDialog(
-  //       app_state: widget.app_state,
+  //       app_state: app_state,
   //       site_name: widget.histSite.name,
   //     ),
   //   );
@@ -343,7 +340,7 @@ class _HistSitePage extends State<HistSitePage> {
                 ,
                 //This Updates Immediately, but one step behind
                 // Text(
-                //     " (${widget.app_state.historicalSites.firstWhere((site) {
+                //     " (${app_state.historicalSites.firstWhere((site) {
                 //           if (site.name == widget.histSite.name) {
                 //             print(site.name);
                 //             return true;

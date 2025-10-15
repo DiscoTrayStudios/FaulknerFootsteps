@@ -44,7 +44,6 @@ class LoginPage extends StatelessWidget {
         primary: const Color.fromARGB(255, 107, 79, 79),
         secondary: const Color.fromARGB(255, 176, 133, 133),
         surface: const Color.fromARGB(255, 255, 243, 228),
-        background: const Color.fromARGB(255, 238, 214, 196),
         onPrimary: const Color.fromARGB(255, 255, 243, 228),
       ),
       inputDecorationTheme: const InputDecorationTheme(

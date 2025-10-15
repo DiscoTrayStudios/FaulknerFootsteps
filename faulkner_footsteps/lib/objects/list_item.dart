@@ -1,20 +1,22 @@
 // https://stackoverflow.com/questions/63869555/shadows-in-a-rounded-rectangle-in-flutter
 // -> To add a shadow effect for the listItem, mapDisplay, rating... etc
-import 'dart:convert';
 
 import 'package:faulkner_footsteps/app_router.dart';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
 
 class ListItem extends StatelessWidget {
-  ListItem({super.key, required this.siteInfo, required this.currentPosition});
+  ListItem(
+      {super.key,
+      required this.siteInfo,
+      required this.app_state,
+      required this.currentPosition});
   final HistSite siteInfo;
+  final ApplicationState app_state;
   final LatLng currentPosition;
 
   final _distance = new Distance();
@@ -22,7 +24,6 @@ class ListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // setImages();
-    final app_state = Provider.of<ApplicationState>(context, listen: false);
     String siteDistance = (_distance.as(LengthUnit.Meter,
                 LatLng(siteInfo.lat, siteInfo.lng), currentPosition) /
             1609.344)

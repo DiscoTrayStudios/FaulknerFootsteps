@@ -1,18 +1,13 @@
 import 'dart:async';
 
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
-import 'package:faulkner_footsteps/pages/achievement.dart';
-import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
-import 'package:faulkner_footsteps/widgets/logout_button.dart';
 import 'package:faulkner_footsteps/widgets/profile_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:faulkner_footsteps/objects/list_item.dart';
-import 'package:faulkner_footsteps/pages/start_page.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -57,6 +52,7 @@ class _ListPageState extends State<ListPage> {
     });
   }
 
+  late Timer updateTimer;
   late List<HistSite> fullSiteList;
   late List<HistSite> displaySites;
   late SearchController _searchController;
@@ -70,19 +66,17 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void initState() {
-    //TODO: move all appstate references in initstate to didchangedependencies. Do this in every file
     getlocation();
-
-    // activeFilters.addAll(app_state
-    // .siteFilters); //I suspect that this doesn't load quickly enough and that is why active filters starts empty
     super.initState();
+    print("reached init state");
   }
 
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    print("reached didchange dependencies");
     app_state = Provider.of<ApplicationState>(context, listen: false);
     setState(() {
+      print("reached");
       displaySites = app_state.historicalSites;
       fullSiteList = app_state.historicalSites;
       searchSites = fullSiteList;
@@ -99,6 +93,15 @@ class _ListPageState extends State<ListPage> {
       });
     });
   }
+
+//TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   final appState = Provider.of<ApplicationState>(context);
+  //   print("DidChangeDependencies Called!!!!");
+  //   print("Historical Sites in AppState? ${appState.historicalSites.length}");
+  //   setDisplayItems();
+  // }
 
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
@@ -119,8 +122,8 @@ class _ListPageState extends State<ListPage> {
 
   @override
   void dispose() {
-    app_state.dispose();
     super.dispose();
+    updateTimer.cancel();
   }
 
   Widget _buildHomeContent() {
@@ -222,6 +225,7 @@ class _ListPageState extends State<ListPage> {
                 HistSite site = displaySites[index - 1];
 
                 return ListItem(
+                    app_state: app_state,
                     siteInfo: site,
                     currentPosition: _currentPosition ?? LatLng(0, 0));
               }

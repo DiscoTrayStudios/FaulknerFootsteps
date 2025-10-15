@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
@@ -14,14 +12,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'firebase_options.dart';
 
 class ApplicationState extends ChangeNotifier {
   ApplicationState() {
-    print("ApplicationState constructor called");
     init();
   }
 
@@ -39,10 +35,7 @@ class ApplicationState extends ChangeNotifier {
   List<SiteFilter> _siteFilters = [];
   List<SiteFilter> get siteFilters => _siteFilters;
 
-  final ValueNotifier<bool> adminImagesReady = ValueNotifier(false);
-
   Future<void> init() async {
-    print("App state init called!!!");
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
 
@@ -70,10 +63,7 @@ class ApplicationState extends ChangeNotifier {
             .snapshots()
             .listen((snapshot) async {
           _historicalSites = [];
-          for (int i = 0; i < snapshot.docs.length; i++) {
-            QueryDocumentSnapshot<Map<String, dynamic>> document =
-                snapshot.docs[i];
-
+          for (final document in snapshot.docs) {
             var blurbCont = document.data()["blurbs"];
             List<String> blurbStrings = blurbCont.split("{ListDiv}");
             List<InfoText> newBlurbs = [];
@@ -114,13 +104,9 @@ class ApplicationState extends ChangeNotifier {
                   : 0,
             );
             _historicalSites.add(site);
-            loadImageToHistSite(document, site).then((_) {
-              if (i == snapshot.docs.length - 1) {
-                print("Last image loaded");
-                adminImagesReady.value = true;
-              }
-            });
+            loadImageToHistSite(document, site);
           }
+          //print(historicalSites);
           notifyListeners();
         });
       } else {
@@ -167,9 +153,6 @@ class ApplicationState extends ChangeNotifier {
       // Handle any errors.
       print(("ERROR!!! This occured when calling getImage(). Error: $e"));
       print("Error is for $s");
-      ByteData bd =
-          await rootBundle.load('assets/images/faulkner_thumbnail.png');
-      data = bd.buffer.asUint8List();
     } finally {}
     return data;
   }
@@ -225,8 +208,6 @@ class ApplicationState extends ChangeNotifier {
         .collection("sites")
         .doc(newSite.name)
         .collection("ratings");
-
-    notifyListeners();
   }
 
   Future<double> getUserRating(String siteName) async {
@@ -340,50 +321,94 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
-  Future<void> loadFilters() async {
-    if (!_loggedIn) return;
+Future<void> loadFilters() async {
+  if (!_loggedIn) return;
 
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
 
-    try {
-      _siteFilters.clear();
-      //is this try needed?
-      final snapshot =
-          await FirebaseFirestore.instance.collection("filters").get();
-      for (final document in snapshot.docs) {
-        String name = document.get("name");
-        SiteFilter f = new SiteFilter(name: name);
-        _siteFilters.add(f);
-        print("filter added: $name");
-      }
-      if (!_siteFilters.any((f) => f.name == "Other")) {
-        _siteFilters.add(SiteFilter(name: "Other"));
-      }
-    } catch (e) {
-      print("Error loading filters: $e");
+  try {
+    _siteFilters.clear();
+    
+    final snapshot = await FirebaseFirestore.instance
+        .collection("filters")
+        .orderBy("order") // Sort by order field
+        .get();
+        
+    for (final document in snapshot.docs) {
+      String name = document.get("name");
+      int order = document.data().containsKey("order") 
+          ? document.get("order") 
+          : 0;
+      SiteFilter f = SiteFilter(name: name, order: order);
+      _siteFilters.add(f);
+      print("filter added: $name with order: $order");
     }
+    
+    if (!_siteFilters.any((f) => f.name == "Other")) {
+      _siteFilters.add(SiteFilter(name: "Other", order: 9999));
+    }
+  } catch (e) {
+    print("Error loading filters: $e");
   }
+}
 
   Future<void> addFilter(String name) async {
-    if (!_loggedIn) return;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (!_loggedIn) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
 
-    if (userId == null) return;
+  try {
+    // New filters go at the end
+    int newOrder = _siteFilters.length;
+    _siteFilters.add(SiteFilter(name: name, order: newOrder));
 
-    try {
-      _siteFilters.add(SiteFilter(name: name));
+    var data = {
+      "name": name,
+      "order": newOrder,
+    };
 
-      var data = {"name": name};
-
+    await FirebaseFirestore.instance
+        .collection("filters")
+        .doc(name)
+        .set(data);
+  } catch (e) {
+    print("Error saving filter: $e");
+  }
+}
+Future<void> saveFilterOrder() async {
+  if (!_loggedIn) return;
+  
+  try {
+    // Update the order field for each filter
+    for (int i = 0; i < _siteFilters.length; i++) {
+      _siteFilters[i].order = i;
+      
       await FirebaseFirestore.instance
           .collection("filters")
-          .doc(name)
-          .set(data);
-    } catch (e) {
-      print("Error saving filter: $e");
+          .doc(_siteFilters[i].name)
+          .update({"order": i});
     }
+    print("Filter order saved");
+  } catch (e) {
+    print("Error saving filter order: $e");
   }
+}
+  Future<void> removeFilter(String name) async {
+  if (!_loggedIn) return;
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  if (userId == null) return;
+  
+  try {
+    
+    await FirebaseFirestore.instance
+        .collection("filters")
+        .doc(name)
+        .delete();
+  } catch (e) {
+    print("Error removing filter: $e");
+  }
+}
 
   Future<void> saveAchievement(String place) async {
     if (!_loggedIn) return;

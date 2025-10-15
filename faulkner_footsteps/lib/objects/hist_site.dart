@@ -1,8 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
-import 'package:flutter/material.dart';
 
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:latlong2/latlong.dart';

@@ -41,7 +41,6 @@ class _StartPageState extends State<StartPage>
     });
   }
 
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final appState = Provider.of<ApplicationState>(context, listen: false);
