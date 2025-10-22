@@ -86,30 +86,67 @@ final ThemeData adminPageTheme = ThemeData(
       surface: const Color.fromARGB(255, 219, 196, 166),
       onSurface: const Color.fromARGB(255, 238, 214, 196) // primary
       ),
-
   expansionTileTheme: ExpansionTileThemeData(
-      collapsedIconColor: Colors.deepPurple,
+      collapsedIconColor: Color.fromARGB(255, 76, 32, 8),
       collapsedTextColor: Color.fromARGB(255, 76, 32, 8),
       backgroundColor: Color.fromARGB(255, 238, 214, 196),
-      iconColor: Colors.deepPurple,
+      iconColor: Color.fromARGB(255, 76, 32, 8),
       textColor: Color.fromARGB(255, 76, 32, 8)),
-
   textButtonTheme: TextButtonThemeData(
       style: ButtonStyle(
-          foregroundColor: WidgetStatePropertyAll(Colors.deepPurple),
-          textStyle:
-              WidgetStatePropertyAll(TextStyle(color: Colors.deepPurple)),
-          iconColor: WidgetStateProperty.all(Colors.deepPurple))),
-
+          foregroundColor:
+              WidgetStatePropertyAll(Color.fromARGB(255, 76, 32, 8)),
+          textStyle: WidgetStatePropertyAll(
+              TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
+          iconColor: WidgetStateProperty.all(Color.fromARGB(255, 76, 32, 8)))),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ButtonStyle(
+          backgroundColor:
+              WidgetStateProperty.all(Color.fromARGB(255, 218, 186, 130)),
+          foregroundColor:
+              WidgetStateProperty.all(Color.fromARGB(255, 76, 32, 8)),
+          textStyle: WidgetStateProperty.all(GoogleFonts.rakkas(
+              textStyle: const TextStyle(
+                  fontSize: 16, color: Color.fromARGB(255, 76, 32, 8)))))),
   listTileTheme: ListTileThemeData(textColor: Color.fromARGB(255, 76, 32, 8)),
-
+  iconButtonTheme: IconButtonThemeData(
+      style: ButtonStyle(
+          iconColor: WidgetStateProperty.all(Color.fromARGB(255, 76, 32, 8)))),
+  iconTheme: IconThemeData(color: Color.fromARGB(255, 76, 32, 8)),
   textTheme: TextTheme(
-      bodySmall: GoogleFonts.rakkas(
+    //  displayMedium: ,
+
+    //  headlineMedium: ,
+
+    titleMedium: GoogleFonts.ultra(
+        textStyle: const TextStyle(
+            fontSize: 18, color: Color.fromARGB(255, 76, 32, 8))),
+
+    bodyMedium: GoogleFonts.rakkas(
+        textStyle: const TextStyle(
+            fontSize: 18, color: Color.fromARGB(255, 76, 32, 8))),
+
+    bodySmall: GoogleFonts.rakkas(
+      textStyle:
+          const TextStyle(fontSize: 18, color: Color.fromARGB(255, 76, 32, 8)),
+    ),
+
+    // labelMedium: ,
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+      focusedBorder: OutlineInputBorder(
+        borderSide:
+            BorderSide(color: Color.fromARGB(255, 76, 32, 8), width: 2.0),
+      ),
+      labelStyle: GoogleFonts.ultra(
           textStyle: const TextStyle(
-    fontSize: 18,
-  ))).apply(
-      bodyColor: Color.fromARGB(255, 76, 32, 8),
-      displayColor: Color.fromARGB(255, 76, 32, 8)),
+              color: Color.fromARGB(255, 76, 32, 8), fontSize: 24))),
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: Color.fromARGB(255, 76, 32, 8),
+    selectionColor: Color.fromARGB(255, 76, 32, 8),
+    selectionHandleColor: Color.fromARGB(255, 76, 32, 8),
+  ),
+
   // elevatedButtonTheme: ElevatedButtonThemeData(
   //     style: ButtonStyle(
   //         backgroundColor:
