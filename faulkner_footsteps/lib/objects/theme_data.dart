@@ -20,6 +20,7 @@ final ThemeData faulknerFootstepsTheme = ThemeData(
         outline: Color.fromARGB(255, 176, 133, 133)),
     appBarTheme: AppBarTheme(
       backgroundColor: Color.fromARGB(255, 72, 52, 52),
+      surfaceTintColor: Colors.transparent,
       actionsIconTheme:
           IconThemeData(color: Color.fromARGB(255, 255, 243, 228)),
       iconTheme: IconThemeData(color: Color.fromARGB(255, 255, 243, 228)),
