@@ -42,6 +42,8 @@ class _AdminListPageState extends State<AdminListPage> {
   // List<SiteFilter> chosenFilters = [];
   List<SiteFilter> acceptableFilters = [];
   List<File> newlyAddedFiles = [];
+  Map<String, List<ImageWithUrl>> tempImageChanges = {};
+  Map<String, List<String>> tempDeletedUrls = {};
 
   @override
   void initState() {
@@ -813,7 +815,38 @@ class _AdminListPageState extends State<AdminListPage> {
                     // Get list of all the current paths
                     List<String> paths = [];
 
-                    print("Length of site list: ${site.images.length}");
+                  List<ImageWithUrl> pairedImages;
+                  if (tempImageChanges.containsKey(originalName)) {
+                  pairedImages = tempImageChanges[originalName]!;
+                  if (tempDeletedUrls.containsKey(originalName)) {
+                    for (String url in tempDeletedUrls[originalName]!) {
+                      try {
+                        await storageRef.child(url).delete();
+                        print("Deleted image: $url");
+                      } catch (e) {
+                        print("Error deleting image: $e");
+                      }
+                    }
+                  }
+                  } else {
+                  pairedImages = [];
+                  for (int i = 0; i < site.imageUrls.length; i++) {
+                    Uint8List? imageData;
+                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
+                      imageData = site.images[i];
+                    } else {
+                      imageData = await app_state.getImage(site.imageUrls[i]);
+                    }
+                    if (imageData != null && site.imageUrls[i].isNotEmpty){
+                      pairedImages.add(ImageWithUrl(
+                        imageData: imageData,
+                        url: site.imageUrls[i],
+                      ));
+                    }
+                  }
+                  }
+
+                   /* print("Length of site list: ${site.images.length}");
 
                     // remove any deleted images
                     // NOTE: it may be better to handle this when we delete items.
@@ -843,11 +876,26 @@ class _AdminListPageState extends State<AdminListPage> {
                     paths.addAll(site.imageUrls);
                     print("Paths size: ${paths.length}");
                     List<ImageWithUrl> pairedImages = [];
+                    for (int i = 0; i < site.imageUrls.length; i++) {
+                    Uint8List? imageData;
+                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
+                      imageData = site.images[i];
+                    } else {
+                      imageData = await app_state.getImage(site.imageUrls[i]);
+                    }
+                    if (imageData != null && site.imageUrls[i].isNotEmpty){
+                    pairedImages.add(ImageWithUrl(
+                      imageData: imageData,
+                      url: site.imageUrls[i],
+                    ));
+                    }} */
                     if (nameController.text.isNotEmpty &&
                         descriptionController.text.isNotEmpty) {
                     List<String> urlsToDelete = [];
                     for (String originalUrl in site.imageUrls) {
-                        bool stillExists = pairedImages.any((img) => img.url == originalUrl);
+                        bool stillExists = pairedImages.any((img) {
+                          return img.url == originalUrl;
+                        });
                         if (!stillExists && originalUrl.isNotEmpty) {
                           urlsToDelete.add(originalUrl);
                         }
@@ -953,6 +1001,8 @@ class _AdminListPageState extends State<AdminListPage> {
                         // Just update existing document
                         app_state.addSite(updatedSite);
                       }
+                        tempImageChanges.remove(originalName);
+                        tempDeletedUrls.remove(originalName);
 
                       Navigator.pop(context);
                       setState(() {});
@@ -971,14 +1021,18 @@ class _AdminListPageState extends State<AdminListPage> {
  Future<void> _showEditSiteImagesDialog(HistSite site) async {
   List<Uint8List?> siteImages = site.images;
   List<String> siteImageURLs = site.imageUrls;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
+  List<String> originalUrls = List.from(site.imageUrls);
   List<ImageWithUrl> pairedImages = [];
+   if (tempImageChanges.containsKey(site.name)) {
+    pairedImages = List.from(tempImageChanges[site.name]!);
+  } else {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
   for (int i = 0; i < siteImageURLs.length; i++) {
     Uint8List? imageData;
     if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
@@ -993,7 +1047,8 @@ class _AdminListPageState extends State<AdminListPage> {
     ));
     }
   }
-  Navigator.pop(context);
+    Navigator.pop(context);
+  }
   await showDialog(
     barrierDismissible: false,
     context: context,
@@ -1024,13 +1079,23 @@ class _AdminListPageState extends State<AdminListPage> {
           }
         },
         onSubmit: () async {
+          tempImageChanges[site.name] = List.from(pairedImages);
+          Set<String> remainingUrls = pairedImages
+              .where((img) => img.url.isNotEmpty)
+              .map((img) => img.url)
+              .toSet();
+          
+          List<String> urlsToDelete = originalUrls
+              .where((url) => !remainingUrls.contains(url))
+              .toList();
+          tempDeletedUrls[site.name] = urlsToDelete;
         },
       );
     },
   );
   
   setState(() {}); // Refresh the parent dialog
-}
+ }
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
