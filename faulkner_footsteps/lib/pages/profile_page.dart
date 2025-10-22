@@ -51,7 +51,6 @@ class _ProfilePageState extends State<ProfilePage>
       ),
     );
 
-
     // Start the animation and make it repeat
     _animationController.repeat(reverse: true);
 
@@ -167,7 +166,7 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
-     // Create color animation (glow effect)
+    // Create color animation (glow effect)
     late Animation<Color?> _colorAnimation;
     _colorAnimation = ColorTween(
       begin: Theme.of(context).colorScheme.onPrimary,
@@ -190,7 +189,6 @@ class _ProfilePageState extends State<ProfilePage>
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
         iconTheme: IconThemeData(
           color: Theme.of(context).colorScheme.primary,
         ),

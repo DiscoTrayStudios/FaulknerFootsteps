@@ -4,6 +4,7 @@ import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
+import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -60,7 +61,7 @@ class _AdminListPageState extends State<AdminListPage> {
     acceptableFilters = app_state.siteFilters;
     app_state.addListener(() {
       print("Appstate has changed!");
-       setState(() {});
+      setState(() {});
       // if (mounted) {
       // setState(() {
       //   acceptableFilters =
@@ -109,8 +110,8 @@ class _AdminListPageState extends State<AdminListPage> {
     setState(() {});
   }
 
-  Future<List<String>> uploadImages(
-     String folderName, List<String> fileNames, {List<File>? files}) async {
+  Future<List<String>> uploadImages(String folderName, List<String> fileNames,
+      {List<File>? files}) async {
     print("begun uploading images");
     //I want to store a reference to each image and return the list of strings
     final metadata = SettableMetadata(contentType: "image/jpeg");
@@ -122,7 +123,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<UploadTask> uploadTasks = [];
     int count = 0;
     print("prior to for loop");
-     final filesToUpload = files ?? images;
+    final filesToUpload = files ?? images;
     if (filesToUpload == null || filesToUpload.isEmpty) {
       print("No files provided to uploadImages()");
       return paths;
@@ -131,7 +132,8 @@ class _AdminListPageState extends State<AdminListPage> {
       final fileName = fileNames[i];
       final path = "images/$folderName/$fileName.jpg";
       paths.add(path);
-      final uploadTask = storageRef.child(path).putFile(filesToUpload[i], metadata);
+      final uploadTask =
+          storageRef.child(path).putFile(filesToUpload[i], metadata);
       uploadTasks.add(uploadTask);
       uploadTasks[count].snapshotEvents.listen((TaskSnapshot taskSnapshot) {
         switch (taskSnapshot.state) {
@@ -235,280 +237,273 @@ class _AdminListPageState extends State<AdminListPage> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                'Add New Historical Site',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
-                  ),
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Site Name',
-                        labelStyle:
-                            TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+            return Theme(
+              data: adminPageTheme,
+              child: Builder(
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                    title: Text(
+                      'Add New Historical Site',
+                      style: GoogleFonts.ultra(
+                        textStyle: const TextStyle(
+                          color: Color.fromARGB(255, 76, 32, 8),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: descriptionController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        labelStyle:
-                            TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: latController,
-                            keyboardType: TextInputType.number,
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: nameController,
+                            style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Latitude',
-                              labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 76, 32, 8)),
+                              labelText: 'Site Name',
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: lngController,
-                            keyboardType: TextInputType.number,
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: descriptionController,
+                            maxLines: 3,
+                            style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Longitude',
-                              labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 76, 32, 8)),
+                              labelText: 'Description',
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130),
-                      ),
-                      onPressed: () async {
-                        await _showAddBlurbDialog(blurbs);
-                        setState(
-                            () {}); // Refresh the dialog to show new blurbs
-                      },
-                      child: const Text('Add Blurb'),
-                    ),
-                    if (blurbs.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      const Text('Current Blurbs:'),
-                      ...blurbs
-                          .map((blurb) => ListTile(
-                                title: Text(blurb.title),
-                                subtitle: Text(blurb.value),
-                              ))
-                          .toList(),
-                    ],
-
-                    MenuAnchor(
-                        style: MenuStyle(
-                            backgroundColor: WidgetStatePropertyAll(
-                                const Color.fromARGB(255, 238, 214, 196)),
-                            side: WidgetStatePropertyAll(BorderSide(
-                                color: Color.fromARGB(255, 72, 52, 52),
-                                width: 2.0)),
-                            shape: WidgetStatePropertyAll(
-                                RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(20.0)))),
-                        builder: (BuildContext context,
-                            MenuController controller, Widget? child) {
-                          return ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromARGB(255, 218, 186, 130),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                    controller: latController,
+                                    keyboardType: TextInputType.number,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Latitude',
+                                    )),
                               ),
-                              // focusNode: _buttonFocusNode,
-                              onPressed: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: lngController,
+                                  keyboardType: TextInputType.number,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Longitude',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () async {
+                              await _showAddBlurbDialog(blurbs);
+                              setState(
+                                  () {}); // Refresh the dialog to show new blurbs
+                            },
+                            child: const Text('Add Blurb'),
+                          ),
+                          if (blurbs.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text('Current Blurbs:'),
+                            ...blurbs
+                                .map((blurb) => ListTile(
+                                      title: Text(blurb.title),
+                                      subtitle: Text(blurb.value),
+                                    ))
+                                .toList(),
+                          ],
+
+                          MenuAnchor(
+                              style: MenuStyle(
+                                  backgroundColor: WidgetStatePropertyAll(
+                                      const Color.fromARGB(255, 238, 214, 196)),
+                                  side: WidgetStatePropertyAll(BorderSide(
+                                      color: Color.fromARGB(255, 72, 52, 52),
+                                      width: 2.0)),
+                                  shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20.0)))),
+                              builder: (BuildContext context,
+                                  MenuController controller, Widget? child) {
+                                return ElevatedButton(
+                                    // focusNode: _buttonFocusNode,
+                                    onPressed: () {
+                                      if (controller.isOpen) {
+                                        controller.close();
+                                      } else {
+                                        controller.open();
+                                      }
+                                    },
+                                    child: const Text("Add Filters"));
+                              },
+                              menuChildren: acceptableFilters
+                                  .map((filter) => CheckboxMenuButton(
+                                      style: ButtonStyle(
+                                          textStyle:
+                                              WidgetStatePropertyAll(TextStyle(color: Color.fromARGB(255, 72, 52, 52), fontSize: 16.0, fontWeight: FontWeight.bold))),
+                                      closeOnActivate: false,
+                                      value: chosenFilters.contains(filter),
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          if (!chosenFilters.contains(filter)) {
+                                            chosenFilters.add(filter);
+                                            print(chosenFilters);
+                                          } else {
+                                            chosenFilters.remove(filter);
+                                            print(chosenFilters);
+                                          }
+                                        });
+                                      },
+                                      child: Text((filter.name))))
+                                  .toList()
+
+                              // [
+                              //   CheckboxMenuButton(
+                              //       value: false,
+                              //       onChanged: (bool? value) {
+                              //         print("changed");
+                              //       },
+                              //       child: const Text("Message"))
+                              // ]
+                              ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              await pickImages();
+                              setState(
+                                  () {}); //idk why, but setState is acting weird here but it works now
+                            },
+                            child: const Text('Add Image'),
+                          ),
+                          //NEW STUFF
+                          // ListView.builder(
+                          //   physics: NeverScrollableScrollPhysics(),
+                          //   shrinkWrap: true,
+                          //   itemCount: siteFilter.values.length,
+                          //   scrollDirection: Axis.horizontal,
+                          //   itemBuilder: (context, index) {
+                          //     siteFilter currentFilter = siteFilter.values[index];
+                          //     return Padding(
+                          //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
+                          //       // padding: EdgeInsets.all(8),
+                          //       child: FilterChip(
+                          //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
+                          //         disabledColor: Color.fromARGB(255, 255, 243, 228),
+                          //         selectedColor: Color.fromARGB(255, 107, 79, 79),
+                          //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
+                          //         label: Text(currentFilter.name,
+                          //             style: GoogleFonts.ultra(
+                          //                 textStyle: TextStyle(
+                          //                     color: chosenFilters
+                          //                             .contains(currentFilter)
+                          //                         ? Color.fromARGB(255, 255, 243, 228)
+                          //                         : Color.fromARGB(255, 107, 79, 79),
+                          //                     fontSize: 14))),
+                          //         selected: chosenFilters.contains(currentFilter),
+                          //         onSelected: (bool selected) {
+                          //           setState(() {
+                          //             if (selected) {
+                          //               chosenFilters.add(currentFilter);
+                          //             } else {
+                          //               chosenFilters.remove(currentFilter);
+                          //             }
+                          //             // filterChangedCallback();
+                          //           });
+                          //         },
+                          //       ),
+                          //     );
+                          //   },
+                          //   // children: siteFilter.values.map((siteFilter filter) {
+                          // ),
+                          if (image != null) ...[
+                            const SizedBox(height: 10),
+                            const Text("Current Image: "),
+                            image != null
+                                ? Image.file(image!,
+                                    width: 160,
+                                    height: 160,
+                                    fit: BoxFit.contain)
+                                : FlutterLogo()
+                          ],
+                          if (images != null) ...[
+                            SizedBox(
+                              //todo: replace with media.sizequery?
+                              height: 200,
+                              width: 200,
+                              child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: images!.length,
+                                  itemBuilder: (context, index) {
+                                    return Image.file(images![index]);
+                                  }),
+                            )
+                          ],
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        // style: images == null
+                        //     ? ElevatedButton.styleFrom(
+                        //         backgroundColor: const Color.fromARGB(0, 0, 0, 0))
+                        //     : ElevatedButton.styleFrom(
+                        //         backgroundColor:
+                        //             const Color.fromARGB(255, 218, 186, 130),
+                        //       ),
+                        onPressed: images == null
+                            ? null
+                            : () async {
+                                if (chosenFilters.isEmpty) {
+                                  chosenFilters.add(SiteFilter(name: "Other"));
+                                }
+                                //I think putting an async here is fine.
+                                if (nameController.text.isNotEmpty &&
+                                    descriptionController.text.isNotEmpty) {
+                                  List<String> randomNames = [];
+                                  int i = 0;
+                                  while (i < images!.length) {
+                                    randomNames.add(uuid.v4());
+                                    print("Random name thing executed");
+                                    i += 1;
+                                  }
+                                  List<String> paths = await uploadImages(
+                                      nameController.text, randomNames);
+                                  print("Made it past uploading images");
+                                  // String randomName = uuid.v4();
+                                  // String path =
+                                  // await uploadImage(nameController.text, randomName);
+                                  final newSite = HistSite(
+                                    name: nameController.text,
+                                    description: descriptionController.text,
+                                    blurbs: blurbs,
+                                    imageUrls: paths,
+                                    avgRating: 0.0,
+                                    ratingAmount: 0,
+                                    filters: chosenFilters,
+                                    lat: double.tryParse(latController.text) ??
+                                        0.0,
+                                    lng: double.tryParse(lngController.text) ??
+                                        0.0,
+                                  );
+                                  app_state.addSite(newSite);
+                                  Navigator.pop(context);
+                                  setState(() {});
                                 }
                               },
-                              child: const Text("Add Filters"));
-                        },
-                        menuChildren: acceptableFilters
-                            .map((filter) => CheckboxMenuButton(
-                                style: ButtonStyle(
-                                    textStyle: WidgetStatePropertyAll(TextStyle(
-                                        color: Color.fromARGB(255, 72, 52, 52),
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold))),
-                                closeOnActivate: false,
-                                value: chosenFilters.contains(filter),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    if (!chosenFilters.contains(filter)) {
-                                      chosenFilters.add(filter);
-                                      print(chosenFilters);
-                                    } else {
-                                      chosenFilters.remove(filter);
-                                      print(chosenFilters);
-                                    }
-                                  });
-                                },
-                                child: Text((filter.name))))
-                            .toList()
-
-                        // [
-                        //   CheckboxMenuButton(
-                        //       value: false,
-                        //       onChanged: (bool? value) {
-                        //         print("changed");
-                        //       },
-                        //       child: const Text("Message"))
-                        // ]
-                        ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130),
+                        child: const Text('Save Site'),
                       ),
-                      onPressed: () async {
-                        await pickImages();
-                        setState(
-                            () {}); //idk why, but setState is acting weird here but it works now
-                      },
-                      child: const Text('Add Image'),
-                    ),
-                    //NEW STUFF
-                    // ListView.builder(
-                    //   physics: NeverScrollableScrollPhysics(),
-                    //   shrinkWrap: true,
-                    //   itemCount: siteFilter.values.length,
-                    //   scrollDirection: Axis.horizontal,
-                    //   itemBuilder: (context, index) {
-                    //     siteFilter currentFilter = siteFilter.values[index];
-                    //     return Padding(
-                    //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
-                    //       // padding: EdgeInsets.all(8),
-                    //       child: FilterChip(
-                    //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
-                    //         disabledColor: Color.fromARGB(255, 255, 243, 228),
-                    //         selectedColor: Color.fromARGB(255, 107, 79, 79),
-                    //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
-                    //         label: Text(currentFilter.name,
-                    //             style: GoogleFonts.ultra(
-                    //                 textStyle: TextStyle(
-                    //                     color: chosenFilters
-                    //                             .contains(currentFilter)
-                    //                         ? Color.fromARGB(255, 255, 243, 228)
-                    //                         : Color.fromARGB(255, 107, 79, 79),
-                    //                     fontSize: 14))),
-                    //         selected: chosenFilters.contains(currentFilter),
-                    //         onSelected: (bool selected) {
-                    //           setState(() {
-                    //             if (selected) {
-                    //               chosenFilters.add(currentFilter);
-                    //             } else {
-                    //               chosenFilters.remove(currentFilter);
-                    //             }
-                    //             // filterChangedCallback();
-                    //           });
-                    //         },
-                    //       ),
-                    //     );
-                    //   },
-                    //   // children: siteFilter.values.map((siteFilter filter) {
-                    // ),
-                    if (image != null) ...[
-                      const SizedBox(height: 10),
-                      const Text("Current Image: "),
-                      image != null
-                          ? Image.file(image!,
-                              width: 160, height: 160, fit: BoxFit.contain)
-                          : FlutterLogo()
                     ],
-                    if (images != null) ...[
-                      SizedBox(
-                        //todo: replace with media.sizequery?
-                        height: 200,
-                        width: 200,
-                        child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: images!.length,
-                            itemBuilder: (context, index) {
-                              return Image.file(images![index]);
-                            }),
-                      )
-                    ],
-                  ],
-                ),
+                  );
+                },
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: images == null
-                      ? ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(0, 0, 0, 0))
-                      : ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(255, 218, 186, 130),
-                        ),
-                  onPressed: images == null
-                      ? null
-                      : () async {
-                          if (chosenFilters.isEmpty) {
-                            chosenFilters.add(SiteFilter(name: "Other"));
-                          }
-                          //I think putting an async here is fine.
-                          if (nameController.text.isNotEmpty &&
-                              descriptionController.text.isNotEmpty) {
-                            List<String> randomNames = [];
-                            int i = 0;
-                            while (i < images!.length) {
-                              randomNames.add(uuid.v4());
-                              print("Random name thing executed");
-                              i += 1;
-                            }
-                            List<String> paths = await uploadImages(
-                                nameController.text, randomNames);
-                            print("Made it past uploading images");
-                            // String randomName = uuid.v4();
-                            // String path =
-                            // await uploadImage(nameController.text, randomName);
-                            final newSite = HistSite(
-                              name: nameController.text,
-                              description: descriptionController.text,
-                              blurbs: blurbs,
-                              imageUrls: paths,
-                              avgRating: 0.0,
-                              ratingAmount: 0,
-                              filters: chosenFilters,
-                              lat: double.tryParse(latController.text) ?? 0.0,
-                              lng: double.tryParse(lngController.text) ?? 0.0,
-                            );
-                            app_state.addSite(newSite);
-                            Navigator.pop(context);
-                            setState(() {});
-                          }
-                        },
-                  child: const Text('Save Site'),
-                ),
-              ],
             );
           },
         );
@@ -525,66 +520,70 @@ class _AdminListPageState extends State<AdminListPage> {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-          title: Text(
-            'Add Blurb',
-            style: GoogleFonts.ultra(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 76, 32, 8),
-              ),
-            ),
+        return Theme(
+          data: adminPageTheme,
+          child: Builder(
+            builder: (context) {
+              return AlertDialog(
+                backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                title: Text(
+                  'Add Blurb',
+                  style: GoogleFonts.ultra(
+                    textStyle: const TextStyle(
+                      color: Color.fromARGB(255, 76, 32, 8),
+                    ),
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                      ),
+                    ),
+                    TextField(
+                      controller: valueController,
+                      maxLines: 3,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: const InputDecoration(
+                        labelText: 'Content',
+                      ),
+                    ),
+                    TextField(
+                      controller: dateController,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: const InputDecoration(
+                        labelText: 'Date',
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (titleController.text.isNotEmpty &&
+                          valueController.text.isNotEmpty) {
+                        blurbs.add(InfoText(
+                          title: titleController.text,
+                          value: valueController.text,
+                          date: dateController.text,
+                        ));
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text('Add Blurb'),
+                  ),
+                ],
+              );
+            },
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                ),
-              ),
-              TextField(
-                controller: valueController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                ),
-              ),
-              TextField(
-                controller: dateController,
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-              ),
-              onPressed: () {
-                if (titleController.text.isNotEmpty &&
-                    valueController.text.isNotEmpty) {
-                  blurbs.add(InfoText(
-                    title: titleController.text,
-                    value: valueController.text,
-                    date: dateController.text,
-                  ));
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Add Blurb'),
-            ),
-          ],
         );
       },
     );
@@ -610,411 +609,339 @@ class _AdminListPageState extends State<AdminListPage> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                'Edit Historical Site',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
+            return Theme(
+              data: adminPageTheme,
+              child: Builder(builder: (context) {
+                return AlertDialog(
+                  backgroundColor: adminPageTheme.colorScheme.primary,
+                  title: Text(
+                    'Edit Historical Site',
+                    style: GoogleFonts.ultra(
+                      textStyle: const TextStyle(
+                        color: Color.fromARGB(255, 76, 32, 8),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Site Name',
-                        labelStyle:
-                            TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                      ),
-                    ),
-                    TextField(
-                      controller: descriptionController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        labelStyle:
-                            TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
+                        Padding(
+                          padding: EdgeInsetsGeometry.all(8.0),
                           child: TextField(
-                            controller: latController,
-                            keyboardType: TextInputType.number,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            controller: nameController,
                             decoration: const InputDecoration(
-                              labelText: 'Latitude',
-                              labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 76, 32, 8)),
+                              labelText: 'Site Name',
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: lngController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Longitude',
-                              labelStyle: TextStyle(
-                                  color: Color.fromARGB(255, 76, 32, 8)),
-                            ),
+                        TextField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Blurbs:',
-                      style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 76, 32, 8),
-                        ),
-                      ),
-                    ),
-                    ...blurbs.asMap().entries.map((entry) {
-                      int idx = entry.key;
-                      InfoText blurb = entry.value;
-                      return ListTile(
-                        title: Text(blurb.title),
-                        subtitle: Text(blurb.value),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        const SizedBox(height: 10),
+                        Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () async {
-                                await _showEditBlurbDialog(blurbs, idx);
-                                setState(() {});
-                              },
+                            Expanded(
+                              child: TextField(
+                                controller: latController,
+                                keyboardType: TextInputType.number,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: const InputDecoration(
+                                  labelText: 'Latitude',
+                                ),
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                setState(() {
-                                  blurbs.removeAt(idx);
-                                });
-                              },
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextField(
+                                controller: lngController,
+                                keyboardType: TextInputType.number,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: const InputDecoration(
+                                  labelText: 'Longitude',
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      );
-                    }).toList(),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130),
-                      ),
-                      onPressed: () async {
-                        await _showAddBlurbDialog(blurbs);
-                        setState(() {});
-                      },
-                      child: const Text('Add Blurb'),
-                    ),
-                    MenuAnchor(
-                        style: MenuStyle(
-                            backgroundColor: WidgetStatePropertyAll(
-                                const Color.fromARGB(255, 238, 214, 196)),
-                            side: WidgetStatePropertyAll(BorderSide(
-                                color: Color.fromARGB(255, 72, 52, 52),
-                                width: 2.0)),
-                            shape: WidgetStatePropertyAll(
-                                RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(20.0)))),
-                        builder: (BuildContext context,
-                            MenuController controller, Widget? child) {
-                          return ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromARGB(255, 218, 186, 130),
-                              ),
-                              // focusNode: _buttonFocusNode,
-                              onPressed: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              },
-                              child: const Text("Add Filters"));
-                        },
-                        menuChildren: acceptableFilters
-                            .map((filter) => CheckboxMenuButton(
-                                style: ButtonStyle(
-                                    textStyle: WidgetStatePropertyAll(TextStyle(
-                                        color: Color.fromARGB(255, 72, 52, 52),
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold))),
-                                closeOnActivate: false,
-                                value: chosenFilters.contains(filter),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    if (!chosenFilters.contains(filter)) {
-                                      chosenFilters.add(filter);
-                                      print(chosenFilters);
-                                    } else {
-                                      chosenFilters.remove(filter);
-                                      print(chosenFilters);
-                                    }
-                                  });
-                                },
-                                child: Text((filter.name))))
-                            .toList()
-
-                        // [
-                        //   CheckboxMenuButton(
-                        //       value: false,
-                        //       onChanged: (bool? value) {
-                        //         print("changed");
-                        //       },
-                        //       child: const Text("Message"))
-                        // ]
+                        const SizedBox(height: 20),
+                        Text(
+                          'Blurbs:',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        ...blurbs.asMap().entries.map((entry) {
+                          int idx = entry.key;
+                          InfoText blurb = entry.value;
+                          return Column(
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  blurb.title,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
+                                subtitle: Text(
+                                  blurb.value,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () async {
+                                      await _showEditBlurbDialog(blurbs, idx);
+                                      setState(() {});
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () {
+                                      setState(() {
+                                        blurbs.removeAt(idx);
+                                      });
+                                    },
+                                  ),
+                                ],
+                              )
+                            ],
+                          );
+                        }).toList(),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await _showAddBlurbDialog(blurbs);
+                            setState(() {});
+                          },
+                          child: const Text('Add Blurb'),
+                        ),
+                        MenuAnchor(
+                            style: MenuStyle(
+                                side: WidgetStatePropertyAll(BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2.0)),
+                                shape: WidgetStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20.0)))),
+                            builder: (BuildContext context,
+                                MenuController controller, Widget? child) {
+                              return ElevatedButton(
+                                  // focusNode: _buttonFocusNode,
+                                  onPressed: () {
+                                    if (controller.isOpen) {
+                                      controller.close();
+                                    } else {
+                                      controller.open();
+                                    }
+                                  },
+                                  child: const Text("Add Filters"));
+                            },
+                            menuChildren: acceptableFilters
+                                .map((filter) => CheckboxMenuButton(
+                                    style: ButtonStyle(
+                                      textStyle: WidgetStatePropertyAll(
+                                          TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 72, 52, 52),
+                                              fontSize: 16.0,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    closeOnActivate: false,
+                                    value: chosenFilters.contains(filter),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (!chosenFilters.contains(filter)) {
+                                          chosenFilters.add(filter);
+                                          print(chosenFilters);
+                                        } else {
+                                          chosenFilters.remove(filter);
+                                          print(chosenFilters);
+                                        }
+                                      });
+                                    },
+                                    child: Text(
+                                      (filter.name),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    )))
+                                .toList()
+
+                            // [
+                            //   CheckboxMenuButton(
+                            //       value: false,
+                            //       onChanged: (bool? value) {
+                            //         print("changed");
+                            //       },
+                            //       child: const Text("Message"))
+                            // ]
+                            ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _showEditSiteImagesDialog(site);
+                            print("Reached post dialog opening");
+                            print("Length p: ${site.images.length}");
+                            for (Uint8List? s in site.images) {
+                              print("Image: $s");
+                            }
+                          },
+                          child: const Text('Edit Images'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actionsAlignment: MainAxisAlignment.spaceEvenly,
+                  actions: [
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 218, 186, 130),
-                      ),
-                      onPressed: () {
-                        _showEditSiteImagesDialog(site);
-                        print("Reached post dialog opening");
-                        print("Length p: ${site.images.length}");
-                        for (Uint8List? s in site.images) {
-                          print("Image: $s");
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        print("pressed submit!");
+                        // Get the original site name for updating or deleting the document
+                        final originalName = site.name;
+                        final oldDocRef = FirebaseFirestore.instance
+                            .collection('sites')
+                            .doc(originalName);
+
+                        // Get list of all the current paths
+                        List<String> paths = [];
+
+                        print("Length of site list: ${site.images.length}");
+
+                        // remove any deleted images
+                        // NOTE: it may be better to handle this when we delete items.
+                        // I could probably also reorder things there very easily.
+                        // TODO: see above
+                        if (site.images.length < site.imageUrls.length) {
+                          // this means that an image has been deleted
+                          print(
+                              "If statement reached. An item has been deleted");
+                          for (Uint8List? image in copyOfOriginalImageList) {
+                            print("image being ichecked");
+                            // check to see if image is in current list
+                            if (!site.images.contains(image)) {
+                              // image is not in current images. thus we must remove it from imageurls
+                              final index =
+                                  copyOfOriginalImageList.indexOf(image);
+
+                              // remove site.imageUrls[index] so the delted item is removed
+                              String url = site.imageUrls.removeAt(index);
+
+                              storageRef.child("$url").delete();
+                              print("Item deleted: $url");
+                              print("An item has been removed!");
+                            }
+                          }
+                        }
+
+                        // add all site images to the paths
+                        paths.addAll(site.imageUrls);
+                        print("Paths size: ${paths.length}");
+
+                        if (nameController.text.isNotEmpty &&
+                            descriptionController.text.isNotEmpty) {
+                          if (site.images != copyOfOriginalImageList) {
+                            // // delete the old images
+                            // print("Deleting ${refName}");
+                            // final path = "images/$refName";
+
+                            // storageRef.child("$path").delete();
+
+                            //make a name for each new image added.
+                            List<String> randomNames = [];
+                            int i = 0;
+                            if (images != null) {
+                              //if we never added new images, then we don't need to upload anything
+                              print("images length: ${images!.length}");
+                              while (i < images!.length) {
+                                randomNames.add(uuid.v4());
+                                print("Random name thing executed");
+                                i += 1;
+                              }
+                              // this will make the images into files so the images list can have them
+                              /*
+                                I suspect that the issue lies here. I am trying to re upload all the files
+                                within site.images. The issue is that they are in a Uint8list format. 
+                                It appears to work okay (it doesn't throw errors) but when I try to upload them, 
+                                it says they don't exist. When I try to view the images in the images list, my terminal
+                                starts speaking in tongues. 
+                
+                                Solution Ideas: 
+                                I previously wanted to delete all files, then reupload them to the storage
+                                If I cannot reupload previously uploaded files (they are currently uint8list)
+                                then I need to only reupload the files I just added. 
+                
+                                If a previously uploaded file is no longer withing the list, i need to delete it
+                
+                
+                
+                                Current state: 
+                                The paths are replaced by only the new items
+                                Not terrible
+                              */
+
+                              //upload all new images
+                              final refName = originalName.replaceAll(' ', '');
+                              List<String> newPaths =
+                                  await uploadImages(refName, randomNames);
+                              print("Made it past uploading images");
+
+                              // add new paths to old paths
+                              paths.addAll(newPaths);
+                            }
+                          }
+
+                          // add "other" if chosenFilters is empty
+
+                          if (chosenFilters.isEmpty) {
+                            chosenFilters.add(SiteFilter(name: "Other"));
+                          }
+
+                          final updatedSite = HistSite(
+                            name: nameController.text,
+                            description: descriptionController.text,
+                            blurbs: blurbs,
+                            imageUrls: site.images == copyOfOriginalImageList
+                                ? site.imageUrls
+                                : paths,
+                            avgRating: site.avgRating,
+                            ratingAmount: site.ratingAmount,
+                            filters: chosenFilters,
+                            lat:
+                                double.tryParse(latController.text) ?? site.lat,
+                            lng:
+                                double.tryParse(lngController.text) ?? site.lng,
+                          );
+
+                          // If name changed, delete old document and create new one
+                          if (originalName != nameController.text) {
+                            oldDocRef.delete().then((_) {
+                              app_state.addSite(updatedSite);
+                            });
+                          } else {
+                            // Just update existing document
+                            app_state.addSite(updatedSite);
+                          }
+                          setState(() {});
+                          Navigator.pop(context);
+                          setState(() {});
                         }
                       },
-                      child: const Text('Edit Images'),
+                      child: const Text('Save Changes'),
                     ),
                   ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    tempImageChanges.remove(site.name);
-                    tempDeletedUrls.remove(site.name);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                  ),
-                  onPressed: () async {
-                    print("pressed submit!");
-                    // Get the original site name for updating or deleting the document
-                    final originalName = site.name;
-                    final oldDocRef = FirebaseFirestore.instance
-                        .collection('sites')
-                        .doc(originalName);
-
-                    // Get list of all the current paths
-                    List<String> paths = [];
-
-                  List<ImageWithUrl> pairedImages;
-                  if (tempImageChanges.containsKey(originalName)) {
-                  pairedImages = tempImageChanges[originalName]!;
-                  if (tempDeletedUrls.containsKey(originalName)) {
-                    for (String url in tempDeletedUrls[originalName]!) {
-                      try {
-                        await storageRef.child(url).delete();
-                        print("Deleted image: $url");
-                      } catch (e) {
-                        print("Error deleting image: $e");
-                      }
-                    }
-                  }
-                  } else {
-                  pairedImages = [];
-                  for (int i = 0; i < site.imageUrls.length; i++) {
-                    Uint8List? imageData;
-                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
-                      imageData = site.images[i];
-                    } else {
-                      imageData = await app_state.getImage(site.imageUrls[i]);
-                    }
-                    if (imageData != null && site.imageUrls[i].isNotEmpty){
-                      pairedImages.add(ImageWithUrl(
-                        imageData: imageData,
-                        url: site.imageUrls[i],
-                      ));
-                    }
-                  }
-                  }
-
-                   /* print("Length of site list: ${site.images.length}");
-
-                    // remove any deleted images
-                    // NOTE: it may be better to handle this when we delete items.
-                    // I could probably also reorder things there very easily.
-                    // TODO: see above
-                    if (site.images.length < site.imageUrls.length) {
-                      // this means that an image has been deleted
-                      print("If statement reached. An item has been deleted");
-                      for (Uint8List? image in copyOfOriginalImageList) {
-                        print("image being ichecked");
-                        // check to see if image is in current list
-                        if (!site.images.contains(image)) {
-                          // image is not in current images. thus we must remove it from imageurls
-                          final index = copyOfOriginalImageList.indexOf(image);
-
-                          // remove site.imageUrls[index] so the delted item is removed
-                          String url = site.imageUrls.removeAt(index);
-
-                          storageRef.child("$url").delete();
-                          print("Item deleted: $url");
-                          print("An item has been removed!");
-                        }
-                      }
-                    }
-
-                    // add all site images to the paths
-                    paths.addAll(site.imageUrls);
-                    print("Paths size: ${paths.length}");
-                    List<ImageWithUrl> pairedImages = [];
-                    for (int i = 0; i < site.imageUrls.length; i++) {
-                    Uint8List? imageData;
-                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
-                      imageData = site.images[i];
-                    } else {
-                      imageData = await app_state.getImage(site.imageUrls[i]);
-                    }
-                    if (imageData != null && site.imageUrls[i].isNotEmpty){
-                    pairedImages.add(ImageWithUrl(
-                      imageData: imageData,
-                      url: site.imageUrls[i],
-                    ));
-                    }} */
-                    if (nameController.text.isNotEmpty &&
-                        descriptionController.text.isNotEmpty) {
-                    List<String> urlsToDelete = [];
-                    for (String originalUrl in site.imageUrls) {
-                        bool stillExists = pairedImages.any((img) {
-                          return img.url == originalUrl;
-                        });
-                        if (!stillExists && originalUrl.isNotEmpty) {
-                          urlsToDelete.add(originalUrl);
-                        }
-                      }
-                    for (String url in urlsToDelete) {
-                      try {
-                        await storageRef.child(url).delete();
-                        print("Deleted image: $url");
-                      } catch (e) {
-                        print("Error deleting image: $e");
-                      }
-                    }
-                     paths.clear();
-                    for (var pair in pairedImages) {
-                      if (pair.url.isNotEmpty) {
-                        paths.add(pair.url);
-                      }
-                    }
-                    if (newlyAddedFiles.isNotEmpty) {
-                        List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-                        final refName = originalName.replaceAll(' ', '');
-                        List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
-                        paths.addAll(uploadedPaths);
-                        newlyAddedFiles.clear();
-                     }
-                      /*if (site.images != copyOfOriginalImageList) {
-                        // // delete the old images
-                        // print("Deleting ${refName}");
-                        // final path = "images/$refName";
-
-                        // storageRef.child("$path").delete();
-
-                        //make a name for each new image added.
-                        List<String> randomNames = [];
-                        int i = 0;
-                        if (images != null) {
-                          //if we never added new images, then we don't need to upload anything
-                          print("images length: ${images!.length}");
-                          while (i < images!.length) {
-                            randomNames.add(uuid.v4());
-                            print("Random name thing executed");
-                            i += 1;
-                          }
-                          // this will make the images into files so the images list can have them
-                          /*
-                            I suspect that the issue lies here. I am trying to re upload all the files
-                            within site.images. The issue is that they are in a Uint8list format. 
-                            It appears to work okay (it doesn't throw errors) but when I try to upload them, 
-                            it says they don't exist. When I try to view the images in the images list, my terminal
-                            starts speaking in tongues. 
-
-                            Solution Ideas: 
-                            I previously wanted to delete all files, then reupload them to the storage
-                            If I cannot reupload previously uploaded files (they are currently uint8list)
-                            then I need to only reupload the files I just added. 
-
-                            If a previously uploaded file is no longer withing the list, i need to delete it
-
-
-
-                            Current state: 
-                            The paths are replaced by only the new items
-                            Not terrible
-                          */
-
-                          //upload all new images
-                          final refName = originalName.replaceAll(' ', '');
-                          List<String> newPaths =
-                              await uploadImages(refName, randomNames);
-                          print("Made it past uploading images");
-
-                          // add new paths to old paths
-                          paths.addAll(newPaths);
-                        }
-                      }*/
-
-                      // add "other" if chosenFilters is empty
-
-                      if (chosenFilters.isEmpty) {
-                        chosenFilters.add(SiteFilter(name: "Other"));
-                      }
-
-                      final updatedSite = HistSite(
-                        name: nameController.text,
-                        description: descriptionController.text,
-                        blurbs: blurbs,
-                        imageUrls: site.images == copyOfOriginalImageList
-                            ? site.imageUrls
-                            : paths,
-                        avgRating: site.avgRating,
-                        ratingAmount: site.ratingAmount,
-                        filters: chosenFilters,
-                        lat: double.tryParse(latController.text) ?? site.lat,
-                        lng: double.tryParse(lngController.text) ?? site.lng,
-                      );
-
-                      // If name changed, delete old document and create new one
-                      if (originalName != nameController.text) {
-                        oldDocRef.delete().then((_) {
-                          app_state.addSite(updatedSite);
-                        });
-                      } else {
-                        // Just update existing document
-                        app_state.addSite(updatedSite);
-                      }
-                        tempImageChanges.remove(originalName);
-                        tempDeletedUrls.remove(originalName);
-
-                      Navigator.pop(context);
-                      setState(() {});
-                    }
-                  },
-                  child: const Text('Save Changes'),
-                ),
-              ],
+                );
+              }),
             );
           },
         );
@@ -1022,14 +949,9 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
- Future<void> _showEditSiteImagesDialog(HistSite site) async {
-  List<Uint8List?> siteImages = site.images;
-  List<String> siteImageURLs = site.imageUrls;
-  List<String> originalUrls = List.from(site.imageUrls);
-  List<ImageWithUrl> pairedImages = [];
-   if (tempImageChanges.containsKey(site.name)) {
-    pairedImages = List.from(tempImageChanges[site.name]!);
-  } else {
+  Future<void> _showEditSiteImagesDialog(HistSite site) async {
+    List<Uint8List?> siteImages = site.images;
+    List<String> siteImageURLs = site.imageUrls;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1037,108 +959,141 @@ class _AdminListPageState extends State<AdminListPage> {
         child: CircularProgressIndicator(),
       ),
     );
-  for (int i = 0; i < siteImageURLs.length; i++) {
-    Uint8List? imageData;
-    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
-      imageData = siteImages[i];
-    } else {
-      imageData = await app_state.getImage(siteImageURLs[i]);
+    List<ImageWithUrl> pairedImages = [];
+    for (int i = 0; i < siteImageURLs.length; i++) {
+      Uint8List? imageData;
+      if (i < siteImages.length &&
+          siteImages[i] != null &&
+          siteImages[i]!.isNotEmpty) {
+        imageData = siteImages[i];
+      } else {
+        imageData = await app_state.getImage(siteImageURLs[i]);
+      }
+      if (imageData != null && siteImageURLs[i].isNotEmpty) {
+        pairedImages.add(ImageWithUrl(
+          imageData: imageData,
+          url: siteImageURLs[i],
+        ));
+      }
     }
-    if (imageData != null && siteImageURLs[i].isNotEmpty){
-    pairedImages.add(ImageWithUrl(
-      imageData: imageData,
-      url: siteImageURLs[i],
-    ));
-    }
-  }
     Navigator.pop(context);
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        List<File> newlyAddedFiles = [];
+        return Theme(
+          data: adminPageTheme,
+          child: Builder(builder: (context) {
+            return ListEdit<ImageWithUrl>(
+              title: "Edit Images",
+              items: pairedImages,
+              itemBuilder: (imageWithUrl) {
+                if (imageWithUrl.imageData != null &&
+                    imageWithUrl.imageData!.isNotEmpty) {
+                  return Image.memory(imageWithUrl.imageData!,
+                      fit: BoxFit.contain);
+                }
+                return Text(
+                    "You do not have any Images uplodaed to this site.");
+              },
+              addButtonText: "Add Images",
+              deleteButtonText: "Delete Images",
+              onAddItem: () async {
+                await pickImages();
+                if (images != null) {
+                  for (File imageFile in images!) {
+                    newlyAddedFiles.add(imageFile);
+                    Uint8List newFile = await imageFile.readAsBytes();
+                    pairedImages.add(ImageWithUrl(
+                      imageData: newFile,
+                      url: "",
+                    ));
+                  }
+                  images = null;
+                }
+              },
+              onSubmit: () async {
+                for (String url in siteImageURLs) {
+                  bool stillExists = pairedImages.any((img) => img.url == url);
+                  if (!stillExists && url.isNotEmpty) {
+                    try {
+                      await storageRef.child(url).delete();
+                    } catch (e) {}
+                  }
+                }
+                if (newlyAddedFiles.isNotEmpty) {
+                  List<String> randomNames =
+                      List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+                  final refName = site.name.replaceAll(' ', '');
+                  List<String> uploadedPaths = await uploadImages(
+                      refName, randomNames,
+                      files: newlyAddedFiles);
+                  int assignIndex = 0;
+                  for (int i = 0; i < pairedImages.length; i++) {
+                    if (pairedImages[i].url.isEmpty &&
+                        assignIndex < uploadedPaths.length) {
+                      pairedImages[i].url = uploadedPaths[assignIndex];
+                      assignIndex++;
+                    }
+                  }
+                }
+                siteImages.clear();
+                siteImageURLs.clear();
+                for (var pair in pairedImages) {
+                  siteImages.add(pair.imageData);
+                  siteImageURLs.add(pair.url);
+                }
+              },
+            );
+          }),
+        );
+      },
+    );
+
+    setState(() {}); // Refresh the parent dialog
   }
-  await showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      return ListEdit<ImageWithUrl>(
-        title: "Edit Images",
-        items: pairedImages,
-        itemBuilder: (imageWithUrl) {
-          if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
-            return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
-          }
-            return Text("You do not have any Images uplodaed to this site.");
-        },
-        addButtonText: "Add Images",
-        deleteButtonText: "Delete Images",
-        onAddItem: () async {
-          await pickImages();
-          if (images != null) {
-            for (File imageFile in images!) {
-              newlyAddedFiles.add(imageFile);
-              Uint8List newFile = await imageFile.readAsBytes();
-              pairedImages.add(ImageWithUrl(
-                imageData: newFile,
-                url: "",
-              ));
-            }
-            images = null;
-          }
-        },
-        onSubmit: () async {
-          tempImageChanges[site.name] = List.from(pairedImages);
-          Set<String> remainingUrls = pairedImages
-              .where((img) => img.url.isNotEmpty)
-              .map((img) => img.url)
-              .toSet();
-          
-          List<String> urlsToDelete = originalUrls
-              .where((url) => !remainingUrls.contains(url))
-              .toList();
-          tempDeletedUrls[site.name] = urlsToDelete;
-        },
-      );
-    },
-  );
-  
-  setState(() {}); // Refresh the parent dialog
- }
+
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return ListEdit<SiteFilter>(
-          title: "Edit Filters",
-          items: app_state.siteFilters,
-          itemBuilder: (filter) => Text(
-            filter.name,
-            style: GoogleFonts.ultra(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 76, 32, 8),
-                fontSize: 12,
-              ),
-            ),
+        return Theme(
+          data: adminPageTheme,
+          child: Builder(
+            builder: (context) {
+              return ListEdit<SiteFilter>(
+                title: "Edit Filters",
+                items: app_state.siteFilters,
+                itemBuilder: (filter) => Text(filter.name,
+                    style: Theme.of(context).textTheme.bodyMedium),
+                addButtonText: "Add Filter",
+                deleteButtonText: "Delete Filters",
+                onAddItem: () async {
+                  await showAddFilterDialog();
+                },
+                onSubmit: () async {
+                  final snapshot = await FirebaseFirestore.instance
+                      .collection("filters")
+                      .get();
+                  Set<String> firestoreFilterNames = {};
+                  for (var doc in snapshot.docs) {
+                    firestoreFilterNames.add(doc.get("name"));
+                  }
+                  for (String filterName in firestoreFilterNames) {
+                    bool stillExists =
+                        app_state.siteFilters.any((f) => f.name == filterName);
+                    if (!stillExists) {
+                      await app_state.removeFilter(filterName);
+                      print("Removed filter: $filterName");
+                    }
+                  }
+                  await app_state.saveFilterOrder();
+                },
+              );
+            },
           ),
-          addButtonText: "Add Filter",
-          deleteButtonText: "Delete Filters",
-          onAddItem: () async {
-            await showAddFilterDialog();
-          },
-          onSubmit: () async {
-            final snapshot =
-                await FirebaseFirestore.instance.collection("filters").get();
-            Set<String> firestoreFilterNames = {};
-            for (var doc in snapshot.docs) {
-              firestoreFilterNames.add(doc.get("name"));
-            }
-            for (String filterName in firestoreFilterNames) {
-              bool stillExists =
-                  app_state.siteFilters.any((f) => f.name == filterName);
-              if (!stillExists) {
-                await app_state.removeFilter(filterName);
-                print("Removed filter: $filterName");
-              }
-            }
-            await app_state.saveFilterOrder();
-          },
         );
       },
     );
@@ -1155,64 +1110,64 @@ class _AdminListPageState extends State<AdminListPage> {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-          title: Text(
-            'Edit Blurb',
-            style: GoogleFonts.ultra(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 76, 32, 8),
+        return Theme(
+          data: adminPageTheme,
+          child: AlertDialog(
+            backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+            title: Text(
+              'Edit Blurb',
+              style: GoogleFonts.ultra(
+                textStyle: const TextStyle(
+                  color: Color.fromARGB(255, 76, 32, 8),
+                ),
               ),
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                  ),
                 ),
+                TextField(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  controller: valueController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                  ),
+                ),
+                TextField(
+                  controller: dateController,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: const InputDecoration(
+                    labelText: 'Date',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
-              TextField(
-                controller: valueController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                ),
-              ),
-              TextField(
-                controller: dateController,
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  labelStyle: TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                ),
+              ElevatedButton(
+                onPressed: () {
+                  print("pressed save changes");
+                  blurbs[index] = InfoText(
+                    title: titleController.text,
+                    value: valueController.text,
+                    date: dateController.text,
+                  );
+                  Navigator.pop(context);
+                },
+                child: const Text('Save Changes'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-              ),
-              onPressed: () {
-                print("pressed save changes");
-                blurbs[index] = InfoText(
-                  title: titleController.text,
-                  value: valueController.text,
-                  date: dateController.text,
-                );
-                Navigator.pop(context);
-              },
-              child: const Text('Save Changes'),
-            ),
-          ],
         );
       },
     );
@@ -1225,49 +1180,57 @@ class _AdminListPageState extends State<AdminListPage> {
         context: context,
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                "Add New Filter",
-                style: GoogleFonts.ultra(
-                    textStyle: const TextStyle(
-                  color: Color.fromARGB(255, 76, 32, 8),
-                )),
+            return Theme(
+              data: adminPageTheme,
+              child: Builder(
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text(
+                      "Add New Filter",
+                      style: GoogleFonts.ultra(
+                        textStyle: const TextStyle(
+                          color: Color.fromARGB(255, 76, 32, 8),
+                        ),
+                      ),
+                      // style: GoogleFonts.ultra(
+                      //     //   textStyle: const TextStyle(
+                      //     // color: Color.fromARGB(255, 76, 32, 8),
+                      //     // )
+                      //     ),
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                            controller: nameController,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration:
+                                const InputDecoration(labelText: "Filter Name"))
+                      ],
+                    ),
+                    actions: [
+                      ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Cancel")),
+                      ElevatedButton(
+                        onPressed: () async {
+                          //do stuff
+                          for (SiteFilter filter in app_state.siteFilters) {
+                            if (filter.name == nameController.text) {
+                              print("Filter is already added!");
+                              return;
+                            }
+                          }
+                          app_state.addFilter(nameController.text);
+                          Navigator.pop(context);
+                          setState(() {});
+                        },
+                        child: const Text("Save Filter"),
+                      )
+                    ],
+                  );
+                },
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                          labelText: "Filter Name",
-                          labelStyle:
-                              TextStyle(color: Color.fromARGB(255, 76, 32, 8))))
-                ],
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Cancel")),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color.fromARGB(255, 218, 186, 130)),
-                  onPressed: () async {
-                    //do stuff
-                    for (SiteFilter filter in app_state.siteFilters) {
-                      if (filter.name == nameController.text) {
-                        print("Filter is already added!");
-                        return;
-                      }
-                    }
-                    app_state.addFilter(nameController.text);
-                    Navigator.pop(context);
-                    setState(() {});
-                  },
-                  child: const Text("Save Filter"),
-                )
-              ],
             );
           });
         });
@@ -1280,7 +1243,6 @@ class _AdminListPageState extends State<AdminListPage> {
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 218, 186, 130),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
             onPressed: _showAddSiteDialog,
@@ -1296,7 +1258,6 @@ class _AdminListPageState extends State<AdminListPage> {
         ),
         ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 218, 186, 130),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
             onPressed: _showEditFiltersDialog,
@@ -1323,7 +1284,9 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                     ),
                   ),
-                  subtitle: Text(site.description),
+                  subtitle: Text(
+                    site.description,
+                  ),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -1348,16 +1311,17 @@ class _AdminListPageState extends State<AdminListPage> {
                           const SizedBox(height: 16),
                           Text(
                             'Blurbs:',
-                            style: GoogleFonts.ultra(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 76, 32, 8),
-                              ),
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
                           ...site.blurbs
                               .map((blurb) => ListTile(
-                                    title: Text(blurb.title),
+                                    title: Text(
+                                      blurb.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
                                     subtitle: Text(blurb.value),
                                     trailing: blurb.date.isNotEmpty
                                         ? Text('Date: ${blurb.date}')
@@ -1365,13 +1329,14 @@ class _AdminListPageState extends State<AdminListPage> {
                                   ))
                               .toList(),
                           OverflowBar(
+                            alignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              TextButton.icon(
+                              ElevatedButton.icon(
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Site'),
                                 onPressed: () => _showEditSiteDialog(site),
                               ),
-                              TextButton.icon(
+                              ElevatedButton.icon(
                                 icon: const Icon(Icons.delete),
                                 label: const Text('Delete Site'),
                                 onPressed: () {
@@ -1399,11 +1364,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                             child: const Text('Cancel'),
                                           ),
                                           ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color.fromARGB(
-                                                      255, 218, 186, 130),
-                                            ),
                                             onPressed: () {
                                               FirebaseFirestore.instance
                                                   .collection('sites')
@@ -1441,41 +1401,44 @@ class _AdminListPageState extends State<AdminListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 219, 196, 166),
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-        elevation: 12.0,
-        shadowColor: const Color.fromARGB(135, 255, 255, 255),
-        title: Text(
-          _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
-          style: GoogleFonts.ultra(
-            textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+    return Theme(
+      data: adminPageTheme,
+      child: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 219, 196, 166),
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+          elevation: 12.0,
+          shadowColor: const Color.fromARGB(135, 255, 255, 255),
+          title: Text(
+            _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
+            style: GoogleFonts.ultra(
+              textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+            ),
           ),
         ),
-      ),
-      body: _selectedIndex == 0
-          ? _buildAdminContent()
-          : MapDisplay(
-              currentPosition: const LatLng(2, 2),
-              initialPosition: const LatLng(2, 2),
+        body: _selectedIndex == 0
+            ? _buildAdminContent()
+            : MapDisplay(
+                currentPosition: const LatLng(2, 2),
+                initialPosition: const LatLng(2, 2),
+              ),
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: const Color.fromARGB(255, 218, 180, 130),
+          selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.admin_panel_settings),
+              label: 'Admin',
             ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 218, 180, 130),
-        selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-        unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.admin_panel_settings),
-            label: 'Admin',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.map),
+              label: 'Map',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
