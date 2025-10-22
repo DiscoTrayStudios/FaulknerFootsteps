@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:ui';
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
@@ -18,7 +15,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:swipe_image_gallery/swipe_image_gallery.dart';
 import 'package:uuid/uuid.dart';
 
 class AdminListPage extends StatefulWidget {
@@ -46,6 +42,9 @@ class _AdminListPageState extends State<AdminListPage> {
   var uuid = Uuid();
   // List<SiteFilter> chosenFilters = [];
   List<SiteFilter> acceptableFilters = [];
+  List<File> newlyAddedFiles = [];
+  Map<String, List<ImageWithUrl>> tempImageChanges = {};
+  Map<String, List<String>> tempDeletedUrls = {};
 
   @override
   void initState() {
