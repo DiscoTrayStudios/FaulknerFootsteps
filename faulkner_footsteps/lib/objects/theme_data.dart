@@ -119,8 +119,7 @@ final ThemeData adminPageTheme = ThemeData(
     //  headlineMedium: ,
 
     titleMedium: GoogleFonts.ultra(
-        textStyle: const TextStyle(
-            fontSize: 18, color: Color.fromARGB(255, 76, 32, 8))),
+        textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
 
     bodyMedium: GoogleFonts.rakkas(
         textStyle: const TextStyle(
@@ -145,6 +144,25 @@ final ThemeData adminPageTheme = ThemeData(
     cursorColor: Color.fromARGB(255, 76, 32, 8),
     selectionColor: Color.fromARGB(255, 76, 32, 8),
     selectionHandleColor: Color.fromARGB(255, 76, 32, 8),
+  ),
+
+  checkboxTheme: CheckboxThemeData(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(4.0),
+    ),
+    side: const BorderSide(
+      color: Color.fromARGB(255, 72, 52, 52), // Outline when unchecked
+      width: 2.0,
+    ),
+    fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+      if (states.contains(MaterialState.selected)) {
+        return const Color.fromARGB(255, 76, 32, 8); // Checked fill
+      }
+      return const Color.fromARGB(255, 238, 214, 196); // Unchecked fill
+    }),
+    checkColor: MaterialStateProperty.all<Color>(
+      Color.fromARGB(255, 238, 214, 196), // Checkmark color
+    ),
   ),
 
   // elevatedButtonTheme: ElevatedButtonThemeData(

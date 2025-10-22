@@ -149,8 +149,8 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                   ),
           ),
           Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -190,6 +190,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
           )
         ],
       ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
         ElevatedButton(
           onPressed: () {

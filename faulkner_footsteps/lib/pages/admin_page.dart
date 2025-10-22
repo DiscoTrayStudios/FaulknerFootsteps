@@ -724,10 +724,9 @@ class _AdminListPageState extends State<AdminListPage> {
                         ),
                         MenuAnchor(
                             style: MenuStyle(
-                                backgroundColor: WidgetStatePropertyAll(
-                                    const Color.fromARGB(255, 238, 214, 196)),
                                 side: WidgetStatePropertyAll(BorderSide(
-                                    color: Color.fromARGB(255, 72, 52, 52),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
                                     width: 2.0)),
                                 shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
@@ -749,8 +748,13 @@ class _AdminListPageState extends State<AdminListPage> {
                             menuChildren: acceptableFilters
                                 .map((filter) => CheckboxMenuButton(
                                     style: ButtonStyle(
-                                        textStyle:
-                                            WidgetStatePropertyAll(TextStyle(color: Color.fromARGB(255, 72, 52, 52), fontSize: 16.0, fontWeight: FontWeight.bold))),
+                                      textStyle: WidgetStatePropertyAll(
+                                          TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 72, 52, 52),
+                                              fontSize: 16.0,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
                                     closeOnActivate: false,
                                     value: chosenFilters.contains(filter),
                                     onChanged: (bool? value) {
@@ -764,7 +768,12 @@ class _AdminListPageState extends State<AdminListPage> {
                                         }
                                       });
                                     },
-                                    child: Text((filter.name))))
+                                    child: Text(
+                                      (filter.name),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    )))
                                 .toList()
 
                             // [
@@ -790,8 +799,9 @@ class _AdminListPageState extends State<AdminListPage> {
                       ],
                     ),
                   ),
+                  actionsAlignment: MainAxisAlignment.spaceEvenly,
                   actions: [
-                    TextButton(
+                    ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text('Cancel'),
                     ),
@@ -973,64 +983,71 @@ class _AdminListPageState extends State<AdminListPage> {
       context: context,
       builder: (BuildContext context) {
         List<File> newlyAddedFiles = [];
-        return ListEdit<ImageWithUrl>(
-          title: "Edit Images",
-          items: pairedImages,
-          itemBuilder: (imageWithUrl) {
-            if (imageWithUrl.imageData != null &&
-                imageWithUrl.imageData!.isNotEmpty) {
-              return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
-            }
-            return Text("You do not have any Images uplodaed to this site.");
-          },
-          addButtonText: "Add Images",
-          deleteButtonText: "Delete Images",
-          onAddItem: () async {
-            await pickImages();
-            if (images != null) {
-              for (File imageFile in images!) {
-                newlyAddedFiles.add(imageFile);
-                Uint8List newFile = await imageFile.readAsBytes();
-                pairedImages.add(ImageWithUrl(
-                  imageData: newFile,
-                  url: "",
-                ));
-              }
-              images = null;
-            }
-          },
-          onSubmit: () async {
-            for (String url in siteImageURLs) {
-              bool stillExists = pairedImages.any((img) => img.url == url);
-              if (!stillExists && url.isNotEmpty) {
-                try {
-                  await storageRef.child(url).delete();
-                } catch (e) {}
-              }
-            }
-            if (newlyAddedFiles.isNotEmpty) {
-              List<String> randomNames =
-                  List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-              final refName = site.name.replaceAll(' ', '');
-              List<String> uploadedPaths = await uploadImages(
-                  refName, randomNames,
-                  files: newlyAddedFiles);
-              int assignIndex = 0;
-              for (int i = 0; i < pairedImages.length; i++) {
-                if (pairedImages[i].url.isEmpty &&
-                    assignIndex < uploadedPaths.length) {
-                  pairedImages[i].url = uploadedPaths[assignIndex];
-                  assignIndex++;
+        return Theme(
+          data: adminPageTheme,
+          child: Builder(builder: (context) {
+            return ListEdit<ImageWithUrl>(
+              title: "Edit Images",
+              items: pairedImages,
+              itemBuilder: (imageWithUrl) {
+                if (imageWithUrl.imageData != null &&
+                    imageWithUrl.imageData!.isNotEmpty) {
+                  return Image.memory(imageWithUrl.imageData!,
+                      fit: BoxFit.contain);
                 }
-              }
-            }
-            siteImages.clear();
-            siteImageURLs.clear();
-            for (var pair in pairedImages) {
-              siteImages.add(pair.imageData);
-              siteImageURLs.add(pair.url);
-            }
-          },
+                return Text(
+                    "You do not have any Images uplodaed to this site.");
+              },
+              addButtonText: "Add Images",
+              deleteButtonText: "Delete Images",
+              onAddItem: () async {
+                await pickImages();
+                if (images != null) {
+                  for (File imageFile in images!) {
+                    newlyAddedFiles.add(imageFile);
+                    Uint8List newFile = await imageFile.readAsBytes();
+                    pairedImages.add(ImageWithUrl(
+                      imageData: newFile,
+                      url: "",
+                    ));
+                  }
+                  images = null;
+                }
+              },
+              onSubmit: () async {
+                for (String url in siteImageURLs) {
+                  bool stillExists = pairedImages.any((img) => img.url == url);
+                  if (!stillExists && url.isNotEmpty) {
+                    try {
+                      await storageRef.child(url).delete();
+                    } catch (e) {}
+                  }
+                }
+                if (newlyAddedFiles.isNotEmpty) {
+                  List<String> randomNames =
+                      List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+                  final refName = site.name.replaceAll(' ', '');
+                  List<String> uploadedPaths = await uploadImages(
+                      refName, randomNames,
+                      files: newlyAddedFiles);
+                  int assignIndex = 0;
+                  for (int i = 0; i < pairedImages.length; i++) {
+                    if (pairedImages[i].url.isEmpty &&
+                        assignIndex < uploadedPaths.length) {
+                      pairedImages[i].url = uploadedPaths[assignIndex];
+                      assignIndex++;
+                    }
+                  }
+                }
+                siteImages.clear();
+                siteImageURLs.clear();
+                for (var pair in pairedImages) {
+                  siteImages.add(pair.imageData);
+                  siteImageURLs.add(pair.url);
+                }
+              },
+            );
+          }),
         );
       },
     );
@@ -1295,16 +1312,17 @@ class _AdminListPageState extends State<AdminListPage> {
                           const SizedBox(height: 16),
                           Text(
                             'Blurbs:',
-                            style: GoogleFonts.ultra(
-                              textStyle: const TextStyle(
-                                color: Color.fromARGB(255, 76, 32, 8),
-                              ),
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
                           ...site.blurbs
                               .map((blurb) => ListTile(
-                                    title: Text(blurb.title),
+                                    title: Text(
+                                      blurb.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
                                     subtitle: Text(blurb.value),
                                     trailing: blurb.date.isNotEmpty
                                         ? Text('Date: ${blurb.date}')
@@ -1312,13 +1330,14 @@ class _AdminListPageState extends State<AdminListPage> {
                                   ))
                               .toList(),
                           OverflowBar(
+                            alignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Site'),
                                 onPressed: () => _showEditSiteDialog(site),
                               ),
-                              TextButton.icon(
+                              ElevatedButton.icon(
                                 icon: const Icon(Icons.delete),
                                 label: const Text('Delete Site'),
                                 onPressed: () {
