@@ -797,7 +797,11 @@ class _AdminListPageState extends State<AdminListPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    tempImageChanges.remove(site.name);
+                    tempDeletedUrls.remove(site.name);
+                  },
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
