@@ -806,135 +806,207 @@ class _AdminListPageState extends State<AdminListPage> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        print("pressed submit!");
-                        // Get the original site name for updating or deleting the document
-                        final originalName = site.name;
-                        final oldDocRef = FirebaseFirestore.instance
-                            .collection('sites')
-                            .doc(originalName);
+                         print("pressed submit!");
+                    // Get the original site name for updating or deleting the document
+                    final originalName = site.name;
+                    final oldDocRef = FirebaseFirestore.instance
+                        .collection('sites')
+                        .doc(originalName);
 
-                        // Get list of all the current paths
-                        List<String> paths = [];
+                    // Get list of all the current paths
+                    List<String> paths = [];
 
-                        print("Length of site list: ${site.images.length}");
+                  List<ImageWithUrl> pairedImages;
+                  if (tempImageChanges.containsKey(originalName)) {
+                  pairedImages = tempImageChanges[originalName]!;
+                  if (tempDeletedUrls.containsKey(originalName)) {
+                    for (String url in tempDeletedUrls[originalName]!) {
+                      try {
+                        await storageRef.child(url).delete();
+                        print("Deleted image: $url");
+                      } catch (e) {
+                        print("Error deleting image: $e");
+                      }
+                    }
+                  }
+                  } else {
+                  pairedImages = [];
+                  for (int i = 0; i < site.imageUrls.length; i++) {
+                    Uint8List? imageData;
+                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
+                      imageData = site.images[i];
+                    } else {
+                      imageData = await app_state.getImage(site.imageUrls[i]);
+                    }
+                    if (imageData != null && site.imageUrls[i].isNotEmpty){
+                      pairedImages.add(ImageWithUrl(
+                        imageData: imageData,
+                        url: site.imageUrls[i],
+                      ));
+                    }
+                  }
+                  }
 
-                        // remove any deleted images
-                        // NOTE: it may be better to handle this when we delete items.
-                        // I could probably also reorder things there very easily.
-                        // TODO: see above
-                        if (site.images.length < site.imageUrls.length) {
-                          // this means that an image has been deleted
-                          print(
-                              "If statement reached. An item has been deleted");
-                          for (Uint8List? image in copyOfOriginalImageList) {
-                            print("image being ichecked");
-                            // check to see if image is in current list
-                            if (!site.images.contains(image)) {
-                              // image is not in current images. thus we must remove it from imageurls
-                              final index =
-                                  copyOfOriginalImageList.indexOf(image);
+                   /* print("Length of site list: ${site.images.length}");
 
-                              // remove site.imageUrls[index] so the delted item is removed
-                              String url = site.imageUrls.removeAt(index);
+                    // remove any deleted images
+                    // NOTE: it may be better to handle this when we delete items.
+                    // I could probably also reorder things there very easily.
+                    // TODO: see above
+                    if (site.images.length < site.imageUrls.length) {
+                      // this means that an image has been deleted
+                      print("If statement reached. An item has been deleted");
+                      for (Uint8List? image in copyOfOriginalImageList) {
+                        print("image being ichecked");
+                        // check to see if image is in current list
+                        if (!site.images.contains(image)) {
+                          // image is not in current images. thus we must remove it from imageurls
+                          final index = copyOfOriginalImageList.indexOf(image);
 
-                              storageRef.child("$url").delete();
-                              print("Item deleted: $url");
-                              print("An item has been removed!");
-                            }
-                          }
+                          // remove site.imageUrls[index] so the delted item is removed
+                          String url = site.imageUrls.removeAt(index);
+
+                          storageRef.child("$url").delete();
+                          print("Item deleted: $url");
+                          print("An item has been removed!");
                         }
+                      }
+                    }
 
-                        // add all site images to the paths
-                        paths.addAll(site.imageUrls);
-                        print("Paths size: ${paths.length}");
+                    // add all site images to the paths
+                    paths.addAll(site.imageUrls);
+                    print("Paths size: ${paths.length}");
+                    List<ImageWithUrl> pairedImages = [];
+                    for (int i = 0; i < site.imageUrls.length; i++) {
+                    Uint8List? imageData;
+                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
+                      imageData = site.images[i];
+                    } else {
+                      imageData = await app_state.getImage(site.imageUrls[i]);
+                    }
+                    if (imageData != null && site.imageUrls[i].isNotEmpty){
+                    pairedImages.add(ImageWithUrl(
+                      imageData: imageData,
+                      url: site.imageUrls[i],
+                    ));
+                    }} */
+                    if (nameController.text.isNotEmpty &&
+                        descriptionController.text.isNotEmpty) {
+                    List<String> urlsToDelete = [];
+                    for (String originalUrl in site.imageUrls) {
+                        bool stillExists = pairedImages.any((img) {
+                          return img.url == originalUrl;
+                        });
+                        if (!stillExists && originalUrl.isNotEmpty) {
+                          urlsToDelete.add(originalUrl);
+                        }
+                      }
+                    for (String url in urlsToDelete) {
+                      try {
+                        await storageRef.child(url).delete();
+                        print("Deleted image: $url");
+                      } catch (e) {
+                        print("Error deleting image: $e");
+                      }
+                    }
+                     paths.clear();
+                    for (var pair in pairedImages) {
+                      if (pair.url.isNotEmpty) {
+                        paths.add(pair.url);
+                      }
+                    }
+                    if (newlyAddedFiles.isNotEmpty) {
+                        List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+                        final refName = originalName.replaceAll(' ', '');
+                        List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
+                        paths.addAll(uploadedPaths);
+                        newlyAddedFiles.clear();
+                     }
+                      /*if (site.images != copyOfOriginalImageList) {
+                        // // delete the old images
+                        // print("Deleting ${refName}");
+                        // final path = "images/$refName";
 
-                        if (nameController.text.isNotEmpty &&
-                            descriptionController.text.isNotEmpty) {
-                          if (site.images != copyOfOriginalImageList) {
-                            // // delete the old images
-                            // print("Deleting ${refName}");
-                            // final path = "images/$refName";
+                        // storageRef.child("$path").delete();
 
-                            // storageRef.child("$path").delete();
-
-                            //make a name for each new image added.
-                            List<String> randomNames = [];
-                            int i = 0;
-                            if (images != null) {
-                              //if we never added new images, then we don't need to upload anything
-                              print("images length: ${images!.length}");
-                              while (i < images!.length) {
-                                randomNames.add(uuid.v4());
-                                print("Random name thing executed");
-                                i += 1;
-                              }
-                              // this will make the images into files so the images list can have them
-                              /*
-                                I suspect that the issue lies here. I am trying to re upload all the files
-                                within site.images. The issue is that they are in a Uint8list format. 
-                                It appears to work okay (it doesn't throw errors) but when I try to upload them, 
-                                it says they don't exist. When I try to view the images in the images list, my terminal
-                                starts speaking in tongues. 
-                
-                                Solution Ideas: 
-                                I previously wanted to delete all files, then reupload them to the storage
-                                If I cannot reupload previously uploaded files (they are currently uint8list)
-                                then I need to only reupload the files I just added. 
-                
-                                If a previously uploaded file is no longer withing the list, i need to delete it
-                
-                
-                
-                                Current state: 
-                                The paths are replaced by only the new items
-                                Not terrible
-                              */
-
-                              //upload all new images
-                              final refName = originalName.replaceAll(' ', '');
-                              List<String> newPaths =
-                                  await uploadImages(refName, randomNames);
-                              print("Made it past uploading images");
-
-                              // add new paths to old paths
-                              paths.addAll(newPaths);
-                            }
+                        //make a name for each new image added.
+                        List<String> randomNames = [];
+                        int i = 0;
+                        if (images != null) {
+                          //if we never added new images, then we don't need to upload anything
+                          print("images length: ${images!.length}");
+                          while (i < images!.length) {
+                            randomNames.add(uuid.v4());
+                            print("Random name thing executed");
+                            i += 1;
                           }
+                          // this will make the images into files so the images list can have them
+                          /*
+                            I suspect that the issue lies here. I am trying to re upload all the files
+                            within site.images. The issue is that they are in a Uint8list format. 
+                            It appears to work okay (it doesn't throw errors) but when I try to upload them, 
+                            it says they don't exist. When I try to view the images in the images list, my terminal
+                            starts speaking in tongues. 
 
-                          // add "other" if chosenFilters is empty
+                            Solution Ideas: 
+                            I previously wanted to delete all files, then reupload them to the storage
+                            If I cannot reupload previously uploaded files (they are currently uint8list)
+                            then I need to only reupload the files I just added. 
 
-                          if (chosenFilters.isEmpty) {
-                            chosenFilters.add(SiteFilter(name: "Other"));
-                          }
+                            If a previously uploaded file is no longer withing the list, i need to delete it
 
-                          final updatedSite = HistSite(
-                            name: nameController.text,
-                            description: descriptionController.text,
-                            blurbs: blurbs,
-                            imageUrls: site.images == copyOfOriginalImageList
-                                ? site.imageUrls
-                                : paths,
-                            avgRating: site.avgRating,
-                            ratingAmount: site.ratingAmount,
-                            filters: chosenFilters,
-                            lat:
-                                double.tryParse(latController.text) ?? site.lat,
-                            lng:
-                                double.tryParse(lngController.text) ?? site.lng,
-                          );
 
-                          // If name changed, delete old document and create new one
-                          if (originalName != nameController.text) {
-                            oldDocRef.delete().then((_) {
-                              app_state.addSite(updatedSite);
-                            });
-                          } else {
-                            // Just update existing document
-                            app_state.addSite(updatedSite);
-                          }
-                          setState(() {});
-                          Navigator.pop(context);
-                          setState(() {});
+
+                            Current state: 
+                            The paths are replaced by only the new items
+                            Not terrible
+                          */
+
+                          //upload all new images
+                          final refName = originalName.replaceAll(' ', '');
+                          List<String> newPaths =
+                              await uploadImages(refName, randomNames);
+                          print("Made it past uploading images");
+
+                          // add new paths to old paths
+                          paths.addAll(newPaths);
+                        }
+                      }*/
+
+                      // add "other" if chosenFilters is empty
+
+                      if (chosenFilters.isEmpty) {
+                        chosenFilters.add(SiteFilter(name: "Other"));
+                      }
+
+                      final updatedSite = HistSite(
+                        name: nameController.text,
+                        description: descriptionController.text,
+                        blurbs: blurbs,
+                        imageUrls: site.images == copyOfOriginalImageList
+                            ? site.imageUrls
+                            : paths,
+                        avgRating: site.avgRating,
+                        ratingAmount: site.ratingAmount,
+                        filters: chosenFilters,
+                        lat: double.tryParse(latController.text) ?? site.lat,
+                        lng: double.tryParse(lngController.text) ?? site.lng,
+                      );
+
+                      // If name changed, delete old document and create new one
+                      if (originalName != nameController.text) {
+                        oldDocRef.delete().then((_) {
+                          app_state.addSite(updatedSite);
+                        });
+                      } else {
+                        // Just update existing document
+                        app_state.addSite(updatedSite);
+                      }
+                        tempImageChanges.remove(originalName);
+                        tempDeletedUrls.remove(originalName);
+
+                      Navigator.pop(context);
+                      setState(() {});
                         }
                       },
                       child: const Text('Save Changes'),
@@ -950,8 +1022,13 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
-    List<Uint8List?> siteImages = site.images;
-    List<String> siteImageURLs = site.imageUrls;
+     List<Uint8List?> siteImages = site.images;
+  List<String> siteImageURLs = site.imageUrls;
+  List<String> originalUrls = List.from(site.imageUrls);
+  List<ImageWithUrl> pairedImages = [];
+   if (tempImageChanges.containsKey(site.name)) {
+    pairedImages = List.from(tempImageChanges[site.name]!);
+  } else {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -959,29 +1036,26 @@ class _AdminListPageState extends State<AdminListPage> {
         child: CircularProgressIndicator(),
       ),
     );
-    List<ImageWithUrl> pairedImages = [];
-    for (int i = 0; i < siteImageURLs.length; i++) {
-      Uint8List? imageData;
-      if (i < siteImages.length &&
-          siteImages[i] != null &&
-          siteImages[i]!.isNotEmpty) {
-        imageData = siteImages[i];
-      } else {
-        imageData = await app_state.getImage(siteImageURLs[i]);
-      }
-      if (imageData != null && siteImageURLs[i].isNotEmpty) {
-        pairedImages.add(ImageWithUrl(
-          imageData: imageData,
-          url: siteImageURLs[i],
-        ));
-      }
+  for (int i = 0; i < siteImageURLs.length; i++) {
+    Uint8List? imageData;
+    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
+      imageData = siteImages[i];
+    } else {
+      imageData = await app_state.getImage(siteImageURLs[i]);
     }
+    if (imageData != null && siteImageURLs[i].isNotEmpty){
+    pairedImages.add(ImageWithUrl(
+      imageData: imageData,
+      url: siteImageURLs[i],
+    ));
+    }
+  }
     Navigator.pop(context);
+  }
     await showDialog(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        List<File> newlyAddedFiles = [];
         return Theme(
           data: adminPageTheme,
           child: Builder(builder: (context) {
@@ -989,13 +1063,10 @@ class _AdminListPageState extends State<AdminListPage> {
               title: "Edit Images",
               items: pairedImages,
               itemBuilder: (imageWithUrl) {
-                if (imageWithUrl.imageData != null &&
-                    imageWithUrl.imageData!.isNotEmpty) {
-                  return Image.memory(imageWithUrl.imageData!,
-                      fit: BoxFit.contain);
+                if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
+                  return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
                 }
-                return Text(
-                    "You do not have any Images uplodaed to this site.");
+                  return Text("You do not have any Images uplodaed to this site.");
               },
               addButtonText: "Add Images",
               deleteButtonText: "Delete Images",
@@ -1014,36 +1085,16 @@ class _AdminListPageState extends State<AdminListPage> {
                 }
               },
               onSubmit: () async {
-                for (String url in siteImageURLs) {
-                  bool stillExists = pairedImages.any((img) => img.url == url);
-                  if (!stillExists && url.isNotEmpty) {
-                    try {
-                      await storageRef.child(url).delete();
-                    } catch (e) {}
-                  }
-                }
-                if (newlyAddedFiles.isNotEmpty) {
-                  List<String> randomNames =
-                      List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-                  final refName = site.name.replaceAll(' ', '');
-                  List<String> uploadedPaths = await uploadImages(
-                      refName, randomNames,
-                      files: newlyAddedFiles);
-                  int assignIndex = 0;
-                  for (int i = 0; i < pairedImages.length; i++) {
-                    if (pairedImages[i].url.isEmpty &&
-                        assignIndex < uploadedPaths.length) {
-                      pairedImages[i].url = uploadedPaths[assignIndex];
-                      assignIndex++;
-                    }
-                  }
-                }
-                siteImages.clear();
-                siteImageURLs.clear();
-                for (var pair in pairedImages) {
-                  siteImages.add(pair.imageData);
-                  siteImageURLs.add(pair.url);
-                }
+                tempImageChanges[site.name] = List.from(pairedImages);
+                Set<String> remainingUrls = pairedImages
+                    .where((img) => img.url.isNotEmpty)
+                    .map((img) => img.url)
+                    .toSet();
+                
+                List<String> urlsToDelete = originalUrls
+                    .where((url) => !remainingUrls.contains(url))
+                    .toList();
+                tempDeletedUrls[site.name] = urlsToDelete;
               },
             );
           }),
