@@ -75,7 +75,7 @@ class _ListPageState extends State<ListPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
-    print("reached didchange dependencies");
+    // print("reached didchange dependencies");
     app_state = Provider.of<ApplicationState>(context, listen: false);
     setState(() {
       print("reached");
@@ -89,7 +89,7 @@ class _ListPageState extends State<ListPage> {
     _searchController = SearchController();
 
     app_state.addListener(() {
-      print("historical sites list has changed!!!");
+      // print("historical sites list has changed!!!");
       setState(() {
         setDisplayItems();
       });
