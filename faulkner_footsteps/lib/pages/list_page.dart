@@ -400,6 +400,7 @@ class _ListPageState extends State<ListPage> {
                           : IconButton(
                               onPressed: () {
                                 searchSites = fullSiteList;
+                                controller.clear();
                                 onDisplaySitesChanged();
                                 Navigator.pop(context);
                               },
