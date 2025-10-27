@@ -376,27 +376,34 @@ class _ListPageState extends State<ListPage> {
                         .bodySmall
                         ?.copyWith(
                             color: Theme.of(context).colorScheme.secondary)),
-                    backgroundColor: WidgetStatePropertyAll(Theme.of(context)
-                        .colorScheme
-                        .primary), //TODO: This might work?
+                    backgroundColor: WidgetStatePropertyAll(
+                        Theme.of(context).colorScheme.primary),
                     leading: Icon(Icons.search),
                     trailing: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_right_alt),
-                        onPressed: () {
-                          List<HistSite> lst = [];
-                          lst.addAll(fullSiteList.where((HistSite site) {
-                            return site.name
-                                .toLowerCase()
-                                .contains(controller.text.toLowerCase());
-                          }));
-                          setState(() {
-                            searchSites = lst;
-                          });
-                          onDisplaySitesChanged();
-                          Navigator.pop(context);
-                        },
-                      )
+                      controller.text == ""
+                          ? IconButton(
+                              icon: Icon(Icons.arrow_right_alt),
+                              onPressed: () {
+                                List<HistSite> lst = [];
+                                lst.addAll(fullSiteList.where((HistSite site) {
+                                  return site.name
+                                      .toLowerCase()
+                                      .contains(controller.text.toLowerCase());
+                                }));
+                                setState(() {
+                                  searchSites = lst;
+                                });
+                                onDisplaySitesChanged();
+                                Navigator.pop(context);
+                              },
+                            )
+                          : IconButton(
+                              onPressed: () {
+                                searchSites = fullSiteList;
+                                onDisplaySitesChanged();
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(Icons.close))
                     ],
                     controller: _searchController,
                     onTap: () {
