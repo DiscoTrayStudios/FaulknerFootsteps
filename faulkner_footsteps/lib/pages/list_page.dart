@@ -70,9 +70,12 @@ class _ListPageState extends State<ListPage> {
     print("reached init state");
   }
 
+  bool _initialized = false;
+
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print("reached didchange dependencies");
+    if (_initialized) return;
+    // print("reached didchange dependencies");
     app_state = Provider.of<ApplicationState>(context, listen: false);
     setState(() {
       print("reached");
@@ -86,21 +89,13 @@ class _ListPageState extends State<ListPage> {
     _searchController = SearchController();
 
     app_state.addListener(() {
-      print("historical sites list has changed!!!");
+      // print("historical sites list has changed!!!");
       setState(() {
         setDisplayItems();
       });
     });
+    _initialized = true;
   }
-
-//TODO: See if this helps... in my testing i thought it just made like 3x as many filters... might not be ideal.
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   final appState = Provider.of<ApplicationState>(context);
-  //   print("DidChangeDependencies Called!!!!");
-  //   print("Historical Sites in AppState? ${appState.historicalSites.length}");
-  //   setDisplayItems();
-  // }
 
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
@@ -315,26 +310,24 @@ class _ListPageState extends State<ListPage> {
   void onDisplaySitesChanged() {
     Set<HistSite> newDisplaySites = {};
 
-    for (HistSite site in searchSites) {
-      for (SiteFilter filter in activeFilters) {
-        // print("Filter: $filter");
-        // print("Site: $site");
-        if (site.filters.contains(filter)) {
-          newDisplaySites.add(site);
-          break; // prevents site duplicates from being added
+    if (activeFilters.isEmpty) {
+      newDisplaySites.addAll(searchSites);
+    } else {
+      for (HistSite site in searchSites) {
+        for (SiteFilter filter in activeFilters) {
+          // Match by name instead of object identity
+          if (site.filters.any((f) => f.name == filter.name)) {
+            newDisplaySites.add(site);
+            break;
+          }
         }
       }
     }
-    // for (HistSite site in searchSites) {
-    //   if (filteredSites.contains(site)) {
-    //     newDisplaySites.add(site);
-    //   }
-    // }
 
     setState(() {
       displaySites = newDisplaySites.toList();
+      print("New display sites: ${displaySites.length}, ${displaySites.first}");
     });
-    // sortDisplayItems();
   }
 
   void openSearchDialog() {
@@ -383,27 +376,35 @@ class _ListPageState extends State<ListPage> {
                         .bodySmall
                         ?.copyWith(
                             color: Theme.of(context).colorScheme.secondary)),
-                    backgroundColor: WidgetStatePropertyAll(Theme.of(context)
-                        .colorScheme
-                        .primary), //TODO: This might work?
+                    backgroundColor: WidgetStatePropertyAll(
+                        Theme.of(context).colorScheme.primary),
                     leading: Icon(Icons.search),
                     trailing: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_right_alt),
-                        onPressed: () {
-                          List<HistSite> lst = [];
-                          lst.addAll(fullSiteList.where((HistSite site) {
-                            return site.name
-                                .toLowerCase()
-                                .contains(controller.text.toLowerCase());
-                          }));
-                          setState(() {
-                            searchSites = lst;
-                          });
-                          onDisplaySitesChanged();
-                          Navigator.pop(context);
-                        },
-                      )
+                      controller.text == ""
+                          ? IconButton(
+                              icon: Icon(Icons.arrow_right_alt),
+                              onPressed: () {
+                                List<HistSite> lst = [];
+                                lst.addAll(fullSiteList.where((HistSite site) {
+                                  return site.name
+                                      .toLowerCase()
+                                      .contains(controller.text.toLowerCase());
+                                }));
+                                setState(() {
+                                  searchSites = lst;
+                                });
+                                onDisplaySitesChanged();
+                                Navigator.pop(context);
+                              },
+                            )
+                          : IconButton(
+                              onPressed: () {
+                                searchSites = fullSiteList;
+                                controller.clear();
+                                onDisplaySitesChanged();
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(Icons.close))
                     ],
                     controller: _searchController,
                     onTap: () {
@@ -465,7 +466,9 @@ class _ListPageState extends State<ListPage> {
                       title: Text(filteredSite.name),
                       onTap: () {
                         setState(() {
-                          displaySites = [filteredSite];
+                          print("clicked tile");
+                          searchSites = [filteredSite];
+                          onDisplaySitesChanged();
                           controller.closeView(filteredSite.name);
                         });
                         Navigator.pop(context);

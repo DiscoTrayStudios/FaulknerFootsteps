@@ -359,7 +359,12 @@ class _AdminListPageState extends State<AdminListPage> {
                                           }
                                         });
                                       },
-                                      child: Text((filter.name))))
+                                      child: Text(
+                                        (filter.name),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      )))
                                   .toList()
 
                               // [
@@ -806,48 +811,52 @@ class _AdminListPageState extends State<AdminListPage> {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                         print("pressed submit!");
-                    // Get the original site name for updating or deleting the document
-                    final originalName = site.name;
-                    final oldDocRef = FirebaseFirestore.instance
-                        .collection('sites')
-                        .doc(originalName);
+                        print("pressed submit!");
+                        // Get the original site name for updating or deleting the document
+                        final originalName = site.name;
+                        final oldDocRef = FirebaseFirestore.instance
+                            .collection('sites')
+                            .doc(originalName);
 
-                    // Get list of all the current paths
-                    List<String> paths = [];
+                        // Get list of all the current paths
+                        List<String> paths = [];
 
-                  List<ImageWithUrl> pairedImages;
-                  if (tempImageChanges.containsKey(originalName)) {
-                  pairedImages = tempImageChanges[originalName]!;
-                  if (tempDeletedUrls.containsKey(originalName)) {
-                    for (String url in tempDeletedUrls[originalName]!) {
-                      try {
-                        await storageRef.child(url).delete();
-                        print("Deleted image: $url");
-                      } catch (e) {
-                        print("Error deleting image: $e");
-                      }
-                    }
-                  }
-                  } else {
-                  pairedImages = [];
-                  for (int i = 0; i < site.imageUrls.length; i++) {
-                    Uint8List? imageData;
-                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
-                      imageData = site.images[i];
-                    } else {
-                      imageData = await app_state.getImage(site.imageUrls[i]);
-                    }
-                    if (imageData != null && site.imageUrls[i].isNotEmpty){
-                      pairedImages.add(ImageWithUrl(
-                        imageData: imageData,
-                        url: site.imageUrls[i],
-                      ));
-                    }
-                  }
-                  }
+                        List<ImageWithUrl> pairedImages;
+                        if (tempImageChanges.containsKey(originalName)) {
+                          pairedImages = tempImageChanges[originalName]!;
+                          if (tempDeletedUrls.containsKey(originalName)) {
+                            for (String url in tempDeletedUrls[originalName]!) {
+                              try {
+                                await storageRef.child(url).delete();
+                                print("Deleted image: $url");
+                              } catch (e) {
+                                print("Error deleting image: $e");
+                              }
+                            }
+                          }
+                        } else {
+                          pairedImages = [];
+                          for (int i = 0; i < site.imageUrls.length; i++) {
+                            Uint8List? imageData;
+                            if (i < site.images.length &&
+                                site.images[i] != null &&
+                                site.images[i]!.isNotEmpty) {
+                              imageData = site.images[i];
+                            } else {
+                              imageData =
+                                  await app_state.getImage(site.imageUrls[i]);
+                            }
+                            if (imageData != null &&
+                                site.imageUrls[i].isNotEmpty) {
+                              pairedImages.add(ImageWithUrl(
+                                imageData: imageData,
+                                url: site.imageUrls[i],
+                              ));
+                            }
+                          }
+                        }
 
-                   /* print("Length of site list: ${site.images.length}");
+                        /* print("Length of site list: ${site.images.length}");
 
                     // remove any deleted images
                     // NOTE: it may be better to handle this when we delete items.
@@ -890,39 +899,42 @@ class _AdminListPageState extends State<AdminListPage> {
                       url: site.imageUrls[i],
                     ));
                     }} */
-                    if (nameController.text.isNotEmpty &&
-                        descriptionController.text.isNotEmpty) {
-                    List<String> urlsToDelete = [];
-                    for (String originalUrl in site.imageUrls) {
-                        bool stillExists = pairedImages.any((img) {
-                          return img.url == originalUrl;
-                        });
-                        if (!stillExists && originalUrl.isNotEmpty) {
-                          urlsToDelete.add(originalUrl);
-                        }
-                      }
-                    for (String url in urlsToDelete) {
-                      try {
-                        await storageRef.child(url).delete();
-                        print("Deleted image: $url");
-                      } catch (e) {
-                        print("Error deleting image: $e");
-                      }
-                    }
-                     paths.clear();
-                    for (var pair in pairedImages) {
-                      if (pair.url.isNotEmpty) {
-                        paths.add(pair.url);
-                      }
-                    }
-                    if (newlyAddedFiles.isNotEmpty) {
-                        List<String> randomNames = List.generate(newlyAddedFiles.length, (_) => uuid.v4());
-                        final refName = originalName.replaceAll(' ', '');
-                        List<String> uploadedPaths = await uploadImages(refName, randomNames, files: newlyAddedFiles);
-                        paths.addAll(uploadedPaths);
-                        newlyAddedFiles.clear();
-                     }
-                      /*if (site.images != copyOfOriginalImageList) {
+                        if (nameController.text.isNotEmpty &&
+                            descriptionController.text.isNotEmpty) {
+                          List<String> urlsToDelete = [];
+                          for (String originalUrl in site.imageUrls) {
+                            bool stillExists = pairedImages.any((img) {
+                              return img.url == originalUrl;
+                            });
+                            if (!stillExists && originalUrl.isNotEmpty) {
+                              urlsToDelete.add(originalUrl);
+                            }
+                          }
+                          for (String url in urlsToDelete) {
+                            try {
+                              await storageRef.child(url).delete();
+                              print("Deleted image: $url");
+                            } catch (e) {
+                              print("Error deleting image: $e");
+                            }
+                          }
+                          paths.clear();
+                          for (var pair in pairedImages) {
+                            if (pair.url.isNotEmpty) {
+                              paths.add(pair.url);
+                            }
+                          }
+                          if (newlyAddedFiles.isNotEmpty) {
+                            List<String> randomNames = List.generate(
+                                newlyAddedFiles.length, (_) => uuid.v4());
+                            final refName = originalName.replaceAll(' ', '');
+                            List<String> uploadedPaths = await uploadImages(
+                                refName, randomNames,
+                                files: newlyAddedFiles);
+                            paths.addAll(uploadedPaths);
+                            newlyAddedFiles.clear();
+                          }
+                          /*if (site.images != copyOfOriginalImageList) {
                         // // delete the old images
                         // print("Deleting ${refName}");
                         // final path = "images/$refName";
@@ -973,40 +985,42 @@ class _AdminListPageState extends State<AdminListPage> {
                         }
                       }*/
 
-                      // add "other" if chosenFilters is empty
+                          // add "other" if chosenFilters is empty
 
-                      if (chosenFilters.isEmpty) {
-                        chosenFilters.add(SiteFilter(name: "Other"));
-                      }
+                          if (chosenFilters.isEmpty) {
+                            chosenFilters.add(SiteFilter(name: "Other"));
+                          }
 
-                      final updatedSite = HistSite(
-                        name: nameController.text,
-                        description: descriptionController.text,
-                        blurbs: blurbs,
-                        imageUrls: site.images == copyOfOriginalImageList
-                            ? site.imageUrls
-                            : paths,
-                        avgRating: site.avgRating,
-                        ratingAmount: site.ratingAmount,
-                        filters: chosenFilters,
-                        lat: double.tryParse(latController.text) ?? site.lat,
-                        lng: double.tryParse(lngController.text) ?? site.lng,
-                      );
+                          final updatedSite = HistSite(
+                            name: nameController.text,
+                            description: descriptionController.text,
+                            blurbs: blurbs,
+                            imageUrls: site.images == copyOfOriginalImageList
+                                ? site.imageUrls
+                                : paths,
+                            avgRating: site.avgRating,
+                            ratingAmount: site.ratingAmount,
+                            filters: chosenFilters,
+                            lat:
+                                double.tryParse(latController.text) ?? site.lat,
+                            lng:
+                                double.tryParse(lngController.text) ?? site.lng,
+                          );
 
-                      // If name changed, delete old document and create new one
-                      if (originalName != nameController.text) {
-                        oldDocRef.delete().then((_) {
-                          app_state.addSite(updatedSite);
-                        });
-                      } else {
-                        // Just update existing document
-                        app_state.addSite(updatedSite);
-                      }
-                        tempImageChanges.remove(originalName);
-                        tempDeletedUrls.remove(originalName);
+                          // If name changed, delete old document and create new one
+                          if (originalName != nameController.text) {
+                            oldDocRef.delete().then((_) {
+                              app_state.addSite(updatedSite);
+                            });
+                          } else {
+                            // Just update existing document
+                            app_state.addSite(updatedSite);
+                          }
+                          tempImageChanges.remove(originalName);
+                          tempDeletedUrls.remove(originalName);
 
-                      Navigator.pop(context);
-                      setState(() {});
+                          Navigator.pop(context);
+                          setState(() {});
                         }
                       },
                       child: const Text('Save Changes'),
@@ -1022,36 +1036,38 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
-     List<Uint8List?> siteImages = site.images;
-  List<String> siteImageURLs = site.imageUrls;
-  List<String> originalUrls = List.from(site.imageUrls);
-  List<ImageWithUrl> pairedImages = [];
-   if (tempImageChanges.containsKey(site.name)) {
-    pairedImages = List.from(tempImageChanges[site.name]!);
-  } else {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  for (int i = 0; i < siteImageURLs.length; i++) {
-    Uint8List? imageData;
-    if (i < siteImages.length && siteImages[i] != null && siteImages[i]!.isNotEmpty) {
-      imageData = siteImages[i];
+    List<Uint8List?> siteImages = site.images;
+    List<String> siteImageURLs = site.imageUrls;
+    List<String> originalUrls = List.from(site.imageUrls);
+    List<ImageWithUrl> pairedImages = [];
+    if (tempImageChanges.containsKey(site.name)) {
+      pairedImages = List.from(tempImageChanges[site.name]!);
     } else {
-      imageData = await app_state.getImage(siteImageURLs[i]);
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+      for (int i = 0; i < siteImageURLs.length; i++) {
+        Uint8List? imageData;
+        if (i < siteImages.length &&
+            siteImages[i] != null &&
+            siteImages[i]!.isNotEmpty) {
+          imageData = siteImages[i];
+        } else {
+          imageData = await app_state.getImage(siteImageURLs[i]);
+        }
+        if (imageData != null && siteImageURLs[i].isNotEmpty) {
+          pairedImages.add(ImageWithUrl(
+            imageData: imageData,
+            url: siteImageURLs[i],
+          ));
+        }
+      }
+      Navigator.pop(context);
     }
-    if (imageData != null && siteImageURLs[i].isNotEmpty){
-    pairedImages.add(ImageWithUrl(
-      imageData: imageData,
-      url: siteImageURLs[i],
-    ));
-    }
-  }
-    Navigator.pop(context);
-  }
     await showDialog(
       barrierDismissible: false,
       context: context,
@@ -1063,10 +1079,13 @@ class _AdminListPageState extends State<AdminListPage> {
               title: "Edit Images",
               items: pairedImages,
               itemBuilder: (imageWithUrl) {
-                if (imageWithUrl.imageData != null && imageWithUrl.imageData!.isNotEmpty) {
-                  return Image.memory(imageWithUrl.imageData!, fit: BoxFit.contain);
+                if (imageWithUrl.imageData != null &&
+                    imageWithUrl.imageData!.isNotEmpty) {
+                  return Image.memory(imageWithUrl.imageData!,
+                      fit: BoxFit.contain);
                 }
-                  return Text("You do not have any Images uplodaed to this site.");
+                return Text(
+                    "You do not have any Images uplodaed to this site.");
               },
               addButtonText: "Add Images",
               deleteButtonText: "Delete Images",
@@ -1090,7 +1109,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     .where((img) => img.url.isNotEmpty)
                     .map((img) => img.url)
                     .toSet();
-                
+
                 List<String> urlsToDelete = originalUrls
                     .where((url) => !remainingUrls.contains(url))
                     .toList();
