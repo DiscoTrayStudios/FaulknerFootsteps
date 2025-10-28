@@ -224,7 +224,7 @@ class _ProfilePageState extends State<ProfilePage>
                         'Email',
                         style: GoogleFonts.ultra(
                           textStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 16,
                           ),
                         ),

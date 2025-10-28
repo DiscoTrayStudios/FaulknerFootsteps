@@ -154,13 +154,13 @@ final ThemeData adminPageTheme = ThemeData(
       color: Color.fromARGB(255, 72, 52, 52), // Outline when unchecked
       width: 2.0,
     ),
-    fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-      if (states.contains(MaterialState.selected)) {
+    fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+      if (states.contains(WidgetState.selected)) {
         return const Color.fromARGB(255, 76, 32, 8); // Checked fill
       }
       return const Color.fromARGB(255, 238, 214, 196); // Unchecked fill
     }),
-    checkColor: MaterialStateProperty.all<Color>(
+    checkColor: WidgetStateProperty.all<Color>(
       Color.fromARGB(255, 238, 214, 196), // Checkmark color
     ),
   ),

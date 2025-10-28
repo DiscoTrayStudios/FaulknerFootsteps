@@ -456,14 +456,11 @@ class _AdminListPageState extends State<AdminListPage> {
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        // style: images == null
-                        //     ? ElevatedButton.styleFrom(
-                        //         backgroundColor: const Color.fromARGB(0, 0, 0, 0))
-                        //     : ElevatedButton.styleFrom(
-                        //         backgroundColor:
-                        //             const Color.fromARGB(255, 218, 186, 130),
-                        //       ),
-                        onPressed: images == null
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+                          disabledBackgroundColor:  Color.fromARGB(255, 120, 120, 120),
+                        ),
+                        onPressed: images == null || blurbs.isEmpty
                             ? null
                             : () async {
                                 if (chosenFilters.isEmpty) {
