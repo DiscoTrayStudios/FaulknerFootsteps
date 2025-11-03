@@ -84,6 +84,13 @@ class _ListPageState extends State<ListPage> {
       searchSites = fullSiteList;
       activeFilters.clear();
       activeFilters.addAll(app_state.siteFilters);
+      for (var filter in activeFilters) {
+        print("Filter: ${filter.name}, Order: ${filter.order}");
+      }
+      for (int i = 0; i < activeFilters.length; i++) {
+        final filter = activeFilters[i];
+        print("[$i] Filter: ${filter.name}, Order: ${filter.order}");
+      }
     });
 
     _searchController = SearchController();
