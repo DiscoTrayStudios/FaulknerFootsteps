@@ -259,8 +259,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             controller: nameController,
                             style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Site Name',
-                            ),
+                                labelText: 'Site Name', hintText: 'Site Name'),
                           ),
                           const SizedBox(height: 10),
                           TextField(
@@ -268,8 +267,8 @@ class _AdminListPageState extends State<AdminListPage> {
                             maxLines: 3,
                             style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Description',
-                            ),
+                                labelText: 'Description',
+                                hintText: 'Description'),
                           ),
                           const SizedBox(height: 10),
                           Row(
@@ -545,23 +544,20 @@ class _AdminListPageState extends State<AdminListPage> {
                       controller: titleController,
                       style: Theme.of(context).textTheme.bodyMedium,
                       decoration: const InputDecoration(
-                        labelText: 'Title',
-                      ),
+                          labelText: 'Title', hintText: 'Title'),
                     ),
                     TextField(
                       controller: valueController,
                       maxLines: 3,
                       style: Theme.of(context).textTheme.bodyMedium,
                       decoration: const InputDecoration(
-                        labelText: 'Content',
-                      ),
+                          labelText: 'Content', hintText: 'Content'),
                     ),
                     TextField(
                       controller: dateController,
                       style: Theme.of(context).textTheme.bodyMedium,
                       decoration: const InputDecoration(
-                        labelText: 'Date',
-                      ),
+                          labelText: 'Date', hintText: 'Date'),
                     ),
                   ],
                 ),
@@ -636,8 +632,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             style: Theme.of(context).textTheme.bodyMedium,
                             controller: nameController,
                             decoration: const InputDecoration(
-                              labelText: 'Site Name',
-                            ),
+                                labelText: 'Site Name', hintText: 'Site Name'),
                           ),
                         ),
                         TextField(
@@ -645,8 +640,8 @@ class _AdminListPageState extends State<AdminListPage> {
                           maxLines: 3,
                           style: Theme.of(context).textTheme.bodyMedium,
                           decoration: const InputDecoration(
-                            labelText: 'Description',
-                          ),
+                              labelText: 'Description',
+                              hintText: 'Description'),
                         ),
                         const SizedBox(height: 10),
                         Row(

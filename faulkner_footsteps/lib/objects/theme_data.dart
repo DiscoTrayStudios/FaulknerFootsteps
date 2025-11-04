@@ -133,13 +133,23 @@ final ThemeData adminPageTheme = ThemeData(
     // labelMedium: ,
   ),
   inputDecorationTheme: InputDecorationTheme(
-      focusedBorder: OutlineInputBorder(
-        borderSide:
-            BorderSide(color: Color.fromARGB(255, 76, 32, 8), width: 2.0),
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 76, 32, 8), width: 2.0),
+    ),
+    labelStyle: GoogleFonts.ultra(
+        textStyle: const TextStyle(
+            color: Color.fromARGB(255, 76, 32, 8), fontSize: 24)),
+    hintStyle: GoogleFonts.rakkas(
+      textStyle: TextStyle(
+        fontSize: 16, // Slightly smaller than input text for subtle hierarchy
+        color: Color.fromARGB(255, 76, 32, 8)
+            .withValues(alpha: 128), // Softer tone for unobtrusive guidance
+        fontStyle: FontStyle
+            .italic, // Optional: adds a gentle visual cue that it's a hint
       ),
-      labelStyle: GoogleFonts.ultra(
-          textStyle: const TextStyle(
-              color: Color.fromARGB(255, 76, 32, 8), fontSize: 24))),
+    ),
+  ),
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Color.fromARGB(255, 76, 32, 8),
     selectionColor: Color.fromARGB(255, 76, 32, 8),
