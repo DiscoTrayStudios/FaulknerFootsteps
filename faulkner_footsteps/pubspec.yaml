@@ -58,6 +58,9 @@ dependencies:
   firebase_storage: ^12.4.4
   uuid: ^4.5.1
   shared_preferences: ^2.5.3
+  flutter_image_compress: ^2.4.0
+  path_provider: ^2.0.14
+
 
 dev_dependencies:
   flutter_test:

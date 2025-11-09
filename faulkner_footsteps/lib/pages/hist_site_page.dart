@@ -108,7 +108,7 @@ class _HistSitePage extends State<HistSitePage> {
           leading: BackButton(
               // color: Color.fromARGB(255, 255, 243, 228),
               ),
-          backgroundColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           title: Text(
             "Faulkner Footsteps",
             style: GoogleFonts.ultra(

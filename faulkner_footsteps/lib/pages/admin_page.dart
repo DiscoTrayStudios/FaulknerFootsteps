@@ -16,6 +16,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AdminListPage extends StatefulWidget {
   AdminListPage({super.key});
@@ -78,20 +80,52 @@ class _AdminListPageState extends State<AdminListPage> {
     }
   }
 
-  Future pickImages() async {
+  Future<void> pickImages() async {
+    final int maxBytes = 1024 * 1024; // 1 MB
     try {
-      final images = await ImagePicker().pickMultiImage();
-      ;
-      List<File> t = [];
-      for (XFile image in images) {
-        t.add(File(image.path));
+      final pickedImages = await ImagePicker().pickMultiImage();
+      if (pickedImages == null || pickedImages.isEmpty) return;
+
+      List<File> finalImages = [];
+
+      for (XFile image in pickedImages) {
+        final file = File(image.path);
+        final fileSize = await file.length();
+
+        if (fileSize > maxBytes) {
+          final compressed = await compressAndGetFile(file);
+          if (compressed != null) {
+            finalImages.add(compressed);
+          } else {
+            print("Compression failed for ${image.name}");
+          }
+        } else {
+          finalImages.add(file);
+        }
       }
-      this.images = t;
+
+      this.images = finalImages;
       setState(() {});
     } on PlatformException catch (e) {
-      print("Failed to pick images: $e: ");
+      print("Failed to pick images: $e");
     }
-    setState(() {});
+  }
+
+  Future<File?> compressAndGetFile(File file,
+      {int quality = 75, int maxWidth = 1280}) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    XFile? result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: quality,
+      minWidth: maxWidth,
+      minHeight: (maxWidth * 0.75).toInt(),
+      format: CompressFormat.jpeg,
+    );
+    return result != null ? File(result.path) : null;
   }
 
   Future pickImage() async {
