@@ -574,24 +574,33 @@ class _AdminListPageState extends State<AdminListPage> {
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: titleController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Title', hintText: 'Title'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: titleController,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Title', hintText: 'Title'),
+                      ),
                     ),
-                    TextField(
-                      controller: valueController,
-                      maxLines: 3,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Content', hintText: 'Content'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: valueController,
+                        maxLines: 3,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Content', hintText: 'Content'),
+                      ),
                     ),
-                    TextField(
-                      controller: dateController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Date', hintText: 'Date'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: dateController,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Date', hintText: 'Date'),
+                      ),
                     ),
                   ],
                 ),
@@ -661,7 +670,7 @@ class _AdminListPageState extends State<AdminListPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Padding(
-                          padding: EdgeInsetsGeometry.all(8.0),
+                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                           child: TextField(
                             style: Theme.of(context).textTheme.bodyMedium,
                             controller: nameController,
@@ -669,13 +678,16 @@ class _AdminListPageState extends State<AdminListPage> {
                                 labelText: 'Site Name', hintText: 'Site Name'),
                           ),
                         ),
-                        TextField(
-                          controller: descriptionController,
-                          maxLines: 3,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: const InputDecoration(
-                              labelText: 'Description',
-                              hintText: 'Description'),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                          child: TextField(
+                            controller: descriptionController,
+                            maxLines: 3,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: const InputDecoration(
+                                labelText: 'Description',
+                                hintText: 'Description'),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -823,7 +835,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             print("Reached post dialog opening");
                             print("Length p: ${site.images.length}");
                             for (Uint8List? s in site.images) {
-                              print("Image: $s");
+                              //print("Image: $s");
                             }
                           },
                           child: const Text('Edit Images'),

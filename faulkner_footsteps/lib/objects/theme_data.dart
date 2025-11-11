@@ -137,6 +137,9 @@ final ThemeData adminPageTheme = ThemeData(
     focusedBorder: OutlineInputBorder(
       borderSide: BorderSide(color: Color.fromARGB(255, 76, 32, 8), width: 2.0),
     ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color.fromARGB(255, 76, 32, 8), width: 1.0),
+    ),
     labelStyle: GoogleFonts.ultra(
         textStyle: const TextStyle(
             color: Color.fromARGB(255, 76, 32, 8), fontSize: 24)),
