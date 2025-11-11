@@ -63,6 +63,16 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
+
+      // ... your existing theme config ...
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color.fromARGB(255, 107, 79, 79),
+        selectionColor:
+            Color.fromARGB(255, 107, 79, 79), // Optional: text highlight
+        selectionHandleColor:
+            Color.fromARGB(255, 107, 79, 79), // Optional: drag handle
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 107, 79, 79),
