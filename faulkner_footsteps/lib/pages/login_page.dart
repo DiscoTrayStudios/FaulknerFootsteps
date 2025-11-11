@@ -143,7 +143,8 @@ class LoginPage extends StatelessWidget {
 
   Widget buildSignInScreen() {
     // Standard SignInScreen with custom theme
-    return SignInScreen(
+    return RegisterScreen(
+      showAuthActionSwitch: true,
       providers: [EmailAuthProvider()],
       actions: [
         AuthStateChangeAction<SignedIn>((context, state) async {
