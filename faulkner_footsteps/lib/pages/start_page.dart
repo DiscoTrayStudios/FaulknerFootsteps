@@ -66,14 +66,24 @@ class _StartPageState extends State<StartPage>
 
   void _handleContinue() async {
     player.stop(); // Stop the audio
+
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      print("navigated to list page");
-      AppRouter.navigateTo(context, AppRouter.list);
+      print("already signed in");
     } else {
-      print("navigated to login page");
-      AppRouter.navigateTo(context, AppRouter.loginPage);
+      print("signing in anonymously");
+      try {
+        UserCredential credential =
+            await FirebaseAuth.instance.signInAnonymously();
+        user = credential.user;
+        print("signed in as ${user?.uid}");
+      } catch (e) {
+        print("Anonymous sign-in failed: $e");
+        return; // Don't navigate if sign-in fails
+      }
     }
+
+    AppRouter.navigateTo(context, AppRouter.list);
   }
 
   @override

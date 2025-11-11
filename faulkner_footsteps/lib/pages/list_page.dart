@@ -502,7 +502,7 @@ class _ListPageState extends State<ListPage> {
       appBar: AppBar(
           elevation: 5.0,
           actions: [
-            const ProfileButton(),
+            ProfileButton(),
             IconButton(
                 onPressed: () {
                   openSearchDialog();
