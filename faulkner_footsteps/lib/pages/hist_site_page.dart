@@ -318,7 +318,13 @@ class _HistSitePage extends State<HistSitePage> {
                   onRatingChanged: (rating) {
                     final user = FirebaseAuth.instance.currentUser;
                     if (user == null || user.isAnonymous) {
-                      print("must sign in to rate sites!");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("You must sign in to rate sites!"),
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
                       return;
                     }
                     setState(() {
