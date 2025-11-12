@@ -10,6 +10,7 @@ import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -271,31 +272,78 @@ class _AdminListPageState extends State<AdminListPage> {
                                 hintText: 'Description'),
                           ),
                           const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                    controller: latController,
-                                    keyboardType: TextInputType.number,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Latitude',
-                                    )),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: TextField(
-                                  controller: lngController,
-                                  keyboardType: TextInputType.number,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Longitude',
-                                  ),
-                                ),
-                              ),
-                            ],
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.my_location),
+                          label: const Text('Get Location'),
+                          onPressed: () async {
+                            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                            if (!serviceEnabled) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Location services are disabled.')),
+                              );
+                              return;
+                            }
+                            LocationPermission permission = await Geolocator.checkPermission();
+                            if (permission == LocationPermission.denied) {
+                              permission = await Geolocator.requestPermission();
+                              if (permission == LocationPermission.denied) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Location permission denied.')),
+                                );
+                                return;
+                              }
+                            }
+                            if (permission == LocationPermission.deniedForever) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Location permissions are permanently denied. Open settings to enable.')),
+                              );
+                              return;
+                            }
+                            try {
+                              final pos = await Geolocator.getCurrentPosition(
+                                  desiredAccuracy: LocationAccuracy.best);
+                              latController.text = pos.latitude.toStringAsFixed(6);
+                              lngController.text = pos.longitude.toStringAsFixed(6);
+                              setState(() {});
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to get position: $e')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 218, 186, 130),
                           ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                        children: [
+                        Expanded(
+                          child: TextField(
+                            controller: latController,
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: const InputDecoration(
+                              labelText: 'Latitude',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: lngController,
+                            keyboardType: TextInputType.numberWithOptions(decimal: true),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: const InputDecoration(
+                              labelText: 'Longitude',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ],
+                        ),
                           const SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () async {
@@ -450,7 +498,9 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                     ),
                     actions: [
-                      TextButton(
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor:
+                              const Color.fromARGB(255, 218, 186, 130),),
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel'),
                       ),
@@ -642,6 +692,52 @@ class _AdminListPageState extends State<AdminListPage> {
                           decoration: const InputDecoration(
                               labelText: 'Description',
                               hintText: 'Description'),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.my_location),
+                          label: const Text('Get Location'),
+                          onPressed: () async {
+                            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                            if (!serviceEnabled) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Location services are disabled.')),
+                              );
+                              return;
+                            }
+                            LocationPermission permission = await Geolocator.checkPermission();
+                            if (permission == LocationPermission.denied) {
+                              permission = await Geolocator.requestPermission();
+                              if (permission == LocationPermission.denied) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Location permission denied.')),
+                                );
+                                return;
+                              }
+                            }
+                            if (permission == LocationPermission.deniedForever) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Location permissions are permanently denied. Open settings to enable.')),
+                              );
+                              return;
+                            }
+                            try {
+                              final pos = await Geolocator.getCurrentPosition(
+                                  desiredAccuracy: LocationAccuracy.best);
+                              latController.text = pos.latitude.toStringAsFixed(6);
+                              lngController.text = pos.longitude.toStringAsFixed(6);
+                              setState(() {});
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to get position: $e')),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Row(
