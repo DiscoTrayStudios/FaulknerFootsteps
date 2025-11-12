@@ -326,6 +326,17 @@ class _HistSitePage extends State<HistSitePage> {
                         ),
                       );
                       return;
+                    } else if (!app_state.visitedPlaces
+                        .contains(widget.histSite.name)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              "You need to visit ${widget.histSite.name} before you rate it!"),
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                      return;
                     }
                     setState(() {
                       widget.histSite.updateRating(
