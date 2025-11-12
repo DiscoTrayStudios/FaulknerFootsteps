@@ -231,6 +231,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<SiteFilter> chosenFilters = [];
 
     List<InfoText> blurbs = [];
+    final ScrollController _scrollController = ScrollController();
 
     return showDialog(
       barrierDismissible: false,
@@ -252,7 +253,11 @@ class _AdminListPageState extends State<AdminListPage> {
                         ),
                       ),
                     ),
-                    content: SingleChildScrollView(
+                    content: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -503,6 +508,7 @@ class _AdminListPageState extends State<AdminListPage> {
                         ],
                       ),
                     ),
+                    ),
                     actions: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor:
@@ -658,6 +664,7 @@ class _AdminListPageState extends State<AdminListPage> {
     copyOfOriginalImageList.addAll(site.images);
 
     List<InfoText> blurbs = List.from(site.blurbs);
+    final ScrollController _scrollController = ScrollController();
 
     return showDialog(
       barrierDismissible: false,
@@ -678,7 +685,11 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                     ),
                   ),
-                  content: SingleChildScrollView(
+                  content: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -905,6 +916,7 @@ class _AdminListPageState extends State<AdminListPage> {
                         ),
                       ],
                     ),
+                  ),
                   ),
                   actionsAlignment: MainAxisAlignment.spaceEvenly,
                   actions: [
