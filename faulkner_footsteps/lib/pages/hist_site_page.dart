@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating/flutter_rating.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -108,7 +109,7 @@ class _HistSitePage extends State<HistSitePage> {
           leading: BackButton(
               // color: Color.fromARGB(255, 255, 243, 228),
               ),
-          backgroundColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           title: Text(
             "Faulkner Footsteps",
             style: GoogleFonts.ultra(
@@ -315,6 +316,17 @@ class _HistSitePage extends State<HistSitePage> {
                   rating: personalRating,
                   starCount: 5,
                   onRatingChanged: (rating) {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null || user.isAnonymous) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("You must sign in to rate sites!"),
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                      return;
+                    }
                     setState(() {
                       widget.histSite.updateRating(
                           personalRating, rating, personalRating == 0.0);
