@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:faulkner_footsteps/app_router.dart';
 
@@ -12,7 +13,15 @@ class ProfileButton extends StatelessWidget {
         color: Color.fromARGB(255, 255, 243, 228),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, AppRouter.profilePage);
+        print("attempting to get user");
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null || user.isAnonymous) {
+          print("user is anonymous");
+          AppRouter.navigateTo(context, AppRouter.loginPage);
+        } else {
+          print("user is logged in");
+          AppRouter.navigateTo(context, AppRouter.profilePage);
+        }
       },
     );
   }

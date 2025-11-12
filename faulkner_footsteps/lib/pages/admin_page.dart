@@ -17,6 +17,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AdminListPage extends StatefulWidget {
   AdminListPage({super.key});
@@ -79,20 +81,52 @@ class _AdminListPageState extends State<AdminListPage> {
     }
   }
 
-  Future pickImages() async {
+  Future<void> pickImages() async {
+    final int maxBytes = 1024 * 1024; // 1 MB
     try {
-      final images = await ImagePicker().pickMultiImage();
-      ;
-      List<File> t = [];
-      for (XFile image in images) {
-        t.add(File(image.path));
+      final pickedImages = await ImagePicker().pickMultiImage();
+      if (pickedImages == null || pickedImages.isEmpty) return;
+
+      List<File> finalImages = [];
+
+      for (XFile image in pickedImages) {
+        final file = File(image.path);
+        final fileSize = await file.length();
+
+        if (fileSize > maxBytes) {
+          final compressed = await compressAndGetFile(file);
+          if (compressed != null) {
+            finalImages.add(compressed);
+          } else {
+            print("Compression failed for ${image.name}");
+          }
+        } else {
+          finalImages.add(file);
+        }
       }
-      this.images = t;
+
+      this.images = finalImages;
       setState(() {});
     } on PlatformException catch (e) {
-      print("Failed to pick images: $e: ");
+      print("Failed to pick images: $e");
     }
-    setState(() {});
+  }
+
+  Future<File?> compressAndGetFile(File file,
+      {int quality = 75, int maxWidth = 1280}) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    XFile? result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: quality,
+      minWidth: maxWidth,
+      minHeight: (maxWidth * 0.75).toInt(),
+      format: CompressFormat.jpeg,
+    );
+    return result != null ? File(result.path) : null;
   }
 
   Future pickImage() async {
@@ -602,24 +636,33 @@ class _AdminListPageState extends State<AdminListPage> {
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: titleController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Title', hintText: 'Title'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: titleController,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Title', hintText: 'Title'),
+                      ),
                     ),
-                    TextField(
-                      controller: valueController,
-                      maxLines: 3,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Content', hintText: 'Content'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: valueController,
+                        maxLines: 3,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Content', hintText: 'Content'),
+                      ),
                     ),
-                    TextField(
-                      controller: dateController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Date', hintText: 'Date'),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: dateController,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: const InputDecoration(
+                            labelText: 'Date', hintText: 'Date'),
+                      ),
                     ),
                   ],
                 ),
@@ -694,7 +737,7 @@ class _AdminListPageState extends State<AdminListPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Padding(
-                          padding: EdgeInsetsGeometry.all(8.0),
+                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                           child: TextField(
                             style: Theme.of(context).textTheme.bodyMedium,
                             controller: nameController,
@@ -702,13 +745,16 @@ class _AdminListPageState extends State<AdminListPage> {
                                 labelText: 'Site Name', hintText: 'Site Name'),
                           ),
                         ),
-                        TextField(
-                          controller: descriptionController,
-                          maxLines: 3,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: const InputDecoration(
-                              labelText: 'Description',
-                              hintText: 'Description'),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                          child: TextField(
+                            controller: descriptionController,
+                            maxLines: 3,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: const InputDecoration(
+                                labelText: 'Description',
+                                hintText: 'Description'),
+                          ),
                         ),
                         const SizedBox(height: 10),
                         ElevatedButton.icon(
@@ -909,7 +955,7 @@ class _AdminListPageState extends State<AdminListPage> {
                             print("Reached post dialog opening");
                             print("Length p: ${site.images.length}");
                             for (Uint8List? s in site.images) {
-                              print("Image: $s");
+                              //print("Image: $s");
                             }
                           },
                           child: const Text('Edit Images'),

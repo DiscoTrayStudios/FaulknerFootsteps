@@ -63,6 +63,16 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
+
+      // ... your existing theme config ...
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color.fromARGB(255, 107, 79, 79),
+        selectionColor:
+            Color.fromARGB(255, 107, 79, 79), // Optional: text highlight
+        selectionHandleColor:
+            Color.fromARGB(255, 107, 79, 79), // Optional: drag handle
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 107, 79, 79),
@@ -81,152 +91,53 @@ class LoginPage extends StatelessWidget {
     );
 
     return Theme(
-      data: customTheme,
-      child: Scaffold(
-        resizeToAvoidBottomInset:
-            false, // Prevent resizing when keyboard appears
-        backgroundColor: Color.fromARGB(255, 238, 214, 196),
-        body: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              // Show loading indicator with theme colors
-              return const Center(
-                  child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 107, 79, 79),
-              ));
-            }
+        data: customTheme,
+        child: Scaffold(
+          resizeToAvoidBottomInset:
+              false, // Prevent resizing when keyboard appears
+          backgroundColor: Color.fromARGB(255, 238, 214, 196),
+          body: StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // Show loading indicator with theme colors
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    color: Color.fromARGB(255, 107, 79, 79),
+                  ));
+                }
 
-            if (!snapshot.hasData) {
-              // Standard SignInScreen with custom theme
-              return SignInScreen(
-                providers: [EmailAuthProvider()],
-                actions: [
-                  AuthStateChangeAction<SignedIn>((context, state) async {
-                    // Check if user is admin immediately after sign in
-                    if (state.user != null) {
-                      await checkAndStoreAdminStatus(state.user!);
+                final user = snapshot.data;
+                if (user == null) {
+                  return buildSignInScreen();
+                }
+                if (user.isAnonymous) {
+                  // Stay on login page for anonymous users
+                  return buildSignInScreen();
+                }
 
-                      // Navigate to the list page for all users
-                      if (context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ListPage(),
-                          ),
-                          (route) => false,
-                        );
-                      }
-                    }
-                  }),
-                ],
-                // Adjust the headerBuilder to have less vertical padding
-                headerBuilder: (context, constraints, shrinkOffset) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16, bottom: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // App title
-                        Text(
-                          'Faulkner Footsteps',
-                          style: GoogleFonts.ultra(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 72, 52, 52),
-                              fontSize: 24,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        // Optional subtitle
-                        Text(
-                          'Explore Historical Sites',
-                          style: GoogleFonts.rakkas(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 107, 79, 79),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                // Make subtitle more compact
-                subtitleBuilder: (context, action) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-                    child: Text(
-                      action == AuthAction.signIn
-                          ? 'Welcome back! Please sign in to continue.'
-                          : 'Welcome! Please create an account to get started.',
-                      style: GoogleFonts.rakkas(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 72, 52, 52),
-                          fontSize: 13,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                },
-                // Make footer more compact
-                footerBuilder: (context, action) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-                    child: Text(
-                      'Discover the rich history of Faulkner County',
-                      style: GoogleFonts.rakkas(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 107, 79, 79),
-                          fontSize: 12,
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                },
-                // Side builder for tablet/desktop
-                sideBuilder: (context, constraints) {
-                  return Container(
-                    color: const Color.fromARGB(255, 238, 214, 196),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Faulkner Footsteps',
-                          style: GoogleFonts.ultra(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 72, 52, 52),
-                              fontSize: 28,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            }
+                // If we already have a user when this widget is built, check admin status and navigate to List page
 
-            // If we already have a user when this widget is built, check admin status and navigate to List page
-            handleExistingUser(snapshot.data!, context);
-
-            // Return loading indicator while checking admin status
-            return const Center(
-              child: CircularProgressIndicator(
-                color: Color.fromARGB(255, 107, 79, 79),
-              ),
-            );
-          },
-        ),
-      ),
-    );
+                return FutureBuilder<void>(
+                  future: handleExistingUser(user, context),
+                  builder: (context, snapshot) {
+                    return const Center(
+                        child: CircularProgressIndicator(
+                      color: Color.fromARGB(255, 107, 79, 79),
+                    ));
+                  },
+                );
+              }),
+        ));
   }
 
   // Helper method to check admin status and navigate to the List page
   Future<void> handleExistingUser(User user, BuildContext context) async {
+    if (user.isAnonymous) {
+      // Stay on login page for anonymous users
+      return;
+    }
+
     await checkAndStoreAdminStatus(user);
 
     if (context.mounted) {
@@ -238,5 +149,119 @@ class LoginPage extends StatelessWidget {
         (route) => false,
       );
     }
+  }
+
+  Widget buildSignInScreen() {
+    // Standard SignInScreen with custom theme
+    return RegisterScreen(
+      showAuthActionSwitch: true,
+      providers: [EmailAuthProvider()],
+      actions: [
+        AuthStateChangeAction<SignedIn>((context, state) async {
+          // Check if user is admin immediately after sign in
+          if (state.user != null) {
+            await checkAndStoreAdminStatus(state.user!);
+
+            // Navigate to the list page for all users
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ListPage(),
+                ),
+                (route) => false,
+              );
+            }
+          }
+        }),
+      ],
+      // Adjust the headerBuilder to have less vertical padding
+      headerBuilder: (context, constraints, shrinkOffset) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // App title
+              Text(
+                'Faulkner Footsteps',
+                style: GoogleFonts.ultra(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 72, 52, 52),
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Optional subtitle
+              Text(
+                'Explore Historical Sites',
+                style: GoogleFonts.rakkas(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 107, 79, 79),
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      // Make subtitle more compact
+      subtitleBuilder: (context, action) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+          child: Text(
+            action == AuthAction.signIn
+                ? 'Welcome back! Please sign in to continue.'
+                : 'Welcome! Please create an account to get started.',
+            style: GoogleFonts.rakkas(
+              textStyle: const TextStyle(
+                color: Color.fromARGB(255, 72, 52, 52),
+                fontSize: 13,
+              ),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
+      // Make footer more compact
+      footerBuilder: (context, action) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+          child: Text(
+            'Discover the rich history of Faulkner County',
+            style: GoogleFonts.rakkas(
+              textStyle: const TextStyle(
+                color: Color.fromARGB(255, 107, 79, 79),
+                fontSize: 12,
+              ),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
+      // Side builder for tablet/desktop
+      sideBuilder: (context, constraints) {
+        return Container(
+          color: const Color.fromARGB(255, 238, 214, 196),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Faulkner Footsteps',
+                style: GoogleFonts.ultra(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 72, 52, 52),
+                    fontSize: 28,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
