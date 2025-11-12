@@ -224,6 +224,7 @@ class _HistSitePage extends State<HistSitePage> {
                         SwipeImageGallery(
                           context: context,
                           initialIndex: index,
+                          hideOverlayOnTap: false,
                           itemBuilder: (context, galleryIndex) {
                             return widget.histSite.images[galleryIndex] != null
                                 ? Image.memory(
