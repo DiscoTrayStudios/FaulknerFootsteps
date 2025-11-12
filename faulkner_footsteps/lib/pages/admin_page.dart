@@ -292,9 +292,14 @@ class _AdminListPageState extends State<AdminListPage> {
                       thumbVisibility: true,
                       child: SingleChildScrollView(
                         controller: _scrollController,
+                      child : Padding(
+                      padding: const EdgeInsets.only(right: 8, left: 8),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: MainAxisSize.max,
                         children: [
+                          Padding(
+                          padding: const EdgeInsets.only(top: 8)
+                          ),
                           TextField(
                             controller: nameController,
                             style: Theme.of(context).textTheme.bodyMedium,
@@ -371,18 +376,18 @@ class _AdminListPageState extends State<AdminListPage> {
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
                             style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Latitude',
+                              labelText: 'Lat',
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 20),
                         Expanded(
                           child: TextField(
                             controller: lngController,
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
                             style: Theme.of(context).textTheme.bodyMedium,
                             decoration: const InputDecoration(
-                              labelText: 'Longitude',
+                              labelText: 'Lng',
                             ),
                           ),
                         ),
@@ -541,8 +546,10 @@ class _AdminListPageState extends State<AdminListPage> {
                           ],
                         ],
                       ),
+                      ),
+                      ),
                     ),
-                    ),
+              
                     actions: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor:
@@ -733,9 +740,12 @@ class _AdminListPageState extends State<AdminListPage> {
                       thumbVisibility: true,
                       child: SingleChildScrollView(
                         controller: _scrollController,
+                    child : Padding(
+                    padding: const EdgeInsets.only(right: 8, left: 8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Padding(padding: const EdgeInsets.only(top:8)),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                           child: TextField(
@@ -818,24 +828,24 @@ class _AdminListPageState extends State<AdminListPage> {
                                 keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyMedium,
                                 decoration: const InputDecoration(
-                                  labelText: 'Latitude',
+                                  labelText: 'Lat',
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 20),
                             Expanded(
                               child: TextField(
                                 controller: lngController,
                                 keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyMedium,
                                 decoration: const InputDecoration(
-                                  labelText: 'Longitude',
+                                  labelText: 'Lng',
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         Text(
                           'Blurbs:',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -961,6 +971,7 @@ class _AdminListPageState extends State<AdminListPage> {
                           child: const Text('Edit Images'),
                         ),
                       ],
+                    ),
                     ),
                   ),
                   ),
