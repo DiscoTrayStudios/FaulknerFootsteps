@@ -52,7 +52,7 @@ class _MapDisplayState extends State<MapDisplay> {
 
     // Only run this once
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = widget.centerPosition ?? widget.currentPosition;
+      final target = new LatLng(35.090328, -92.441559);
       _mapController.move(target, 14.0);
       print("CenterPosition = ${widget.centerPosition}");
       print("CurrentPosition = ${widget.currentPosition}");
