@@ -292,268 +292,298 @@ class _AdminListPageState extends State<AdminListPage> {
                       thumbVisibility: true,
                       child: SingleChildScrollView(
                         controller: _scrollController,
-                      child : Padding(
-                      padding: const EdgeInsets.only(right: 8, left: 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(
-                          padding: const EdgeInsets.only(top: 8)
-                          ),
-                          TextField(
-                            controller: nameController,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: const InputDecoration(
-                                labelText: 'Site Name', hintText: 'Site Name'),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: descriptionController,
-                            maxLines: 3,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: const InputDecoration(
-                                labelText: 'Description',
-                                hintText: 'Description'),
-                          ),
-                          const SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.my_location),
-                          label: const Text('Get Location'),
-                          onPressed: () async {
-                            showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(child: CircularProgressIndicator()),
-                          );
-                            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                            if (!serviceEnabled) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Location services are disabled.')),
-                              );
-                              return;
-                            }
-                            LocationPermission permission = await Geolocator.checkPermission();
-                            if (permission == LocationPermission.denied) {
-                              permission = await Geolocator.requestPermission();
-                              if (permission == LocationPermission.denied) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Location permission denied.')),
-                                );
-                                return;
-                              }
-                            }
-                            if (permission == LocationPermission.deniedForever) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Location permissions are permanently denied. Open settings to enable.')),
-                              );
-                              return;
-                            }
-                            try {
-                              final pos = await Geolocator.getCurrentPosition(
-                                  desiredAccuracy: LocationAccuracy.best);
-                              latController.text = pos.latitude.toStringAsFixed(6);
-                              lngController.text = pos.longitude.toStringAsFixed(6);
-                              setState(() {});
-                              Navigator.of(context, rootNavigator: true).pop();
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to get position: $e')),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                        children: [
-                        Expanded(
-                          child: TextField(
-                            controller: latController,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: const InputDecoration(
-                              labelText: 'Lat',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: TextField(
-                            controller: lngController,
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: const InputDecoration(
-                              labelText: 'Lng',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ],
-                        ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () async {
-                              await _showAddBlurbDialog(blurbs);
-                              setState(
-                                  () {}); // Refresh the dialog to show new blurbs
-                            },
-                            child: const Text('Add Blurb'),
-                          ),
-                          if (blurbs.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            const Text('Current Blurbs:'),
-                            ...blurbs
-                                .map((blurb) => ListTile(
-                                      title: Text(blurb.title),
-                                      subtitle: Text(blurb.value),
-                                    ))
-                                .toList(),
-                          ],
-
-                          MenuAnchor(
-                              style: MenuStyle(
-                                  backgroundColor: WidgetStatePropertyAll(
-                                      const Color.fromARGB(255, 238, 214, 196)),
-                                  side: WidgetStatePropertyAll(BorderSide(
-                                      color: Color.fromARGB(255, 72, 52, 52),
-                                      width: 2.0)),
-                                  shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20.0)))),
-                              builder: (BuildContext context,
-                                  MenuController controller, Widget? child) {
-                                return ElevatedButton(
-                                    // focusNode: _buttonFocusNode,
-                                    onPressed: () {
-                                      if (controller.isOpen) {
-                                        controller.close();
-                                      } else {
-                                        controller.open();
-                                      }
-                                    },
-                                    child: const Text("Add Filters"));
-                              },
-                              menuChildren: acceptableFilters
-                                  .map((filter) => CheckboxMenuButton(
-                                      style: ButtonStyle(
-                                          textStyle:
-                                              WidgetStatePropertyAll(TextStyle(color: Color.fromARGB(255, 72, 52, 52), fontSize: 16.0, fontWeight: FontWeight.bold))),
-                                      closeOnActivate: false,
-                                      value: chosenFilters.contains(filter),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (!chosenFilters.contains(filter)) {
-                                            chosenFilters.add(filter);
-                                            print(chosenFilters);
-                                          } else {
-                                            chosenFilters.remove(filter);
-                                            print(chosenFilters);
-                                          }
-                                        });
-                                      },
-                                      child: Text(
-                                        (filter.name),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      )))
-                                  .toList()
-
-                              // [
-                              //   CheckboxMenuButton(
-                              //       value: false,
-                              //       onChanged: (bool? value) {
-                              //         print("changed");
-                              //       },
-                              //       child: const Text("Message"))
-                              // ]
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16, left: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(padding: const EdgeInsets.only(top: 8)),
+                              TextField(
+                                controller: nameController,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: const InputDecoration(
+                                    labelText: 'Site Name',
+                                    hintText: 'Site Name'),
                               ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              await pickImages();
-                              setState(
-                                  () {}); //idk why, but setState is acting weird here but it works now
-                            },
-                            child: const Text('Add Image'),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: descriptionController,
+                                maxLines: 3,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: const InputDecoration(
+                                    labelText: 'Description',
+                                    hintText: 'Description'),
+                              ),
+                              const SizedBox(height: 10),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.my_location),
+                                label: const Text('Get Location'),
+                                onPressed: () async {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => const Center(
+                                        child: CircularProgressIndicator()),
+                                  );
+                                  bool serviceEnabled = await Geolocator
+                                      .isLocationServiceEnabled();
+                                  if (!serviceEnabled) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Location services are disabled.')),
+                                    );
+                                    return;
+                                  }
+                                  LocationPermission permission =
+                                      await Geolocator.checkPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    permission =
+                                        await Geolocator.requestPermission();
+                                    if (permission ==
+                                        LocationPermission.denied) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Location permission denied.')),
+                                      );
+                                      return;
+                                    }
+                                  }
+                                  if (permission ==
+                                      LocationPermission.deniedForever) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Location permissions are permanently denied. Open settings to enable.')),
+                                    );
+                                    return;
+                                  }
+                                  try {
+                                    final pos =
+                                        await Geolocator.getCurrentPosition(
+                                            desiredAccuracy:
+                                                LocationAccuracy.best);
+                                    latController.text =
+                                        pos.latitude.toStringAsFixed(6);
+                                    lngController.text =
+                                        pos.longitude.toStringAsFixed(6);
+                                    setState(() {});
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Failed to get position: $e')),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 218, 186, 130),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: latController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lat',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: lngController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lng',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _showAddBlurbDialog(blurbs);
+                                  setState(
+                                      () {}); // Refresh the dialog to show new blurbs
+                                },
+                                child: const Text('Add Blurb'),
+                              ),
+                              if (blurbs.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Current Blurbs:'),
+                                ...blurbs
+                                    .map((blurb) => ListTile(
+                                          title: Text(blurb.title),
+                                          subtitle: Text(blurb.value),
+                                        ))
+                                    .toList(),
+                              ],
+
+                              MenuAnchor(
+                                  style: MenuStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                          const Color.fromARGB(
+                                              255, 238, 214, 196)),
+                                      side: WidgetStatePropertyAll(BorderSide(
+                                          color:
+                                              Color.fromARGB(255, 72, 52, 52),
+                                          width: 2.0)),
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20.0)))),
+                                  builder: (BuildContext context,
+                                      MenuController controller,
+                                      Widget? child) {
+                                    return ElevatedButton(
+                                        // focusNode: _buttonFocusNode,
+                                        onPressed: () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        },
+                                        child: const Text("Add Filters"));
+                                  },
+                                  menuChildren: acceptableFilters
+                                      .map((filter) => CheckboxMenuButton(
+                                          style: ButtonStyle(textStyle: WidgetStatePropertyAll(TextStyle(color: Color.fromARGB(255, 72, 52, 52), fontSize: 16.0, fontWeight: FontWeight.bold))),
+                                          closeOnActivate: false,
+                                          value: chosenFilters.contains(filter),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              if (!chosenFilters
+                                                  .contains(filter)) {
+                                                chosenFilters.add(filter);
+                                                print(chosenFilters);
+                                              } else {
+                                                chosenFilters.remove(filter);
+                                                print(chosenFilters);
+                                              }
+                                            });
+                                          },
+                                          child: Text(
+                                            (filter.name),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium,
+                                          )))
+                                      .toList()
+
+                                  // [
+                                  //   CheckboxMenuButton(
+                                  //       value: false,
+                                  //       onChanged: (bool? value) {
+                                  //         print("changed");
+                                  //       },
+                                  //       child: const Text("Message"))
+                                  // ]
+                                  ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await pickImages();
+                                  setState(
+                                      () {}); //idk why, but setState is acting weird here but it works now
+                                },
+                                child: const Text('Add Image'),
+                              ),
+                              //NEW STUFF
+                              // ListView.builder(
+                              //   physics: NeverScrollableScrollPhysics(),
+                              //   shrinkWrap: true,
+                              //   itemCount: siteFilter.values.length,
+                              //   scrollDirection: Axis.horizontal,
+                              //   itemBuilder: (context, index) {
+                              //     siteFilter currentFilter = siteFilter.values[index];
+                              //     return Padding(
+                              //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
+                              //       // padding: EdgeInsets.all(8),
+                              //       child: FilterChip(
+                              //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
+                              //         disabledColor: Color.fromARGB(255, 255, 243, 228),
+                              //         selectedColor: Color.fromARGB(255, 107, 79, 79),
+                              //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
+                              //         label: Text(currentFilter.name,
+                              //             style: GoogleFonts.ultra(
+                              //                 textStyle: TextStyle(
+                              //                     color: chosenFilters
+                              //                             .contains(currentFilter)
+                              //                         ? Color.fromARGB(255, 255, 243, 228)
+                              //                         : Color.fromARGB(255, 107, 79, 79),
+                              //                     fontSize: 14))),
+                              //         selected: chosenFilters.contains(currentFilter),
+                              //         onSelected: (bool selected) {
+                              //           setState(() {
+                              //             if (selected) {
+                              //               chosenFilters.add(currentFilter);
+                              //             } else {
+                              //               chosenFilters.remove(currentFilter);
+                              //             }
+                              //             // filterChangedCallback();
+                              //           });
+                              //         },
+                              //       ),
+                              //     );
+                              //   },
+                              //   // children: siteFilter.values.map((siteFilter filter) {
+                              // ),
+                              if (image != null) ...[
+                                const SizedBox(height: 10),
+                                const Text("Current Image: "),
+                                image != null
+                                    ? Image.file(image!,
+                                        width: 160,
+                                        height: 160,
+                                        fit: BoxFit.contain)
+                                    : FlutterLogo()
+                              ],
+                              if (images != null) ...[
+                                SizedBox(
+                                  //todo: replace with media.sizequery?
+                                  height: 200,
+                                  width: 200,
+                                  child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: images!.length,
+                                      itemBuilder: (context, index) {
+                                        return Image.file(images![index]);
+                                      }),
+                                )
+                              ],
+                            ],
                           ),
-                          //NEW STUFF
-                          // ListView.builder(
-                          //   physics: NeverScrollableScrollPhysics(),
-                          //   shrinkWrap: true,
-                          //   itemCount: siteFilter.values.length,
-                          //   scrollDirection: Axis.horizontal,
-                          //   itemBuilder: (context, index) {
-                          //     siteFilter currentFilter = siteFilter.values[index];
-                          //     return Padding(
-                          //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
-                          //       // padding: EdgeInsets.all(8),
-                          //       child: FilterChip(
-                          //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
-                          //         disabledColor: Color.fromARGB(255, 255, 243, 228),
-                          //         selectedColor: Color.fromARGB(255, 107, 79, 79),
-                          //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
-                          //         label: Text(currentFilter.name,
-                          //             style: GoogleFonts.ultra(
-                          //                 textStyle: TextStyle(
-                          //                     color: chosenFilters
-                          //                             .contains(currentFilter)
-                          //                         ? Color.fromARGB(255, 255, 243, 228)
-                          //                         : Color.fromARGB(255, 107, 79, 79),
-                          //                     fontSize: 14))),
-                          //         selected: chosenFilters.contains(currentFilter),
-                          //         onSelected: (bool selected) {
-                          //           setState(() {
-                          //             if (selected) {
-                          //               chosenFilters.add(currentFilter);
-                          //             } else {
-                          //               chosenFilters.remove(currentFilter);
-                          //             }
-                          //             // filterChangedCallback();
-                          //           });
-                          //         },
-                          //       ),
-                          //     );
-                          //   },
-                          //   // children: siteFilter.values.map((siteFilter filter) {
-                          // ),
-                          if (image != null) ...[
-                            const SizedBox(height: 10),
-                            const Text("Current Image: "),
-                            image != null
-                                ? Image.file(image!,
-                                    width: 160,
-                                    height: 160,
-                                    fit: BoxFit.contain)
-                                : FlutterLogo()
-                          ],
-                          if (images != null) ...[
-                            SizedBox(
-                              //todo: replace with media.sizequery?
-                              height: 200,
-                              width: 200,
-                              child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: images!.length,
-                                  itemBuilder: (context, index) {
-                                    return Image.file(images![index]);
-                                  }),
-                            )
-                          ],
-                        ],
-                      ),
-                      ),
+                        ),
                       ),
                     ),
-              
                     actions: [
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor:
-                              const Color.fromARGB(255, 218, 186, 130),),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 218, 186, 130),
+                        ),
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel'),
                       ),
@@ -736,244 +766,273 @@ class _AdminListPageState extends State<AdminListPage> {
                     ),
                   ),
                   content: Scrollbar(
+                    controller: _scrollController,
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
                       controller: _scrollController,
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                    child : Padding(
-                    padding: const EdgeInsets.only(right: 8, left: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(padding: const EdgeInsets.only(top:8)),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                          child: TextField(
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            controller: nameController,
-                            decoration: const InputDecoration(
-                                labelText: 'Site Name', hintText: 'Site Name'),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                          child: TextField(
-                            controller: descriptionController,
-                            maxLines: 3,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: const InputDecoration(
-                                labelText: 'Description',
-                                hintText: 'Description'),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.my_location),
-                          label: const Text('Get Location'),
-                          onPressed: () async {
-                            showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(child: CircularProgressIndicator()),
-                          );
-                            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                            if (!serviceEnabled) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Location services are disabled.')),
-                              );
-                              return;
-                            }
-                            LocationPermission permission = await Geolocator.checkPermission();
-                            if (permission == LocationPermission.denied) {
-                              permission = await Geolocator.requestPermission();
-                              if (permission == LocationPermission.denied) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Location permission denied.')),
-                                );
-                                return;
-                              }
-                            }
-                            if (permission == LocationPermission.deniedForever) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Location permissions are permanently denied. Open settings to enable.')),
-                              );
-                              return;
-                            }
-                            try {
-                              final pos = await Geolocator.getCurrentPosition(
-                                  desiredAccuracy: LocationAccuracy.best);
-                              latController.text = pos.latitude.toStringAsFixed(6);
-                              lngController.text = pos.longitude.toStringAsFixed(6);
-                              setState(() {});
-                              Navigator.of(context, rootNavigator: true).pop();
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to get position: $e')),
-                              );
-                            Navigator.of(context, rootNavigator: true).pop();
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16, left: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
+                            Padding(padding: const EdgeInsets.only(top: 8)),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
                               child: TextField(
-                                controller: latController,
-                                keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyMedium,
+                                controller: nameController,
                                 decoration: const InputDecoration(
-                                  labelText: 'Lat',
-                                ),
+                                    labelText: 'Site Name',
+                                    hintText: 'Site Name'),
                               ),
                             ),
-                            const SizedBox(width: 20),
-                            Expanded(
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
                               child: TextField(
-                                controller: lngController,
-                                keyboardType: TextInputType.number,
+                                controller: descriptionController,
+                                maxLines: 3,
                                 style: Theme.of(context).textTheme.bodyMedium,
                                 decoration: const InputDecoration(
-                                  labelText: 'Lng',
-                                ),
+                                    labelText: 'Description',
+                                    hintText: 'Description'),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Blurbs:',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        ...blurbs.asMap().entries.map((entry) {
-                          int idx = entry.key;
-                          InfoText blurb = entry.value;
-                          return Column(
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  blurb.title,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
-                                ),
-                                subtitle: Text(
-                                  blurb.value,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
+                            const SizedBox(height: 10),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.my_location),
+                              label: const Text('Get Location'),
+                              onPressed: () async {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (_) => const Center(
+                                      child: CircularProgressIndicator()),
+                                );
+                                bool serviceEnabled =
+                                    await Geolocator.isLocationServiceEnabled();
+                                if (!serviceEnabled) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Location services are disabled.')),
+                                  );
+                                  return;
+                                }
+                                LocationPermission permission =
+                                    await Geolocator.checkPermission();
+                                if (permission == LocationPermission.denied) {
+                                  permission =
+                                      await Geolocator.requestPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Location permission denied.')),
+                                    );
+                                    return;
+                                  }
+                                }
+                                if (permission ==
+                                    LocationPermission.deniedForever) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Location permissions are permanently denied. Open settings to enable.')),
+                                  );
+                                  return;
+                                }
+                                try {
+                                  final pos =
+                                      await Geolocator.getCurrentPosition(
+                                          desiredAccuracy:
+                                              LocationAccuracy.best);
+                                  latController.text =
+                                      pos.latitude.toStringAsFixed(6);
+                                  lngController.text =
+                                      pos.longitude.toStringAsFixed(6);
+                                  setState(() {});
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('Failed to get position: $e')),
+                                  );
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color.fromARGB(255, 218, 186, 130),
                               ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () async {
-                                      await _showEditBlurbDialog(blurbs, idx);
-                                      setState(() {});
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () {
-                                      setState(() {
-                                        blurbs.removeAt(idx);
-                                      });
-                                    },
-                                  ),
-                                ],
-                              )
-                            ],
-                          );
-                        }).toList(),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _showAddBlurbDialog(blurbs);
-                            setState(() {});
-                          },
-                          child: const Text('Add Blurb'),
-                        ),
-                        MenuAnchor(
-                            style: MenuStyle(
-                                side: WidgetStatePropertyAll(BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2.0)),
-                                shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(20.0)))),
-                            builder: (BuildContext context,
-                                MenuController controller, Widget? child) {
-                              return ElevatedButton(
-                                  // focusNode: _buttonFocusNode,
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  child: const Text("Add Filters"));
-                            },
-                            menuChildren: acceptableFilters
-                                .map((filter) => CheckboxMenuButton(
-                                    style: ButtonStyle(
-                                      textStyle: WidgetStatePropertyAll(
-                                          TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 72, 52, 52),
-                                              fontSize: 16.0,
-                                              fontWeight: FontWeight.bold)),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: latController,
+                                    keyboardType: TextInputType.number,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Lat',
                                     ),
-                                    closeOnActivate: false,
-                                    value: chosenFilters.contains(filter),
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        if (!chosenFilters.contains(filter)) {
-                                          chosenFilters.add(filter);
-                                          print(chosenFilters);
-                                        } else {
-                                          chosenFilters.remove(filter);
-                                          print(chosenFilters);
-                                        }
-                                      });
-                                    },
-                                    child: Text(
-                                      (filter.name),
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: TextField(
+                                    controller: lngController,
+                                    keyboardType: TextInputType.number,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Lng',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Blurbs:',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            ...blurbs.asMap().entries.map((entry) {
+                              int idx = entry.key;
+                              InfoText blurb = entry.value;
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    title: Text(
+                                      blurb.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                    subtitle: Text(
+                                      blurb.value,
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium,
-                                    )))
-                                .toList()
-
-                            // [
-                            //   CheckboxMenuButton(
-                            //       value: false,
-                            //       onChanged: (bool? value) {
-                            //         print("changed");
-                            //       },
-                            //       child: const Text("Message"))
-                            // ]
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () async {
+                                          await _showEditBlurbDialog(
+                                              blurbs, idx);
+                                          setState(() {});
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () {
+                                          setState(() {
+                                            blurbs.removeAt(idx);
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              );
+                            }).toList(),
+                            ElevatedButton(
+                              onPressed: () async {
+                                await _showAddBlurbDialog(blurbs);
+                                setState(() {});
+                              },
+                              child: const Text('Add Blurb'),
                             ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _showEditSiteImagesDialog(site);
-                            print("Reached post dialog opening");
-                            print("Length p: ${site.images.length}");
-                            for (Uint8List? s in site.images) {
-                              //print("Image: $s");
-                            }
-                          },
-                          child: const Text('Edit Images'),
+                            MenuAnchor(
+                                style: MenuStyle(
+                                    side: WidgetStatePropertyAll(BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
+                                        width: 2.0)),
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0)))),
+                                builder: (BuildContext context,
+                                    MenuController controller, Widget? child) {
+                                  return ElevatedButton(
+                                      // focusNode: _buttonFocusNode,
+                                      onPressed: () {
+                                        if (controller.isOpen) {
+                                          controller.close();
+                                        } else {
+                                          controller.open();
+                                        }
+                                      },
+                                      child: const Text("Add Filters"));
+                                },
+                                menuChildren: acceptableFilters
+                                    .map((filter) => CheckboxMenuButton(
+                                        style: ButtonStyle(
+                                          textStyle: WidgetStatePropertyAll(
+                                              TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 72, 52, 52),
+                                                  fontSize: 16.0,
+                                                  fontWeight: FontWeight.bold)),
+                                        ),
+                                        closeOnActivate: false,
+                                        value: chosenFilters.contains(filter),
+                                        onChanged: (bool? value) {
+                                          setState(() {
+                                            if (!chosenFilters
+                                                .contains(filter)) {
+                                              chosenFilters.add(filter);
+                                              print(chosenFilters);
+                                            } else {
+                                              chosenFilters.remove(filter);
+                                              print(chosenFilters);
+                                            }
+                                          });
+                                        },
+                                        child: Text(
+                                          (filter.name),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        )))
+                                    .toList()
+
+                                // [
+                                //   CheckboxMenuButton(
+                                //       value: false,
+                                //       onChanged: (bool? value) {
+                                //         print("changed");
+                                //       },
+                                //       child: const Text("Message"))
+                                // ]
+                                ),
+                            ElevatedButton(
+                              onPressed: () {
+                                _showEditSiteImagesDialog(site);
+                                print("Reached post dialog opening");
+                                print("Length p: ${site.images.length}");
+                                for (Uint8List? s in site.images) {
+                                  //print("Image: $s");
+                                }
+                              },
+                              child: const Text('Edit Images'),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                    ),
-                  ),
                   ),
                   actionsAlignment: MainAxisAlignment.spaceEvenly,
                   actions: [
