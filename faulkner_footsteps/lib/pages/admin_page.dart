@@ -276,6 +276,11 @@ class _AdminListPageState extends State<AdminListPage> {
                           icon: const Icon(Icons.my_location),
                           label: const Text('Get Location'),
                           onPressed: () async {
+                            showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(child: CircularProgressIndicator()),
+                          );
                             bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
                             if (!serviceEnabled) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -307,6 +312,7 @@ class _AdminListPageState extends State<AdminListPage> {
                               latController.text = pos.latitude.toStringAsFixed(6);
                               lngController.text = pos.longitude.toStringAsFixed(6);
                               setState(() {});
+                              Navigator.of(context, rootNavigator: true).pop();
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Failed to get position: $e')),
@@ -698,6 +704,11 @@ class _AdminListPageState extends State<AdminListPage> {
                           icon: const Icon(Icons.my_location),
                           label: const Text('Get Location'),
                           onPressed: () async {
+                            showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(child: CircularProgressIndicator()),
+                          );
                             bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
                             if (!serviceEnabled) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -729,10 +740,12 @@ class _AdminListPageState extends State<AdminListPage> {
                               latController.text = pos.latitude.toStringAsFixed(6);
                               lngController.text = pos.longitude.toStringAsFixed(6);
                               setState(() {});
+                              Navigator.of(context, rootNavigator: true).pop();
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Failed to get position: $e')),
                               );
+                            Navigator.of(context, rootNavigator: true).pop();
                             }
                           },
                           style: ElevatedButton.styleFrom(
