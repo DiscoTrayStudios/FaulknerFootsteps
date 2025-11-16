@@ -1426,26 +1426,35 @@ class _AdminListPageState extends State<AdminListPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: titleController,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                  child: TextField(
+                    controller: titleController,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    decoration: const InputDecoration(
+                      labelText: 'Title',
+                    ),
                   ),
                 ),
-                TextField(
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  controller: valueController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Content',
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                  child: TextField(
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    controller: valueController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Content',
+                    ),
                   ),
                 ),
-                TextField(
-                  controller: dateController,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: const InputDecoration(
-                    labelText: 'Date',
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                  child: TextField(
+                    controller: dateController,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    decoration: const InputDecoration(
+                      labelText: 'Date',
+                    ),
                   ),
                 ),
               ],
