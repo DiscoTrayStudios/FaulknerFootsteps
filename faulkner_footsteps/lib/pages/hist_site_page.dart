@@ -225,18 +225,47 @@ class _HistSitePage extends State<HistSitePage> {
                           context: context,
                           initialIndex: index,
                           hideOverlayOnTap: false,
+                          initialOverlay: Text("sod'ifhsdifj"),
                           itemBuilder: (context, galleryIndex) {
-                            return widget.histSite.images[galleryIndex] != null
+                            return Scaffold(
+                            backgroundColor: Colors.black,
+                            body: Stack(
+                            children: [
+                            Center(
+                             child : widget.histSite.images[galleryIndex] != null
                                 ? Image.memory(
                                     widget.histSite.images[galleryIndex]!,
                                     fit: BoxFit.contain,
                                   )
                                 : Image.asset(
                                     "assets/images/faulkner_thumbnail.png",
-                                    fit: BoxFit.contain);
+                                    fit: BoxFit.contain),
+                            ),
+                                     Positioned(
+                                      top: 40, 
+                                      right: 20, 
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).pop(); // 
+                                        },
+                                        child: const CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.white54, //
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.black,
+                                            size: 24,
+                                          )
+                                        )
+                                      )
+                                     )
+                                  ],
+                                ),
+                            );
                           },
                           itemCount: widget.histSite.images.length,
                         ).show();
+
                       },
                       child: Padding(
                           padding: const EdgeInsets.all(8.0),
