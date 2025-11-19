@@ -221,98 +221,118 @@ class _HistSitePage extends State<HistSitePage> {
                   itemCount: widget.histSite.images.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Dismissible(
-                            key: const Key('photo_gallery'),
-                            direction: DismissDirection.vertical,
-                            onDismissed: (direction) {
-                              Navigator.of(context).pop();
-                            },
-                            child: Scaffold(
-                              backgroundColor: Colors.black,
-                              body: Stack(
-                                children: [
-                                  PhotoViewGallery.builder(
-                                    scrollPhysics: const BouncingScrollPhysics(),
-                                    builder: (BuildContext context, int galleryIndex) {
-                                      ImageProvider imageProvider;
-                                      if (widget.histSite.images[galleryIndex] != null && 
-                                          widget.histSite.images[galleryIndex]!.isNotEmpty) {
-                                        imageProvider = MemoryImage(widget.histSite.images[galleryIndex]!);
-                                      } else {
-                                        imageProvider = const AssetImage("assets/images/faulkner_thumbnail.png");
-                                      }
-                                      
-                                      return PhotoViewGalleryPageOptions(
-                                        imageProvider: imageProvider,
-                                        minScale: PhotoViewComputedScale.contained * 0.8,
-                                        maxScale: PhotoViewComputedScale.covered * 2,
-                                        initialScale: PhotoViewComputedScale.contained,
-                                      );
-                                    },
-                                    itemCount: widget.histSite.images.length,
-                                    loadingBuilder: (context, event) => const Center(
-                                      child: CircularProgressIndicator(color: Colors.white),
-                                    ),
-                                    backgroundDecoration: const BoxDecoration(
-                                      color: Colors.black,
-                                    ),
-                                    pageController: PageController(initialPage: index),
-                                    enableRotation: false,
-                                  ),
-                                  Positioned(
-                                    top: 40,
-                                    right: 20,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.of(context).pop();
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Dismissible(
+                              key: const Key('photo_gallery'),
+                              direction: DismissDirection.vertical,
+                              onDismissed: (direction) {
+                                Navigator.of(context).pop();
+                              },
+                              child: Scaffold(
+                                backgroundColor: Colors.black,
+                                body: Stack(
+                                  children: [
+                                    PhotoViewGallery.builder(
+                                      scrollPhysics:
+                                          const BouncingScrollPhysics(),
+                                      builder: (BuildContext context,
+                                          int galleryIndex) {
+                                        ImageProvider imageProvider;
+                                        if (widget.histSite
+                                                    .images[galleryIndex] !=
+                                                null &&
+                                            widget
+                                                .histSite
+                                                .images[galleryIndex]!
+                                                .isNotEmpty) {
+                                          imageProvider = MemoryImage(widget
+                                              .histSite.images[galleryIndex]!);
+                                        } else {
+                                          imageProvider = const AssetImage(
+                                              "assets/images/faulkner_thumbnail.png");
+                                        }
+
+                                        return PhotoViewGalleryPageOptions(
+                                          imageProvider: imageProvider,
+                                          minScale:
+                                              PhotoViewComputedScale.contained *
+                                                  0.8,
+                                          maxScale:
+                                              PhotoViewComputedScale.covered *
+                                                  2,
+                                          initialScale:
+                                              PhotoViewComputedScale.contained,
+                                        );
                                       },
-                                      child: const CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: Colors.white54,
-                                        child: Icon(
-                                          Icons.close,
-                                          color: Colors.black,
-                                          size: 24,
+                                      itemCount: widget.histSite.images.length,
+                                      loadingBuilder: (context, event) =>
+                                          const Center(
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white),
+                                      ),
+                                      backgroundDecoration: const BoxDecoration(
+                                        color: Colors.black,
+                                      ),
+                                      pageController:
+                                          PageController(initialPage: index),
+                                      enableRotation: false,
+                                    ),
+                                    Positioned(
+                                      top: 40,
+                                      right: 20,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.white54,
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.black,
+                                            size: 24,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: FutureBuilder<Uint8List?>(
+                          future: app_state
+                              .getImage(widget.histSite.imageUrls[index]),
+                          builder: (context, snapshot) {
+                            if (widget.histSite.images.length > 0 &&
+                                widget.histSite.images[index] != null) {
+                              return Image.memory(
+                                widget.histSite.images[index]!,
+                                fit: BoxFit.cover,
+                              );
+                            } else if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError || !snapshot.hasData) {
+                              return Image.asset(
+                                'assets/images/faulkner_thumbnail.png',
+                                fit: BoxFit.cover,
+                              );
+                            } else {
+                              return Image.memory(snapshot.data!,
+                                  fit: BoxFit.cover);
+                            }
+                          },
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: FutureBuilder<Uint8List?>(
-                        future: app_state.getImage(widget.histSite.imageUrls[index]),
-                        builder: (context, snapshot) {
-                          if (widget.histSite.images.length > 0 &&
-                              widget.histSite.images[index] != null) {
-                            return Image.memory(
-                              widget.histSite.images[index]!,
-                              fit: BoxFit.cover,
-                            );
-                          } else if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError || !snapshot.hasData) {
-                            return Image.asset(
-                              'assets/images/faulkner_thumbnail.png',
-                              fit: BoxFit.cover,
-                            );
-                          } else {
-                            return Image.memory(snapshot.data!, fit: BoxFit.cover);
-                          }
-                        },
                       ),
-                    ),
-                  );
+                    );
                   },
                 ),
               ),
@@ -369,6 +389,17 @@ class _HistSitePage extends State<HistSitePage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text("You must sign in to rate sites!"),
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                      return;
+                    } else if (!app_state.visitedPlaces
+                        .contains(widget.histSite.name)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              "You need to visit ${widget.histSite.name} before you rate it!"),
                           behavior: SnackBarBehavior.floating,
                           duration: Duration(seconds: 3),
                         ),

@@ -724,11 +724,16 @@ class _ProfilePageState extends State<ProfilePage>
 
                             if (shouldLogout == true) {
                               await FirebaseAuth.instance.signOut();
+                              UserCredential user = await FirebaseAuth.instance
+                                  .signInAnonymously();
+                              // i don't think this is necessary
+                              //User? credential = FirebaseAuth.instance.currentUser;
+                              //credential = user.user;
                               if (mounted) {
                                 // Navigate to login page and clear the navigation stack
                                 Navigator.pushNamedAndRemoveUntil(
                                   context,
-                                  AppRouter.loginPage,
+                                  AppRouter.list,
                                   (route) => false,
                                 );
                               }

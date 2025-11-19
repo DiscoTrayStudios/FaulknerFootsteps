@@ -288,7 +288,7 @@ class ApplicationState extends ChangeNotifier {
         // We don't need to handle this error further since we've already updated the local object
       }
 
-      notifyListeners();
+      //notifyListeners();
     } catch (e) {
       print("Error updating site rating: $e");
     }

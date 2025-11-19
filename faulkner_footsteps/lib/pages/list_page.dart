@@ -52,16 +52,12 @@ class _ListPageState extends State<ListPage> {
   }
 
   late Timer updateTimer;
-  late List<HistSite> fullSiteList;
-  late List<HistSite> displaySites;
   late SearchController _searchController;
-
   final Distance distance = new Distance();
   late Map<String, LatLng> siteLocations;
   late Map<String, double> siteDistances;
   late var sorted;
   late List<SiteFilter> activeFilters = [];
-  late List<HistSite> searchSites;
 
   @override
   void initState() {
@@ -80,9 +76,6 @@ class _ListPageState extends State<ListPage> {
     app_state = Provider.of<ApplicationState>(context, listen: false);
     setState(() {
       print("reached");
-      displaySites = app_state.historicalSites;
-      fullSiteList = app_state.historicalSites;
-      searchSites = fullSiteList;
       activeFilters.clear();
       activeFilters.addAll(app_state.siteFilters);
       for (var filter in activeFilters) {
@@ -96,13 +89,13 @@ class _ListPageState extends State<ListPage> {
 
     _searchController = SearchController();
 
-    app_state.addListener(() {
-      // print("historical sites list has changed!!!");
-      setState(() {
-        print("setdisplayitems called!");
-        setDisplayItems();
-      });
-    });
+    // app_state.addListener(() {
+    //   // print("historical sites list has changed!!!");
+    //   setState(() {
+    //     print("setdisplayitems called!");
+    //     setDisplayItems();
+    //   });
+    // });
     _initialized = true;
   }
 
@@ -129,364 +122,235 @@ class _ListPageState extends State<ListPage> {
     updateTimer.cancel();
   }
 
-  Widget _buildHomeContent() {
-    return Column(
+  Widget _buildFilterBar() {
+    return Stack(
       children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: displaySites.length + 1,
-            itemBuilder: (BuildContext context, int index) {
-              if (index == 0) {
-                return Container(
-                  // height: MediaQuery.of(context).size.height,
-                  height: MediaQuery.of(context).size.height / 9,
-                  child: Stack(children: [
-                    ListView.builder(
-                      itemCount: app_state.siteFilters.length,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) {
-                        SiteFilter currentFilter = app_state.siteFilters[index];
-                        return Padding(
-                          padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
-                          // padding: EdgeInsets.all(8),
-                          child: FilterChip(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            disabledColor:
-                                Theme.of(context).colorScheme.primary,
-                            selectedColor:
-                                Theme.of(context).colorScheme.secondary,
-                            //    checkmarkColor: Color.fromARGB(255, 255, 243, 228),
-                            label: Text(currentFilter.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                        color: activeFilters
-                                                .contains(currentFilter)
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onSecondary
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary)),
-                            selected: activeFilters.contains(currentFilter),
-                            onSelected: (bool selected) {
-                              setState(() {
-                                if (selected) {
-                                  activeFilters.add(currentFilter);
-                                } else {
-                                  activeFilters.remove(currentFilter);
-                                }
-                                filterChangedCallback();
-                              });
-                            },
-                          ),
-                        );
-                      },
-                      // children: siteFilter.values.map((siteFilter filter) {
-                    ),
-                    Align(
-                      child: Container(
-                        // padding: EdgeInsets.fromLTRB(0, 0, 0, 32),
-                        child: TextButton(
-                            style: ButtonStyle(
-                              // overlayColor: WidgetStatePropertyAll(
-                              //     Color.fromARGB(255, 107, 79, 79)),
-                              overlayColor:
-                                  WidgetStatePropertyAll(Colors.transparent),
-                              maximumSize: WidgetStatePropertyAll(
-                                  Size(MediaQuery.of(context).size.width, 50)),
-                              // backgroundColor: WidgetStatePropertyAll(
-                              //     Color.fromARGB(255, 107, 79, 79))
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                activeFilters.clear();
-                                filterChangedCallback();
-                              });
-                            },
-                            child: Text(
-                              activeFilters.length > 0
-                                  ? "Clear (${activeFilters.length})"
-                                  : "",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                      decoration: TextDecoration.underline),
-                            )),
-                      ),
-                      alignment: Alignment.topRight,
-                    ),
-                  ]),
-                );
-              } else {
-                HistSite site = displaySites[index - 1];
+        Selector<ApplicationState, List<SiteFilter>>(
+          selector: (_, appState) => appState.siteFilters,
+          builder: (context, filters, _) {
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: filters.length,
+              itemBuilder: (context, index) {
+                final filter = filters[index];
+                final isSelected =
+                    activeFilters.any((f) => f.name == filter.name);
 
-                return ListItem(
-                    app_state: app_state,
-                    siteInfo: site,
-                    currentPosition: _currentPosition ?? LatLng(0, 0));
-              }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 32, 8, 16),
+                  child: FilterChip(
+                    label: Text(filter.name),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        selected
+                            ? activeFilters.add(filter)
+                            : activeFilters
+                                .removeWhere((f) => f.name == filter.name);
+                      });
+                    },
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        Align(
+          alignment: Alignment.topRight,
+          child: TextButton(
+            onPressed: () {
+              setState(() {
+                activeFilters.clear();
+              });
             },
+            child: Text(
+              activeFilters.isNotEmpty ? "Clear (${activeFilters.length})" : "",
+            ),
           ),
         ),
       ],
     );
   }
 
-  void sortDisplayItems() {
-    List<HistSite> lst = [];
-    siteLocations = app_state.getLocations();
-    siteDistances = getDistances(siteLocations);
-    sorted = Map.fromEntries(siteDistances.entries.toList()
-      ..sort((e1, e2) => e1.value.compareTo(e2.value)));
-    int i = 0;
-    while (i < sorted.keys.length) {
-      for (HistSite site in displaySites) {
-        if (site.name == sorted.keys.elementAt(i)) {
-          lst.add(site);
-          // print("x: ${site.name}");
-          // print("sorted name: ${sorted.keys.elementAt(i)}");
-        }
-      }
-      i++;
-    }
-    // print("Lst: $lst");
-    displaySites.clear();
-    displaySites.addAll(lst);
+  Widget _buildSiteList() {
+    return Selector<ApplicationState, List<HistSite>>(
+      selector: (_, appState) => appState.historicalSites,
+      builder: (context, sites, _) {
+        final filteredSites = getFilteredSites(sites);
 
-    // print("Sorted: $sorted");
-    // print("Display List: $displaySites");
+        return ListView.builder(
+          itemCount: filteredSites.length,
+          itemBuilder: (context, index) {
+            final site = filteredSites[index];
+            return ListItem(
+              key: ValueKey(site.id),
+              app_state: app_state,
+              siteInfo: site,
+              currentPosition: _currentPosition ?? LatLng(0, 0),
+            );
+          },
+        );
+      },
+    );
   }
 
-  void setDisplayItems() {
-    fullSiteList = app_state.historicalSites;
-    displaySites.clear();
-    displaySites.addAll(fullSiteList);
-    // This results in edits not taking place
+  Widget _buildHomeContent() {
+    return Column(
+      children: [
+        // 🔹 Filter bar (reacts to siteFilters)
+        SizedBox(
+          height: MediaQuery.of(context).size.height / 9,
+          child: _buildFilterBar(),
+        ),
 
-    // bool shouldAdd = true;
-    // for (HistSite site in fullSiteList) {
-    //   for (HistSite tst in displaySites) {
-    //     if (tst.name == site.name) {
-    //       shouldAdd = false;
-    //       break;
-    //     }
-    //   }
-    //   if (shouldAdd) displaySites.add(site);
-    //   shouldAdd = true;
-    // }
-
-    setState(() {});
-    // print("Full Site List: $fullSiteList");
-    // print("Display Sites: $displaySites");
-    print("setDisplayItems is called");
-    activeFilters.clear();
-    activeFilters.addAll(app_state.siteFilters);
-    // print("ALL active filters: $activeFilters");
-    /*
-      I want to put the other filter last, so I remove it from th e
-    */
-    searchSites = fullSiteList;
-    sortDisplayItems();
+        // 🔹 Site list (reacts to historicalSites)
+        Expanded(
+          child: _buildSiteList(),
+        ),
+      ],
+    );
   }
 
-  // NOTE: This literally does nothing except call ondisplaysiteschanged
-  void filterChangedCallback() {
-    // print("Filter Changed Callback");
-    List<HistSite> lst = [];
-    // print(fullSiteList);
-    //TODO: set display items so that only items with the filter will appear in display items list
-
-    for (HistSite site in displaySites) {
-      for (SiteFilter filter in activeFilters) {
-        // print("Filter: $filter");
-        // print("Site: $site");
-        if (site.filters.contains(filter)) {
-          lst.add(site);
-        }
-      }
-    }
-
-    onDisplaySitesChanged();
-  }
-
-  void onDisplaySitesChanged() {
-    Set<HistSite> newDisplaySites = {};
+  List<HistSite> getFilteredSites(List<HistSite> allSites) {
+    List<HistSite> filtered = [];
 
     if (activeFilters.isEmpty) {
-      newDisplaySites.addAll(searchSites);
+      filtered = allSites;
     } else {
-      for (HistSite site in searchSites) {
-        for (SiteFilter filter in activeFilters) {
-          // Match by name instead of object identity
+      for (final site in allSites) {
+        for (final filter in activeFilters) {
           if (site.filters.any((f) => f.name == filter.name)) {
-            newDisplaySites.add(site);
+            filtered.add(site);
             break;
           }
         }
       }
     }
 
-    setState(() {
-      displaySites = newDisplaySites.toList();
-      print("New display sites: ${displaySites.length}, ${displaySites.first}");
-    });
+    // Optional: apply search filtering here if needed
+    if (_searchController.text.isNotEmpty) {
+      final query = _searchController.text.toLowerCase();
+      filtered = filtered
+          .where((site) => site.name.toLowerCase().contains(query))
+          .toList();
+    }
+
+    // Optional: apply sorting
+    if (_currentPosition != null) {
+      final locations = app_state.getLocations();
+      final distances = getDistances(locations);
+      filtered.sort((a, b) => distances[a.name]!.compareTo(distances[b.name]!));
+    }
+
+    return filtered;
   }
 
   void openSearchDialog() {
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Search"),
-            titleTextStyle: Theme.of(context)
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Search"),
+          titleTextStyle: Theme.of(context)
+              .textTheme
+              .headlineMedium
+              ?.copyWith(color: Theme.of(context).colorScheme.secondary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.secondary,
+              width: 2.0,
+            ),
+          ),
+          elevation: 8,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          alignment: Alignment.topCenter,
+          content: SearchAnchor(
+            searchController: _searchController,
+            isFullScreen: false,
+            viewBackgroundColor: Theme.of(context).colorScheme.primary,
+            viewSide: BorderSide(
+              color: Theme.of(context).colorScheme.secondary,
+              width: 2.0,
+            ),
+            dividerColor: Theme.of(context).colorScheme.secondary,
+            headerTextStyle: Theme.of(context)
                 .textTheme
-                .headlineMedium
+                .bodySmall
                 ?.copyWith(color: Theme.of(context).colorScheme.secondary),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-                side: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary,
-                    width: 2.0)),
-            elevation: 8,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            alignment: Alignment.topCenter,
-            content: SearchAnchor(
-                dividerColor: Theme.of(context).colorScheme.secondary,
-                viewSide: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary, width: 2.0),
-                viewBackgroundColor: Theme.of(context).colorScheme.primary,
-                isFullScreen: false,
-                headerTextStyle: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Theme.of(context).colorScheme.secondary),
-                viewConstraints:
-                    BoxConstraints(), //this works for some reason despite having no arguments
-                searchController: _searchController,
-                builder: (context, controller) {
-                  return SearchBar(
-                    // hintStyle: WidgetStatePropertyAll(TextStyle(
-                    //     color: Color.fromARGB(255, 72, 52, 52),
-                    //     fontSize: 16.0,
-                    // fontWeight: FontWeight.bold)),
-
-                    side: WidgetStatePropertyAll(BorderSide(
-                        color: Theme.of(context).colorScheme.secondary,
-                        width: 2.0)),
-                    textStyle: WidgetStatePropertyAll(Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary)),
-                    backgroundColor: WidgetStatePropertyAll(
-                        Theme.of(context).colorScheme.primary),
-                    leading: Icon(Icons.search),
-                    trailing: [
-                      controller.text == ""
-                          ? IconButton(
-                              icon: Icon(Icons.arrow_right_alt),
-                              onPressed: () {
-                                List<HistSite> lst = [];
-                                lst.addAll(fullSiteList.where((HistSite site) {
-                                  return site.name
-                                      .toLowerCase()
-                                      .contains(controller.text.toLowerCase());
-                                }));
-                                setState(() {
-                                  searchSites = lst;
-                                });
-                                onDisplaySitesChanged();
-                                Navigator.pop(context);
-                              },
-                            )
-                          : IconButton(
-                              onPressed: () {
-                                searchSites = fullSiteList;
-                                controller.clear();
-                                onDisplaySitesChanged();
-                                Navigator.pop(context);
-                              },
-                              icon: Icon(Icons.close))
-                    ],
-                    controller: _searchController,
-                    onTap: () {
-                      controller.openView();
-                    },
-                    onChanged: (query) {
-                      controller.closeView(query);
-                    },
-
-                    // onChanged: (query) {
-                    //   List<HistSite> lst = [];
-                    //   lst.addAll(fullSiteList.where((HistSite site) {
-                    //     return site.name
-                    //         .toLowerCase()
-                    //         .contains(query.toLowerCase());
-                    //   }));
-                    //   setState(() {
-                    //     displaySites = lst;
-                    //   });
-                    //   Navigator.pop(context);
-                    // },
-                    onSubmitted: (query) {
-                      controller.closeView(query);
-                      List<HistSite> lst = [];
-                      lst.addAll(fullSiteList.where((HistSite site) {
-                        return site.name
-                            .toLowerCase()
-                            .contains(query.toLowerCase());
-                      }));
-                      setState(() {
-                        searchSites = lst;
-                      });
-                      onDisplaySitesChanged();
-                      Navigator.pop(context);
-                    },
-                  );
+            viewConstraints: const BoxConstraints(),
+            builder: (context, controller) {
+              return SearchBar(
+                controller: _searchController,
+                onTap: controller.openView,
+                onChanged: controller.closeView,
+                onSubmitted: (query) {
+                  setState(() {}); // triggers rebuild of filtered list
+                  Navigator.pop(context);
                 },
-                suggestionsBuilder: (context, controller) {
-                  final String input = controller.text.toLowerCase();
-                  List<HistSite> filteredItems = [];
-                  for (HistSite site in fullSiteList) {
-                    if (site.name.toLowerCase().contains(input)) {
-                      filteredItems.add(site);
-                    }
-                  }
-                  // return List<ListTile>.generate(filteredItems.length,
-                  //     (int index) {
-                  //   return ListTile(
-                  //     title: Text(filteredItems[index].name),
-                  //   );
-                  // });
-                  return filteredItems.map((HistSite filteredSite) {
-                    return ListTile(
-                      titleTextStyle: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(
-                              color: Theme.of(context).colorScheme.secondary),
-                      title: Text(filteredSite.name),
-                      onTap: () {
-                        setState(() {
-                          print("clicked tile");
-                          searchSites = [filteredSite];
-                          onDisplaySitesChanged();
-                          controller.closeView(filteredSite.name);
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
-                  });
-                }),
-          );
-        });
+                leading: const Icon(Icons.search),
+                trailing: [
+                  _searchController.text.isEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.arrow_right_alt),
+                          onPressed: () {
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                ],
+                side: WidgetStatePropertyAll(
+                  BorderSide(
+                    color: Theme.of(context).colorScheme.secondary,
+                    width: 2.0,
+                  ),
+                ),
+                textStyle: WidgetStatePropertyAll(
+                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                ),
+                backgroundColor: WidgetStatePropertyAll(
+                  Theme.of(context).colorScheme.primary,
+                ),
+              );
+            },
+            suggestionsBuilder: (context, controller) {
+              final query = controller.text.toLowerCase();
+              final allSites = context.read<ApplicationState>().historicalSites;
+              final matches = allSites
+                  .where((site) => site.name.toLowerCase().contains(query))
+                  .toList();
+
+              return matches.map((site) {
+                return ListTile(
+                  title: Text(
+                    site.name,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                  ),
+                  onTap: () {
+                    _searchController.text = site.name;
+                    setState(() {});
+                    controller.closeView(site.name);
+                    Navigator.pop(context);
+                  },
+                );
+              });
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
