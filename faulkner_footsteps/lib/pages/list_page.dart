@@ -183,6 +183,7 @@ class _ListPageState extends State<ListPage> {
           itemBuilder: (context, index) {
             final site = filteredSites[index];
             return ListItem(
+              key: ValueKey(site.id),
               app_state: app_state,
               siteInfo: site,
               currentPosition: _currentPosition ?? LatLng(0, 0),

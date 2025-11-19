@@ -4,6 +4,7 @@ import 'package:faulkner_footsteps/objects/site_filter.dart';
 
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:uuid/uuid.dart';
 
 class HistSite {
   HistSite(
@@ -15,7 +16,10 @@ class HistSite {
       required this.ratingAmount,
       required this.lat,
       required this.lng,
-      required this.filters});
+      required this.filters})
+      : id = const Uuid().v4();
+
+  final String id;
 
   String divider = "{ListDiv}";
   String name;
