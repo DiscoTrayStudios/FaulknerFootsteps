@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating/flutter_rating.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:provider/provider.dart';
-import 'package:swipe_image_gallery/swipe_image_gallery.dart';
+import 'package:photo_view/photo_view.dart';
 
 class HistSitePage extends StatefulWidget {
   final HistSite histSite;
@@ -220,52 +221,98 @@ class _HistSitePage extends State<HistSitePage> {
                   itemCount: widget.histSite.images.length,
                   itemBuilder: (context, index) {
                     return GestureDetector(
-                      onTap: () {
-                        SwipeImageGallery(
-                          context: context,
-                          initialIndex: index,
-                          hideOverlayOnTap: false,
-                          itemBuilder: (context, galleryIndex) {
-                            return widget.histSite.images[galleryIndex] != null
-                                ? Image.memory(
-                                    widget.histSite.images[galleryIndex]!,
-                                    fit: BoxFit.contain,
-                                  )
-                                : Image.asset(
-                                    "assets/images/faulkner_thumbnail.png",
-                                    fit: BoxFit.contain);
-                          },
-                          itemCount: widget.histSite.images.length,
-                        ).show();
-                      },
-                      child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: FutureBuilder<Uint8List?>(
-                            future: app_state
-                                .getImage(widget.histSite.imageUrls[index]),
-                            builder: (context, snapshot) {
-                              if (widget.histSite.images.length > 0 &&
-                                  widget.histSite.images[index] != null) {
-                                return Image.memory(
-                                    widget.histSite.images[index]!,
-                                    fit: BoxFit.cover);
-                              } else if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                    child: CircularProgressIndicator());
-                              } else if (snapshot.hasError ||
-                                  !snapshot.hasData) {
-                                return Image.asset(
-                                  'assets/images/faulkner_thumbnail.png',
-                                  fit: BoxFit.cover,
-                                );
-                              } else {
-                                return Image.memory(snapshot.data!,
-                                    fit: BoxFit.cover);
-                              }
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Dismissible(
+                            key: const Key('photo_gallery'),
+                            direction: DismissDirection.vertical,
+                            onDismissed: (direction) {
+                              Navigator.of(context).pop();
                             },
-                          )),
-                    );
+                            child: Scaffold(
+                              backgroundColor: Colors.black,
+                              body: Stack(
+                                children: [
+                                  PhotoViewGallery.builder(
+                                    scrollPhysics: const BouncingScrollPhysics(),
+                                    builder: (BuildContext context, int galleryIndex) {
+                                      ImageProvider imageProvider;
+                                      if (widget.histSite.images[galleryIndex] != null && 
+                                          widget.histSite.images[galleryIndex]!.isNotEmpty) {
+                                        imageProvider = MemoryImage(widget.histSite.images[galleryIndex]!);
+                                      } else {
+                                        imageProvider = const AssetImage("assets/images/faulkner_thumbnail.png");
+                                      }
+                                      
+                                      return PhotoViewGalleryPageOptions(
+                                        imageProvider: imageProvider,
+                                        minScale: PhotoViewComputedScale.contained * 0.8,
+                                        maxScale: PhotoViewComputedScale.covered * 2,
+                                        initialScale: PhotoViewComputedScale.contained,
+                                      );
+                                    },
+                                    itemCount: widget.histSite.images.length,
+                                    loadingBuilder: (context, event) => const Center(
+                                      child: CircularProgressIndicator(color: Colors.white),
+                                    ),
+                                    backgroundDecoration: const BoxDecoration(
+                                      color: Colors.black,
+                                    ),
+                                    pageController: PageController(initialPage: index),
+                                    enableRotation: false,
+                                  ),
+                                  Positioned(
+                                    top: 40,
+                                    right: 20,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.white54,
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.black,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: FutureBuilder<Uint8List?>(
+                        future: app_state.getImage(widget.histSite.imageUrls[index]),
+                        builder: (context, snapshot) {
+                          if (widget.histSite.images.length > 0 &&
+                              widget.histSite.images[index] != null) {
+                            return Image.memory(
+                              widget.histSite.images[index]!,
+                              fit: BoxFit.cover,
+                            );
+                          } else if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError || !snapshot.hasData) {
+                            return Image.asset(
+                              'assets/images/faulkner_thumbnail.png',
+                              fit: BoxFit.cover,
+                            );
+                          } else {
+                            return Image.memory(snapshot.data!, fit: BoxFit.cover);
+                          }
+                        },
+                      ),
+                    ),
+                  );
                   },
                 ),
               ),

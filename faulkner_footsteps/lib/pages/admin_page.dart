@@ -266,6 +266,10 @@ class _AdminListPageState extends State<AdminListPage> {
 
     List<InfoText> blurbs = [];
     final ScrollController _scrollController = ScrollController();
+    String? nameError;
+    String? descriptionError;
+    String? blurbError;
+    String? imageError;
 
     return showDialog(
       barrierDismissible: false,
@@ -301,18 +305,34 @@ class _AdminListPageState extends State<AdminListPage> {
                               TextField(
                                 controller: nameController,
                                 style: Theme.of(context).textTheme.bodyMedium,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                     labelText: 'Site Name',
-                                    hintText: 'Site Name'),
+                                    hintText: 'Site Name',
+                                    errorText: nameError),
+                                    onChanged: (value) {
+                                  if (value.isNotEmpty && nameError != null) {
+                                    setState(() {
+                                      nameError = null;
+                                    });
+                                  }
+                                    },
                               ),
                               const SizedBox(height: 10),
                               TextField(
                                 controller: descriptionController,
                                 maxLines: 3,
                                 style: Theme.of(context).textTheme.bodyMedium,
-                                decoration: const InputDecoration(
+                                decoration:  InputDecoration(
                                     labelText: 'Description',
-                                    hintText: 'Description'),
+                                    hintText: 'Description',
+                                    errorText: descriptionError),
+                                    onChanged: (value) {
+                                  if (value.isNotEmpty && descriptionError != null) {
+                                    setState(() {
+                                      descriptionError = null;
+                                    });
+                                  }
+                                },
                               ),
                               const SizedBox(height: 10),
                               ElevatedButton.icon(
@@ -424,11 +444,26 @@ class _AdminListPageState extends State<AdminListPage> {
                               ElevatedButton(
                                 onPressed: () async {
                                   await _showAddBlurbDialog(blurbs);
-                                  setState(
-                                      () {}); // Refresh the dialog to show new blurbs
+                                  if (blurbs.isNotEmpty && blurbError != null) {
+                                    setState(() {
+                                      blurbError = null;
+                                    });
+                                  }
+                                  setState(() {});
                                 },
                                 child: const Text('Add Blurb'),
                               ),
+                               if (blurbError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    blurbError!,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
                               if (blurbs.isNotEmpty) ...[
                                 const SizedBox(height: 10),
                                 const Text('Current Blurbs:'),
@@ -502,11 +537,35 @@ class _AdminListPageState extends State<AdminListPage> {
                                   //       child: const Text("Message"))
                                   // ]
                                   ),
+                              if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                               ElevatedButton(
                                 onPressed: () async {
                                   await pickImages();
-                                  setState(
-                                      () {}); //idk why, but setState is acting weird here but it works now
+                                  if (images != null && imageError != null) {
+                                    setState(() {
+                                      imageError = null;
+                                    });
+                                  }
+                                  setState(() {});
                                 },
                                 child: const Text('Add Image'),
                               ),
@@ -550,6 +609,17 @@ class _AdminListPageState extends State<AdminListPage> {
                               //   },
                               //   // children: siteFilter.values.map((siteFilter filter) {
                               // ),
+                               if (imageError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    imageError!,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
                               if (image != null) ...[
                                 const SizedBox(height: 10),
                                 const Text("Current Image: "),
@@ -594,9 +664,41 @@ class _AdminListPageState extends State<AdminListPage> {
                           disabledBackgroundColor:
                               Color.fromARGB(255, 120, 120, 120),
                         ),
-                        onPressed: images == null || blurbs.isEmpty
-                            ? null
-                            : () async {
+                        onPressed: ()
+                            async {
+                              bool hasErrors = false;
+                          
+                            if (nameController.text.isEmpty) {
+                              setState(() {
+                                nameError = 'Site name is required';
+                              });
+                              hasErrors = true;
+                            }
+                            
+                            if (descriptionController.text.isEmpty) {
+                              setState(() {
+                                descriptionError = 'Description is required';
+                              });
+                              hasErrors = true;
+                            }
+                            
+                            if (blurbs.isEmpty) {
+                              setState(() {
+                                blurbError = 'At least one blurb is required';
+                              });
+                              hasErrors = true;
+                            }
+                            
+                            if (images == null || images!.isEmpty) {
+                              setState(() {
+                                imageError = 'At least one image is required';
+                              });
+                              hasErrors = true;
+                            }
+                            
+                            if (hasErrors) {
+                              return;
+                            }
                                 if (chosenFilters.isEmpty) {
                                   chosenFilters.add(SiteFilter(name: "Other"));
                                 }
@@ -1018,6 +1120,26 @@ class _AdminListPageState extends State<AdminListPage> {
                                 //       child: const Text("Message"))
                                 // ]
                                 ),
+                            if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ElevatedButton(
                               onPressed: () {
                                 _showEditSiteImagesDialog(site);
