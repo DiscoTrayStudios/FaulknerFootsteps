@@ -537,6 +537,26 @@ class _AdminListPageState extends State<AdminListPage> {
                                   //       child: const Text("Message"))
                                   // ]
                                   ),
+                              if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                               ElevatedButton(
                                 onPressed: () async {
                                   await pickImages();
@@ -1100,6 +1120,26 @@ class _AdminListPageState extends State<AdminListPage> {
                                 //       child: const Text("Message"))
                                 // ]
                                 ),
+                            if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ElevatedButton(
                               onPressed: () {
                                 _showEditSiteImagesDialog(site);
