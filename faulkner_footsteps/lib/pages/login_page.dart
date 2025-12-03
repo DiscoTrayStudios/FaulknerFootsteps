@@ -1,3 +1,4 @@
+import 'package:faulkner_footsteps/app_router.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ class LoginPage extends StatelessWidget {
       colorScheme: ColorScheme.light(
         primary: const Color.fromARGB(255, 107, 79, 79),
         secondary: const Color.fromARGB(255, 176, 133, 133),
-        surface: const Color.fromARGB(255, 255, 243, 228),
+        surface: const Color.fromARGB(255, 238, 214, 196),
         onPrimary: const Color.fromARGB(255, 255, 243, 228),
       ),
       inputDecorationTheme: const InputDecorationTheme(
@@ -93,9 +94,21 @@ class LoginPage extends StatelessWidget {
     return Theme(
         data: customTheme,
         child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: customTheme.colorScheme.surface,
+            leading: BackButton(
+              color: customTheme.colorScheme.primary,
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => ListPage()),
+                    (route) => false);
+              },
+            ),
+          ),
           resizeToAvoidBottomInset:
               false, // Prevent resizing when keyboard appears
-          backgroundColor: Color.fromARGB(255, 238, 214, 196),
+          backgroundColor: customTheme.colorScheme.surface,
           body: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
