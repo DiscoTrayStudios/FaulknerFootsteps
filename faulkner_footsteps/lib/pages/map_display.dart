@@ -99,6 +99,12 @@ class _MapDisplayState extends State<MapDisplay> {
         ratingAmount: 0,
       ),
     );
+    final achievementState = AchievementsPageState();
+                          achievementState.visitPlace(
+                              context, selectedSite.name);
+                          setState(() {
+                            visited = true;
+                          });
 
     // Show the dialog
     showDialog(
@@ -194,8 +200,8 @@ class _MapDisplayState extends State<MapDisplay> {
                       // Visit Site Button
                       _buildRoundedButton(
                         context: context,
-                        text: "Visit Site",
-                        icon: Icons.location_on,
+                        text: "More Info",
+                        icon: Icons.info,
                         onPressed: () {
                           Navigator.of(context).pop();
                           // Navigate User to the HistSitePage
@@ -211,22 +217,6 @@ class _MapDisplayState extends State<MapDisplay> {
                         },
                       ),
 
-                      // Discover Button
-                      _buildRoundedButton(
-                        context: context,
-                        text: "Discover",
-                        icon: Icons.emoji_events,
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          // Mark site as visited for achievements
-                          final achievementState = AchievementsPageState();
-                          achievementState.visitPlace(
-                              context, selectedSite.name);
-                          setState(() {
-                            visited = true;
-                          });
-                        },
-                      ),
                     ],
                   ),
                 ),
