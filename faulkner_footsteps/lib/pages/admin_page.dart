@@ -309,25 +309,26 @@ class _AdminListPageState extends State<AdminListPage> {
                                     labelText: 'Site Name',
                                     hintText: 'Site Name',
                                     errorText: nameError),
-                                    onChanged: (value) {
+                                onChanged: (value) {
                                   if (value.isNotEmpty && nameError != null) {
                                     setState(() {
                                       nameError = null;
                                     });
                                   }
-                                    },
+                                },
                               ),
                               const SizedBox(height: 10),
                               TextField(
                                 controller: descriptionController,
                                 maxLines: 3,
                                 style: Theme.of(context).textTheme.bodyMedium,
-                                decoration:  InputDecoration(
+                                decoration: InputDecoration(
                                     labelText: 'Description',
                                     hintText: 'Description',
                                     errorText: descriptionError),
-                                    onChanged: (value) {
-                                  if (value.isNotEmpty && descriptionError != null) {
+                                onChanged: (value) {
+                                  if (value.isNotEmpty &&
+                                      descriptionError != null) {
                                     setState(() {
                                       descriptionError = null;
                                     });
@@ -453,7 +454,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                 },
                                 child: const Text('Add Blurb'),
                               ),
-                               if (blurbError != null)
+                              if (blurbError != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Text(
@@ -548,11 +549,13 @@ class _AdminListPageState extends State<AdminListPage> {
                                       label: Text(
                                         filter.name,
                                         style: const TextStyle(
-                                          color: Color.fromARGB(255, 255, 243, 228),
+                                          color: Color.fromARGB(
+                                              255, 255, 243, 228),
                                           fontSize: 12,
                                         ),
                                       ),
-                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 107, 79, 79),
                                     );
                                   }).toList(),
                                 ),
@@ -609,7 +612,7 @@ class _AdminListPageState extends State<AdminListPage> {
                               //   },
                               //   // children: siteFilter.values.map((siteFilter filter) {
                               // ),
-                               if (imageError != null)
+                              if (imageError != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Text(
@@ -664,78 +667,75 @@ class _AdminListPageState extends State<AdminListPage> {
                           disabledBackgroundColor:
                               Color.fromARGB(255, 120, 120, 120),
                         ),
-                        onPressed: ()
-                            async {
-                              bool hasErrors = false;
-                          
-                            if (nameController.text.isEmpty) {
-                              setState(() {
-                                nameError = 'Site name is required';
-                              });
-                              hasErrors = true;
+                        onPressed: () async {
+                          bool hasErrors = false;
+
+                          if (nameController.text.isEmpty) {
+                            setState(() {
+                              nameError = 'Site name is required';
+                            });
+                            hasErrors = true;
+                          }
+
+                          if (descriptionController.text.isEmpty) {
+                            setState(() {
+                              descriptionError = 'Description is required';
+                            });
+                            hasErrors = true;
+                          }
+
+                          if (blurbs.isEmpty) {
+                            setState(() {
+                              blurbError = 'At least one blurb is required';
+                            });
+                            hasErrors = true;
+                          }
+
+                          if (images == null || images!.isEmpty) {
+                            setState(() {
+                              imageError = 'At least one image is required';
+                            });
+                            hasErrors = true;
+                          }
+
+                          if (hasErrors) {
+                            return;
+                          }
+                          if (chosenFilters.isEmpty) {
+                            chosenFilters.add(SiteFilter(name: "Other"));
+                          }
+                          //I think putting an async here is fine.
+                          if (nameController.text.isNotEmpty &&
+                              descriptionController.text.isNotEmpty) {
+                            List<String> randomNames = [];
+                            int i = 0;
+                            while (i < images!.length) {
+                              randomNames.add(uuid.v4());
+                              print("Random name thing executed");
+                              i += 1;
                             }
-                            
-                            if (descriptionController.text.isEmpty) {
-                              setState(() {
-                                descriptionError = 'Description is required';
-                              });
-                              hasErrors = true;
-                            }
-                            
-                            if (blurbs.isEmpty) {
-                              setState(() {
-                                blurbError = 'At least one blurb is required';
-                              });
-                              hasErrors = true;
-                            }
-                            
-                            if (images == null || images!.isEmpty) {
-                              setState(() {
-                                imageError = 'At least one image is required';
-                              });
-                              hasErrors = true;
-                            }
-                            
-                            if (hasErrors) {
-                              return;
-                            }
-                                if (chosenFilters.isEmpty) {
-                                  chosenFilters.add(SiteFilter(name: "Other"));
-                                }
-                                //I think putting an async here is fine.
-                                if (nameController.text.isNotEmpty &&
-                                    descriptionController.text.isNotEmpty) {
-                                  List<String> randomNames = [];
-                                  int i = 0;
-                                  while (i < images!.length) {
-                                    randomNames.add(uuid.v4());
-                                    print("Random name thing executed");
-                                    i += 1;
-                                  }
-                                  List<String> paths = await uploadImages(
-                                      nameController.text, randomNames);
-                                  print("Made it past uploading images");
-                                  // String randomName = uuid.v4();
-                                  // String path =
-                                  // await uploadImage(nameController.text, randomName);
-                                  final newSite = HistSite(
-                                    name: nameController.text,
-                                    description: descriptionController.text,
-                                    blurbs: blurbs,
-                                    imageUrls: paths,
-                                    avgRating: 0.0,
-                                    ratingAmount: 0,
-                                    filters: chosenFilters,
-                                    lat: double.tryParse(latController.text) ??
-                                        0.0,
-                                    lng: double.tryParse(lngController.text) ??
-                                        0.0,
-                                  );
-                                  app_state.addSite(newSite);
-                                  Navigator.pop(context);
-                                  setState(() {});
-                                }
-                              },
+                            List<String> paths = await uploadImages(
+                                nameController.text, randomNames);
+                            print("Made it past uploading images");
+                            // String randomName = uuid.v4();
+                            // String path =
+                            // await uploadImage(nameController.text, randomName);
+                            final newSite = HistSite(
+                              name: nameController.text,
+                              description: descriptionController.text,
+                              blurbs: blurbs,
+                              imageUrls: paths,
+                              avgRating: 0.0,
+                              ratingAmount: 0,
+                              filters: chosenFilters,
+                              lat: double.tryParse(latController.text) ?? 0.0,
+                              lng: double.tryParse(lngController.text) ?? 0.0,
+                            );
+                            app_state.addSite(newSite);
+                            Navigator.pop(context);
+                            setState(() {});
+                          }
+                        },
                         child: const Text('Save Site'),
                       ),
                     ],
@@ -749,86 +749,118 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
+  ///For selecting the date with the blurbs
+  Future<void> selectDate(
+      BuildContext context, TextEditingController dateController) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        // need a custom theme here because datepicker is stupid
+        return Theme(
+            data: ThemeData(
+                colorScheme: ColorScheme(
+                    brightness: Brightness.light,
+                    primary: Color.fromARGB(255, 76, 32, 8),
+                    onPrimary: Colors.white,
+                    secondary: Color.fromARGB(255, 76, 32, 8),
+                    onSecondary: Colors.red,
+                    error: Colors.red,
+                    onError: Colors.red,
+                    surface: Color.fromARGB(255, 238, 214, 196),
+                    onSurface: Color.fromARGB(255, 76, 32, 8))),
+            child: child!);
+      },
+    );
+    if (picked != null) {
+      dateController.text = "${picked.month}/${picked.day}/${picked.year}";
+    }
+  }
+
   Future<void> _showAddBlurbDialog(List<InfoText> blurbs) async {
     final titleController = TextEditingController();
     final valueController = TextEditingController();
     final dateController = TextEditingController();
+
+    // preset the datecontroller
+    // I actually think its better to be left blank
+    // dateController.text =
+    //     "${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}";
 
     return showDialog(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return Theme(
-          data: adminPageTheme,
-          child: Builder(
-            builder: (context) {
-              return AlertDialog(
-                backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-                title: Text(
-                  'Add Blurb',
-                  style: GoogleFonts.ultra(
-                    textStyle: const TextStyle(
-                      color: Color.fromARGB(255, 76, 32, 8),
-                    ),
+            data: adminPageTheme,
+            child: AlertDialog(
+              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+              title: Text(
+                'Add Blurb',
+                style: GoogleFonts.ultra(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 76, 32, 8),
                   ),
                 ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: titleController,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: const InputDecoration(
-                            labelText: 'Title', hintText: 'Title'),
-                      ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                    child: TextField(
+                      controller: titleController,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: const InputDecoration(
+                          labelText: 'Title', hintText: 'Title'),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: valueController,
-                        maxLines: 3,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: const InputDecoration(
-                            labelText: 'Content', hintText: 'Content'),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: dateController,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: const InputDecoration(
-                            labelText: 'Date', hintText: 'Date'),
-                      ),
-                    ),
-                  ],
-                ),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (titleController.text.isNotEmpty &&
-                          valueController.text.isNotEmpty) {
-                        blurbs.add(InfoText(
-                          title: titleController.text,
-                          value: valueController.text,
-                          date: dateController.text,
-                        ));
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('Add Blurb'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                    child: TextField(
+                      controller: valueController,
+                      maxLines: 3,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: const InputDecoration(
+                          labelText: 'Content', hintText: 'Content'),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                    child: TextField(
+                      controller: dateController,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      readOnly: true,
+                      onTap: () => selectDate(context, dateController),
+                      decoration: const InputDecoration(
+                          labelText: 'Date', hintText: 'Date'),
+                    ),
                   ),
                 ],
-              );
-            },
-          ),
-        );
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (titleController.text.isNotEmpty &&
+                        valueController.text.isNotEmpty) {
+                      blurbs.add(InfoText(
+                        title: titleController.text,
+                        value: valueController.text,
+                        date: dateController.text,
+                      ));
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('Add Blurb'),
+                ),
+              ],
+            ));
       },
     );
   }
@@ -1121,25 +1153,27 @@ class _AdminListPageState extends State<AdminListPage> {
                                 // ]
                                 ),
                             if (chosenFilters.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                const Text('Selected Filters:'),
-                                Wrap(
-                                  spacing: 8.0,
-                                  runSpacing: 4.0,
-                                  children: chosenFilters.map((filter) {
-                                    return Chip(
-                                      label: Text(
-                                        filter.name,
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(255, 255, 243, 228),
-                                          fontSize: 12,
-                                        ),
+                              const SizedBox(height: 10),
+                              const Text('Selected Filters:'),
+                              Wrap(
+                                spacing: 8.0,
+                                runSpacing: 4.0,
+                                children: chosenFilters.map((filter) {
+                                  return Chip(
+                                    label: Text(
+                                      filter.name,
+                                      style: const TextStyle(
+                                        color:
+                                            Color.fromARGB(255, 255, 243, 228),
+                                        fontSize: 12,
                                       ),
-                                      backgroundColor: const Color.fromARGB(255, 107, 79, 79),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
+                                    ),
+                                    backgroundColor:
+                                        const Color.fromARGB(255, 107, 79, 79),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                             ElevatedButton(
                               onPressed: () {
                                 _showEditSiteImagesDialog(site);
@@ -1574,6 +1608,8 @@ class _AdminListPageState extends State<AdminListPage> {
                   child: TextField(
                     controller: dateController,
                     style: Theme.of(context).textTheme.bodyMedium,
+                    readOnly: true,
+                    onTap: () => selectDate(context, dateController),
                     decoration: const InputDecoration(
                       labelText: 'Date',
                     ),
