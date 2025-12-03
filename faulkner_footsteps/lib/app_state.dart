@@ -142,6 +142,7 @@ class ApplicationState extends ChangeNotifier {
 
   final storageRef = FirebaseStorage.instance.ref();
 
+  //TODO: Optimize image loading with caching mechanism. this should check to ensure images arent re-downloaded every time
   Future<Uint8List?> getImage(String s) async {
     final imageRef = storageRef.child("$s");
     Uint8List? data;
