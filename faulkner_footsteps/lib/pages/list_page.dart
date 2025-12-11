@@ -178,6 +178,8 @@ class _ListPageState extends State<ListPage> {
                   child: Text("No sites match your filters.",
                       style: Theme.of(context).textTheme.titleLarge))
               : ListView.builder(
+                  key: ValueKey(filteredSites
+                      .length), // triggers animation when list goes from size > 1 to size 1 or 0. This avoids "jerky" transitions
                   itemCount: filteredSites.length,
                   itemBuilder: (context, index) {
                     final site = filteredSites[index];
