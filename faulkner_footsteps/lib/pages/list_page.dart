@@ -77,14 +77,14 @@ class _ListPageState extends State<ListPage> {
     setState(() {
       print("reached");
       activeFilters.clear();
-      activeFilters.addAll(app_state.siteFilters);
-      for (var filter in activeFilters) {
-        print("Filter: ${filter.name}, Order: ${filter.order}");
-      }
-      for (int i = 0; i < activeFilters.length; i++) {
-        final filter = activeFilters[i];
-        print("[$i] Filter: ${filter.name}, Order: ${filter.order}");
-      }
+      //activeFilters.addAll(app_state.siteFilters);
+      // for (var filter in activeFilters) {
+      //   print("Filter: ${filter.name}, Order: ${filter.order}");
+      // }
+      // for (int i = 0; i < activeFilters.length; i++) {
+      //   final filter = activeFilters[i];
+      //   print("[$i] Filter: ${filter.name}, Order: ${filter.order}");
+      // }
     });
 
     _searchController = SearchController();
@@ -123,51 +123,44 @@ class _ListPageState extends State<ListPage> {
   }
 
   Widget _buildFilterBar() {
-    return Stack(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Selector<ApplicationState, List<SiteFilter>>(
-          selector: (_, appState) => appState.siteFilters,
-          builder: (context, filters, _) {
-            return ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: filters.length,
-              itemBuilder: (context, index) {
-                final filter = filters[index];
-                final isSelected =
-                    activeFilters.any((f) => f.name == filter.name);
-
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 32, 8, 16),
-                  child: FilterChip(
-                    label: Text(filter.name),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        selected
-                            ? activeFilters.add(filter)
-                            : activeFilters
-                                .removeWhere((f) => f.name == filter.name);
-                      });
-                    },
-                  ),
-                );
-              },
-            );
-          },
-        ),
-        Align(
-          alignment: Alignment.topRight,
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                activeFilters.clear();
-              });
-            },
-            child: Text(
-              activeFilters.isNotEmpty ? "Clear (${activeFilters.length})" : "",
-            ),
+        // Horizontal scroll with natural chip height
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: app_state.siteFilters.map((filter) {
+              final isSelected =
+                  activeFilters.any((f) => f.name == filter.name);
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: FilterChip(
+                  label: Text(filter.name),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      selected
+                          ? activeFilters.add(filter)
+                          : activeFilters
+                              .removeWhere((f) => f.name == filter.name);
+                    });
+                  },
+                ),
+              );
+            }).toList(),
           ),
         ),
+        if (activeFilters.isNotEmpty)
+          TextButton(
+            onPressed: () => setState(() => activeFilters.clear()),
+            child: Text(
+              "Clear (${activeFilters.length})",
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
       ],
     );
   }
@@ -177,18 +170,28 @@ class _ListPageState extends State<ListPage> {
       selector: (_, appState) => appState.historicalSites,
       builder: (context, sites, _) {
         final filteredSites = getFilteredSites(sites);
-
-        return ListView.builder(
-          itemCount: filteredSites.length,
-          itemBuilder: (context, index) {
-            final site = filteredSites[index];
-            return ListItem(
-              key: ValueKey(site.id),
-              app_state: app_state,
-              siteInfo: site,
-              currentPosition: _currentPosition ?? LatLng(0, 0),
-            );
-          },
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: filteredSites.isEmpty
+              ? Center(
+                  key: const ValueKey('empty'),
+                  child: Text("No sites match your filters.",
+                      style: Theme.of(context).textTheme.titleLarge))
+              : ListView.builder(
+                  itemCount: filteredSites.length,
+                  itemBuilder: (context, index) {
+                    final site = filteredSites[index];
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: ListItem(
+                        key: ValueKey(site.id),
+                        app_state: app_state,
+                        siteInfo: site,
+                        currentPosition: _currentPosition ?? LatLng(0, 0),
+                      ),
+                    );
+                  },
+                ),
         );
       },
     );
@@ -197,13 +200,11 @@ class _ListPageState extends State<ListPage> {
   Widget _buildHomeContent() {
     return Column(
       children: [
-        // 🔹 Filter bar (reacts to siteFilters)
-        SizedBox(
-          height: MediaQuery.of(context).size.height / 9,
+        AnimatedSize(
+          duration: const Duration(milliseconds: 400),
+          alignment: Alignment.topCenter,
           child: _buildFilterBar(),
         ),
-
-        // 🔹 Site list (reacts to historicalSites)
         Expanded(
           child: _buildSiteList(),
         ),
@@ -371,7 +372,9 @@ class _ListPageState extends State<ListPage> {
                 onPressed: () {
                   openSearchDialog();
                 },
-                icon: const Icon(Icons.search)),
+                icon: _searchController.text.isEmpty
+                    ? Icon(Icons.search)
+                    : Icon(Icons.close)),
           ],
           title: Container(
             constraints: BoxConstraints(
