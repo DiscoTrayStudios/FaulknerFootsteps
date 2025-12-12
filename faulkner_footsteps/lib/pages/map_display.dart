@@ -219,9 +219,51 @@ class _MapDisplayState extends State<MapDisplay> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           // Mark site as visited for achievements
-                          final achievementState = AchievementsPageState();
-                          achievementState.visitPlace(
-                              context, selectedSite.name);
+                          // achievementState.visitPlace(
+                          //     context, selectedSite.name);
+
+                          if (!appState.hasVisited(selectedSite.name)) {
+                            appState.saveAchievement(selectedSite.name);
+
+                            if (!mounted) return;
+                          }
+
+                          // Show achievement popup dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surface,
+                              title: Text(
+                                "Achievement Unlocked!",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              content: Text(
+                                "You have visited ${selectedSite.name}.",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text(
+                                    "OK",
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
                           setState(() {
                             visited = true;
                           });
