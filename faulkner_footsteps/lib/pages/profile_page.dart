@@ -1,4 +1,5 @@
 import 'package:faulkner_footsteps/app_router.dart';
+import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/progress_achievement.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/achievement.dart';
@@ -440,31 +441,39 @@ class _ProfilePageState extends State<ProfilePage>
                             );
                           }
 
-                          return Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: appState.visitedPlaces.map((place) {
-                              return Chip(
-                                backgroundColor: Colors.green[100],
-                                avatar: Icon(
-                                  Icons.emoji_events,
-                                  color: Colors.green,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  place,
-                                  style: GoogleFonts.rakkas(
-                                    textStyle: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                      fontSize: 14,
+                          return Selector<ApplicationState, Set<String>>(
+                            selector: (_, appState) => appState.visitedPlaces,
+                            builder: (context, visitedSites, _) {
+                              return Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: appState.historicalSites
+                                    .where((site) =>
+                                        appState.hasVisited(site.name))
+                                    .map((place) {
+                                  return Chip(
+                                    backgroundColor: Colors.green[100],
+                                    avatar: Icon(
+                                      Icons.emoji_events,
+                                      color: Colors.green,
+                                      size: 18,
                                     ),
-                                  ),
-                                ),
-                                side: BorderSide(color: Colors.green),
+                                    label: Text(
+                                      place.name,
+                                      style: GoogleFonts.rakkas(
+                                        textStyle: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    side: BorderSide(color: Colors.green),
+                                  );
+                                }).toList(),
                               );
-                            }).toList(),
+                            },
                           );
                         },
                       ),
