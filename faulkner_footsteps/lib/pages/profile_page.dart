@@ -485,117 +485,285 @@ class _ProfilePageState extends State<ProfilePage>
             const SizedBox(height: 24),
 
             // Password card
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
+            ExpansionTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Change Password',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge
-                                ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary)),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _currentPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'Current Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            border: const OutlineInputBorder(),
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your current password';
-                            }
-                            return null;
-                          },
+                collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                collapsedBackgroundColor: Theme.of(context).colorScheme.primary,
+                iconColor: Theme.of(context).colorScheme.onPrimary,
+                collapsedIconColor: Theme.of(context).colorScheme.onPrimary,
+                title: Text('Account Actions',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary)),
+                children: [
+                  Container(
+                    width: cardWidth / 1.05,
+                    child: Card(
+                      elevation: 2.0,
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _newPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'New Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Change Password',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary)),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _currentPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Current Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your current password';
+                                  }
+                                  return null;
+                                },
                               ),
-                            ),
-                            border: const OutlineInputBorder(),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _newPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'New Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a new password';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'Password must be at least 6 characters';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _confirmPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Confirm New Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value != _newPasswordController.text) {
+                                    return 'Passwords do not match';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              if (_errorMessage != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      _isLoading ? null : _changePassword,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                  ),
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator()
+                                      : Text(
+                                          'Update Password',
+                                          style: GoogleFonts.rakkas(
+                                            textStyle: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
                           ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a new password';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _confirmPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'Confirm New Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Logout card
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Container(
+                      width: cardWidth / 1.05,
+                      child: Card(
+                        elevation: 2.0,
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outline,
                           ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value != _newPasswordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
+                          borderRadius: BorderRadius.circular(12.0),
                         ),
-                        if (_errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _changePassword,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator()
-                                : Text(
-                                    'Update Password',
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: Icon(
+                                    Icons.logout,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                  onPressed: () async {
+                                    // Show confirmation dialog
+                                    final bool? shouldLogout =
+                                        await showDialog<bool>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          title: Text(
+                                            'Logout',
+                                            style: GoogleFonts.ultra(
+                                              textStyle: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          content: Text(
+                                            'Are you sure you want to logout?',
+                                            style: GoogleFonts.rakkas(
+                                              textStyle: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: Text(
+                                                'Cancel',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: Text(
+                                                'Logout',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (shouldLogout == true) {
+                                      await FirebaseAuth.instance.signOut();
+                                      UserCredential user = await FirebaseAuth
+                                          .instance
+                                          .signInAnonymously();
+                                      // i don't think this is necessary
+                                      //User? credential = FirebaseAuth.instance.currentUser;
+                                      //credential = user.user;
+                                      if (mounted) {
+                                        // Navigate to login page and clear the navigation stack
+                                        Navigator.pushNamedAndRemoveUntil(
+                                          context,
+                                          AppRouter.list,
+                                          (route) => false,
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                  ),
+                                  label: Text(
+                                    'Log Out',
                                     style: GoogleFonts.rakkas(
                                       textStyle: TextStyle(
                                         color: Theme.of(context)
@@ -605,145 +773,15 @@ class _ProfilePageState extends State<ProfilePage>
                                       ),
                                     ),
                                   ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Logout card
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Account Actions',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary)),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: Icon(
-                            Icons.logout,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          onPressed: () async {
-                            // Show confirmation dialog
-                            final bool? shouldLogout = await showDialog<bool>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  title: Text(
-                                    'Logout',
-                                    style: GoogleFonts.ultra(
-                                      textStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  content: Text(
-                                    'Are you sure you want to logout?',
-                                    style: GoogleFonts.rakkas(
-                                      textStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: Text(
-                                        'Cancel',
-                                        style: GoogleFonts.rakkas(
-                                          textStyle: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: Text(
-                                        'Logout',
-                                        style: GoogleFonts.rakkas(
-                                          textStyle: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (shouldLogout == true) {
-                              await FirebaseAuth.instance.signOut();
-                              UserCredential user = await FirebaseAuth.instance
-                                  .signInAnonymously();
-                              // i don't think this is necessary
-                              //User? credential = FirebaseAuth.instance.currentUser;
-                              //credential = user.user;
-                              if (mounted) {
-                                // Navigate to login page and clear the navigation stack
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  AppRouter.list,
-                                  (route) => false,
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          label: Text(
-                            'Log Out',
-                            style: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontSize: 16,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
+                  )
+                ]),
           ],
         ),
       ),
