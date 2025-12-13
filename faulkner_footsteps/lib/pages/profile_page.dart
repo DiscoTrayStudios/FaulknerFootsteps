@@ -410,134 +410,20 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Visited Sites',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary)
-                              // style: GoogleFonts.ultra(
-                              //   textStyle: TextStyle(
-                              //     color: Theme.of(context).colorScheme.onPrimary,
-                              //     fontSize: 16,
-                              //   ),
-                              // ),
-                              ),
-                          // New achievement button with animation and notification badge
-                          Stack(
-                            clipBehavior: Clip
-                                .none, // This prevents clipping of child elements
-                            children: [
-                              // Animated achievement button
-                              AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) {
-                                  return Transform.scale(
-                                    scale: newAchievementCount > 0
-                                        ? _scaleAnimation.value
-                                        : 1.0,
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: newAchievementCount > 0
-                                            ? _colorAnimation.value
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                        border: Border.all(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          width: 2.0,
-                                        ),
-                                        boxShadow: newAchievementCount > 0
-                                            ? [
-                                                BoxShadow(
-                                                  color: Colors.green
-                                                      .withOpacity(0.3),
-                                                  spreadRadius: 1,
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 0),
-                                                )
-                                              ]
-                                            : null,
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                          onTap: _navigateToAchievementsPage,
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.emoji_events,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-
-                              // Notification badge with adjusted position
-                              if (newAchievementCount > 0)
-                                Positioned(
-                                  top: -8,
-                                  right: -8,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        width: 1.5,
-                                      ),
-                                      // Add a bit of margin to ensure visibility
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          spreadRadius: 1,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 18,
-                                      minHeight: 18,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        newAchievementCount.toString(),
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                      Text('Visited Sites',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary)
+                          // style: GoogleFonts.ultra(
+                          //   textStyle: TextStyle(
+                          //     color: Theme.of(context).colorScheme.onPrimary,
+                          //     fontSize: 16,
+                          //   ),
+                          // ),
                           ),
-                        ],
-                      ),
                       const SizedBox(height: 16),
                       Consumer<ApplicationState>(
                         builder: (context, appState, _) {
