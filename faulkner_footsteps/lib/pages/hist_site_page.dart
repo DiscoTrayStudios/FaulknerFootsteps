@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:faulkner_footsteps/app_state.dart';
@@ -31,6 +32,7 @@ class _HistSitePage extends State<HistSitePage> {
   late double personalRating;
   final Distance _distance = new Distance();
   late ApplicationState app_state;
+  String errorMessage = "";
 
   @override
   void initState() {
@@ -47,6 +49,22 @@ class _HistSitePage extends State<HistSitePage> {
   void getUserRating() async {
     personalRating = await app_state.getUserRating(widget.histSite.name);
     setState(() {});
+  }
+
+  Timer? _errorTimer;
+
+  Future<void> updateErrorMessage(String message) async {
+    setState(() {
+      errorMessage = message;
+    });
+
+    _errorTimer?.cancel();
+
+    _errorTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        errorMessage = "";
+      });
+    });
   }
 
   // Future<void> showRatingDialog() async {
@@ -392,42 +410,23 @@ class _HistSitePage extends State<HistSitePage> {
                   onRatingChanged: (rating) {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
-                      final messenger = scaffoldMessengerKey.currentState;
-                      if (messenger == null) {
-                        print("Messenger is null!");
-                        return;
-                      }
-                      // else {
-                      //   messenger.showSnackBar(
-                      //       SnackBar(content: Text("Messenger is not null!")));
-                      // }
+
                       if (user == null || user.isAnonymous) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text("You must sign in to rate sites!"),
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                        });
-                        return; // <-- exits onRatingChanged here
+                        updateErrorMessage(
+                            "You must be logged in to rate sites!");
+
+                        return;
                       }
 
                       if (!app_state.visitedPlaces
                           .contains(widget.histSite.name)) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "You need to visit ${widget.histSite.name} before you rate it!",
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                        });
-                        return; // <-- exits onRatingChanged here
+                        updateErrorMessage(
+                            "You must visit ${widget.histSite.name} to rate it!");
+                        return;
+                      } else {
+                        // setState(() {
+                        //   errorMessage = "";
+                        // });
                       }
 
                       if (!mounted) return;
@@ -484,6 +483,17 @@ class _HistSitePage extends State<HistSitePage> {
                             fontSize: 16)))
               ]),
             ),
+            Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: errorMessage == ""
+                    ? SizedBox.shrink()
+                    : Text(errorMessage,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.error)),
+              ),
+            ),
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -537,5 +547,10 @@ class _HistSitePage extends State<HistSitePage> {
             ),
           ]),
         ));
+  }
+
+  void dispose() {
+    scaffoldMessengerKey.currentState?.clearSnackBars();
+    super.dispose();
   }
 }
