@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:faulkner_footsteps/app_state.dart';
+import 'package:faulkner_footsteps/main.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -389,34 +390,61 @@ class _HistSitePage extends State<HistSitePage> {
                   rating: personalRating,
                   starCount: 5,
                   onRatingChanged: (rating) {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user == null || user.isAnonymous) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("You must sign in to rate sites!"),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    } else if (!app_state.visitedPlaces
-                        .contains(widget.histSite.name)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "You need to visit ${widget.histSite.name} before you rate it!"),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    }
-                    setState(() {
-                      widget.histSite.updateRating(
-                          personalRating, rating, personalRating == 0.0);
-                      personalRating = rating;
+                    try {
+                      final user = FirebaseAuth.instance.currentUser;
+                      final messenger = scaffoldMessengerKey.currentState;
+                      if (messenger == null) {
+                        print("Messenger is null!");
+                        return;
+                      }
+                      // else {
+                      //   messenger.showSnackBar(
+                      //       SnackBar(content: Text("Messenger is not null!")));
+                      // }
+                      if (user == null || user.isAnonymous) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text("You must sign in to rate sites!"),
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        });
+                        return; // <-- exits onRatingChanged here
+                      }
+
+                      if (!app_state.visitedPlaces
+                          .contains(widget.histSite.name)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "You need to visit ${widget.histSite.name} before you rate it!",
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        });
+                        return; // <-- exits onRatingChanged here
+                      }
+
+                      if (!mounted) return;
+
+                      setState(() {
+                        widget.histSite.updateRating(
+                          personalRating,
+                          rating,
+                          personalRating == 0.0,
+                        );
+                        personalRating = rating;
+                      });
+
                       app_state.updateSiteRating(widget.histSite.name, rating);
-                    });
+                    } catch (e, st) {
+                      print("Error in onRatingChanged: $e\n$st");
+                    }
                   },
                   borderColor: Colors.amber,
                   color: Colors.amber,

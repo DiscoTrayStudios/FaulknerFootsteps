@@ -46,6 +46,9 @@ void main() async {
   );
 }
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -56,6 +59,7 @@ class MyApp extends StatelessWidget {
       theme: faulknerFootstepsTheme,
       initialRoute: AppRouter.startPage,
       onGenerateRoute: AppRouter.generateRoute,
+      scaffoldMessengerKey: scaffoldMessengerKey,
     );
   }
 }

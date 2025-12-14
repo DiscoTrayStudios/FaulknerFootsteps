@@ -252,6 +252,7 @@ class ApplicationState extends ChangeNotifier {
   //update/store rating in firebase
   void updateSiteRating(String siteName, double newRating) async {
     try {
+      print("reached here!");
       final site = _historicalSites.firstWhere((s) => s.name == siteName);
       final userId = FirebaseAuth.instance.currentUser!.uid;
       double totalRating = 0;
