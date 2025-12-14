@@ -489,6 +489,7 @@ class _HistSitePage extends State<HistSitePage> {
                 child: errorMessage == ""
                     ? SizedBox.shrink()
                     : Text(errorMessage,
+                        key: ValueKey(errorMessage),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.error)),
               ),
