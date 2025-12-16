@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:faulkner_footsteps/app_state.dart';
+import 'package:faulkner_footsteps/main.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,6 +32,7 @@ class _HistSitePage extends State<HistSitePage> {
   late double personalRating;
   final Distance _distance = new Distance();
   late ApplicationState app_state;
+  String errorMessage = "";
 
   @override
   void initState() {
@@ -46,6 +49,22 @@ class _HistSitePage extends State<HistSitePage> {
   void getUserRating() async {
     personalRating = await app_state.getUserRating(widget.histSite.name);
     setState(() {});
+  }
+
+  Timer? _errorTimer;
+
+  Future<void> updateErrorMessage(String message) async {
+    setState(() {
+      errorMessage = message;
+    });
+
+    _errorTimer?.cancel();
+
+    _errorTimer = Timer(const Duration(seconds: 5), () {
+      setState(() {
+        errorMessage = "";
+      });
+    });
   }
 
   // Future<void> showRatingDialog() async {
@@ -177,12 +196,10 @@ class _HistSitePage extends State<HistSitePage> {
                                                     ),
                                                   ),
                                                 )),
-                                            body: MapDisplay(
+                                            body: MapDisplay2(
                                               currentPosition:
                                                   widget.currentPosition,
-                                              initialPosition: LatLng(
-                                                  widget.histSite.lat,
-                                                  widget.histSite.lng),
+                                              sites: app_state.historicalSites,
                                               centerPosition: LatLng(
                                                   widget.histSite.lat,
                                                   widget.histSite.lng),
@@ -319,7 +336,12 @@ class _HistSitePage extends State<HistSitePage> {
                               );
                             } else if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
+                              return Center(
+                                  child: CircularProgressIndicator(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary, // necessary or else it is white
+                              ));
                             } else if (snapshot.hasError || !snapshot.hasData) {
                               return Image.asset(
                                 'assets/images/faulkner_thumbnail.png',
@@ -384,34 +406,42 @@ class _HistSitePage extends State<HistSitePage> {
                   rating: personalRating,
                   starCount: 5,
                   onRatingChanged: (rating) {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user == null || user.isAnonymous) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("You must sign in to rate sites!"),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    } else if (!app_state.visitedPlaces
-                        .contains(widget.histSite.name)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              "You need to visit ${widget.histSite.name} before you rate it!"),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    }
-                    setState(() {
-                      widget.histSite.updateRating(
-                          personalRating, rating, personalRating == 0.0);
-                      personalRating = rating;
+                    try {
+                      final user = FirebaseAuth.instance.currentUser;
+
+                      if (user == null || user.isAnonymous) {
+                        updateErrorMessage(
+                            "You must be logged in to rate sites!");
+
+                        return;
+                      }
+
+                      if (!app_state.visitedPlaces
+                          .contains(widget.histSite.name)) {
+                        updateErrorMessage(
+                            "You must visit ${widget.histSite.name} to rate it!");
+                        return;
+                      } else {
+                        // setState(() {
+                        //   errorMessage = "";
+                        // });
+                      }
+
+                      if (!mounted) return;
+
+                      setState(() {
+                        widget.histSite.updateRating(
+                          personalRating,
+                          rating,
+                          personalRating == 0.0,
+                        );
+                        personalRating = rating;
+                      });
+
                       app_state.updateSiteRating(widget.histSite.name, rating);
-                    });
+                    } catch (e, st) {
+                      print("Error in onRatingChanged: $e\n$st");
+                    }
                   },
                   borderColor: Colors.amber,
                   color: Colors.amber,
@@ -451,6 +481,18 @@ class _HistSitePage extends State<HistSitePage> {
                             fontSize: 16)))
               ]),
             ),
+            Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: errorMessage == ""
+                    ? SizedBox.shrink()
+                    : Text(errorMessage,
+                        key: ValueKey(errorMessage),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.error)),
+              ),
+            ),
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -504,5 +546,10 @@ class _HistSitePage extends State<HistSitePage> {
             ),
           ]),
         ));
+  }
+
+  void dispose() {
+    scaffoldMessengerKey.currentState?.clearSnackBars();
+    super.dispose();
   }
 }

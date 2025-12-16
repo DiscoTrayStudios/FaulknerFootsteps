@@ -1,4 +1,5 @@
 import 'package:faulkner_footsteps/app_router.dart';
+import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
@@ -101,7 +102,7 @@ class LoginPage extends StatelessWidget {
               onPressed: () {
                 Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => ListPage()),
+                    MaterialPageRoute(builder: (context) => HomePage()),
                     (route) => false);
               },
             ),
@@ -157,7 +158,7 @@ class LoginPage extends StatelessWidget {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => ListPage(),
+          builder: (context) => HomePage(),
         ),
         (route) => false,
       );
@@ -180,7 +181,7 @@ class LoginPage extends StatelessWidget {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ListPage(),
+                  builder: (context) => HomePage(),
                 ),
                 (route) => false,
               );

@@ -53,6 +53,8 @@ final ThemeData faulknerFootstepsTheme = ThemeData(
                 fontWeight: FontWeight.bold)),
         bodyLarge: GoogleFonts.ultra(fontSize: 18),
 
+        //title
+
         //body
         // for basic text
         bodyMedium: GoogleFonts.rakkas(

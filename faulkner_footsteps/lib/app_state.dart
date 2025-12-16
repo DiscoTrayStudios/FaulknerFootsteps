@@ -26,6 +26,8 @@ class ApplicationState extends ChangeNotifier {
 
   StreamSubscription<QuerySnapshot>? _siteSubscription;
 
+  StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
+
   Set<String> _visitedPlaces = {};
   Set<String> get visitedPlaces => _visitedPlaces;
 
@@ -50,13 +52,27 @@ class ApplicationState extends ChangeNotifier {
         // Check if user is admin and update status
         await checkAdminStatus(user);
 
-        // Load achievements when user logs in
-        await loadAchievements();
-
         // Load filters
         await loadFilters();
 
-        // Site Subscription
+        _achievementsSubscription = FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('achievements')
+            .doc('places')
+            .snapshots()
+            .listen((docSnapshot) {
+          if (docSnapshot.exists) {
+            final data = docSnapshot.data();
+            if (data != null && data['visited'] != null) {
+              _visitedPlaces = Set<String>.from(data['visited'] as List);
+              notifyListeners();
+            }
+          } else {
+            _visitedPlaces = {};
+            notifyListeners();
+          }
+        });
 
         _siteSubscription = FirebaseFirestore.instance
             .collection('sites')
@@ -74,17 +90,12 @@ class ApplicationState extends ChangeNotifier {
             }
 
             List<SiteFilter> filters = [];
-
             for (String filter
                 in List<String>.from(document.data()["filters"])) {
               filters.add(_siteFilters.firstWhere(
                   (element) => element.name == filter,
                   orElse: () => SiteFilter(name: "Other")));
-              // print("STRING NAME: $filter");
-              // print("TEST FILTER NAME: ${element.name}");
-              //return element.name == filter;
             }
-            ;
 
             HistSite site = HistSite(
               name: document.data()["name"] as String,
@@ -94,8 +105,6 @@ class ApplicationState extends ChangeNotifier {
               lat: document.data()["lat"] as double,
               lng: document.data()["lng"] as double,
               filters: filters,
-              //added ratings
-              //set as 0.0 for testing, will have to change later to have consistent ratings
               avgRating: document.data()["avgRating"] != null
                   ? (document.data()["avgRating"] as num).toDouble()
                   : 0.0,
@@ -106,7 +115,6 @@ class ApplicationState extends ChangeNotifier {
             _historicalSites.add(site);
             loadImageToHistSite(document, site);
           }
-          //print(historicalSites);
           notifyListeners();
         });
       } else {
@@ -114,6 +122,7 @@ class ApplicationState extends ChangeNotifier {
         _historicalSites = [];
         _visitedPlaces = {};
         _siteSubscription?.cancel();
+        _achievementsSubscription?.cancel();
       }
       notifyListeners();
     });
@@ -243,6 +252,7 @@ class ApplicationState extends ChangeNotifier {
   //update/store rating in firebase
   void updateSiteRating(String siteName, double newRating) async {
     try {
+      print("reached here!");
       final site = _historicalSites.firstWhere((s) => s.name == siteName);
       final userId = FirebaseAuth.instance.currentUser!.uid;
       double totalRating = 0;
