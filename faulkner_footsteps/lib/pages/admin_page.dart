@@ -245,9 +245,10 @@ class _AdminListPageState extends State<AdminListPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MapDisplay(
+          builder: (context) => MapDisplay2(
               currentPosition: const LatLng(2, 2),
-              initialPosition: const LatLng(2, 2)),
+              sites: app_state.historicalSites,
+              centerPosition: const LatLng(2, 2)),
         ),
       );
     } else {
@@ -1903,9 +1904,10 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent()
-            : MapDisplay(
+            : MapDisplay2(
                 currentPosition: const LatLng(2, 2),
-                initialPosition: const LatLng(2, 2),
+                sites: app_state.historicalSites,
+                centerPosition: const LatLng(2, 2),
               ),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),

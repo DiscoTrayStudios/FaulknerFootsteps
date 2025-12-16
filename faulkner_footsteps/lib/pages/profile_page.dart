@@ -1,7 +1,11 @@
 import 'package:faulkner_footsteps/app_router.dart';
+import 'package:faulkner_footsteps/objects/hist_site.dart';
+import 'package:faulkner_footsteps/objects/progress_achievement.dart';
+import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/achievement.dart';
 import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/login_page.dart';
+import 'package:faulkner_footsteps/widgets/achievement_item.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +29,8 @@ class _ProfilePageState extends State<ProfilePage>
   bool _isLoading = false;
   String? _errorMessage;
 
+  // appstate
+  late ApplicationState appState;
   // Animation controller for the achievement button
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -55,7 +61,14 @@ class _ProfilePageState extends State<ProfilePage>
     _animationController.repeat(reverse: true);
 
     // Check for notification count
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    appState = Provider.of<ApplicationState>(context, listen: false);
     _loadAchievementNotificationStatus();
+
+    _initProgressAchievements();
   }
 
   // Load achievement notification status
@@ -66,7 +79,6 @@ class _ProfilePageState extends State<ProfilePage>
         prefs.getBool('has_viewed_achievements') ?? false;
 
     // Get current achievements count
-    final appState = Provider.of<ApplicationState>(context, listen: false);
     final currentCount = appState.visitedPlaces.length;
 
     setState(() {
@@ -148,21 +160,60 @@ class _ProfilePageState extends State<ProfilePage>
     setState(() {
       newAchievementCount = 0;
     });
-
-    // Save the current achievement count
-    await _saveAchievementNotificationStatus();
-
-    // Navigate to achievements page with the app state's historical sites
-    final appState = Provider.of<ApplicationState>(context, listen: false);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AchievementsPage(
-          displaySites: appState.historicalSites,
-        ),
-      ),
-    );
   }
+
+  late List<ProgressAchievement> progressAchievements;
+
+  void _initProgressAchievements() {
+    progressAchievements = [];
+
+    // Find all sites that are monuments
+    List<String> monuments = [];
+    List<String> hendrixSites = [];
+
+    for (var site in appState.historicalSites) {
+      // Fixed: Changed from siteFilter.Monument to checking filter name
+      if (site.filters.any((filter) => filter.name == "Monument")) {
+        monuments.add(site.name);
+      }
+
+      // For demonstrative purposes, let's consider sites with "Hendrix" or "Hall" in the name
+      if (site.name.contains("Hendrix") || site.name.contains("Hall")) {
+        hendrixSites.add(site.name);
+      }
+    }
+
+    // Add the monument achievement
+    progressAchievements.add(ProgressAchievement(
+        title: "Monument Explorer",
+        description: "Visit all monument sites",
+        requiredSites: monuments,
+        filterType:
+            SiteFilter(name: "Monument") // Fixed: Using SiteFilter constructor
+        ));
+
+    // Add the Hendrix sites achievement
+    if (hendrixSites.isNotEmpty) {
+      progressAchievements.add(ProgressAchievement(
+          title: "Hendrix Campus Explorer",
+          description: "Visit all sites at Hendrix",
+          requiredSites: hendrixSites));
+    }
+  }
+
+  // // Save the current achievement count
+  // await _saveAchievementNotificationStatus();
+
+  // // Navigate to achievements page with the app state's historical sites
+  // final appState = Provider.of<ApplicationState>(context, listen: false);
+  // Navigator.push(
+  //   context,
+  //   MaterialPageRoute(
+  //     builder: (context) => AchievementsPage(
+  //       displaySites: appState.historicalSites,
+  //     ),
+  //   ),
+  // );
 
   @override
   Widget build(BuildContext context) {
@@ -220,15 +271,13 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Email',
-                        style: GoogleFonts.ultra(
-                          textStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
+                      Text('Email',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary)),
                       const SizedBox(height: 8),
                       Text(
                         user?.email ?? 'Not signed in',
@@ -261,15 +310,14 @@ class _ProfilePageState extends State<ProfilePage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Admin Controls',
-                          style: GoogleFonts.ultra(
-                            textStyle: TextStyle(
-                              color: Theme.of(context).colorScheme.secondary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                        Text('Admin Controls',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
@@ -311,6 +359,45 @@ class _ProfilePageState extends State<ProfilePage>
             ],
 
             // Achievements card
+            if (progressAchievements.isNotEmpty) ...[
+              Container(
+                  width: cardWidth,
+                  child: Card(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      margin: EdgeInsets.zero,
+                      child: Column(children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text("Achievements",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary))),
+                        ),
+                        ...progressAchievements.map((achievement) {
+                          double progress = achievement
+                              .calculateProgress(appState.visitedPlaces);
+                          bool isCompleted =
+                              achievement.isCompleted(appState.visitedPlaces);
+                          return AchievementItem(
+                            achievement: achievement,
+                            progress: progress,
+                            isCompleted: isCompleted,
+                          );
+                        }).toList(),
+                      ]))),
+              const SizedBox(height: 24),
+            ],
+
+            // Visited Sites Card
             Container(
               width: cardWidth,
               child: Card(
@@ -324,169 +411,69 @@ class _ProfilePageState extends State<ProfilePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'My Achievements',
-                            style: GoogleFonts.ultra(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                                fontSize: 16,
-                              ),
-                            ),
+                      Text('Visited Sites',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary)
+                          // style: GoogleFonts.ultra(
+                          //   textStyle: TextStyle(
+                          //     color: Theme.of(context).colorScheme.onPrimary,
+                          //     fontSize: 16,
+                          //   ),
+                          // ),
                           ),
-                          // New achievement button with animation and notification badge
-                          Stack(
-                            clipBehavior: Clip
-                                .none, // This prevents clipping of child elements
-                            children: [
-                              // Animated achievement button
-                              AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) {
-                                  return Transform.scale(
-                                    scale: newAchievementCount > 0
-                                        ? _scaleAnimation.value
-                                        : 1.0,
-                                    child: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: newAchievementCount > 0
-                                            ? _colorAnimation.value
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                        border: Border.all(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          width: 2.0,
-                                        ),
-                                        boxShadow: newAchievementCount > 0
-                                            ? [
-                                                BoxShadow(
-                                                  color: Colors.green
-                                                      .withOpacity(0.3),
-                                                  spreadRadius: 1,
-                                                  blurRadius: 6,
-                                                  offset: Offset(0, 0),
-                                                )
-                                              ]
-                                            : null,
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                          onTap: _navigateToAchievementsPage,
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.emoji_events,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-
-                              // Notification badge with adjusted position
-                              if (newAchievementCount > 0)
-                                Positioned(
-                                  top: -8,
-                                  right: -8,
-                                  child: Container(
-                                    padding: EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        width: 1.5,
-                                      ),
-                                      // Add a bit of margin to ensure visibility
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          spreadRadius: 1,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                    constraints: BoxConstraints(
-                                      minWidth: 18,
-                                      minHeight: 18,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        newAchievementCount.toString(),
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 16),
                       Consumer<ApplicationState>(
                         builder: (context, appState, _) {
                           if (appState.visitedPlaces.isEmpty) {
                             return Text(
                               'You haven\'t visited any historical sites yet.',
-                              style: GoogleFonts.rakkas(
-                                textStyle: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  fontSize: 14,
-                                ),
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
                             );
                           }
 
-                          return Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: appState.visitedPlaces.map((place) {
-                              return Chip(
-                                backgroundColor: Colors.green[100],
-                                avatar: Icon(
-                                  Icons.emoji_events,
-                                  color: Colors.green,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  place,
-                                  style: GoogleFonts.rakkas(
-                                    textStyle: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
-                                      fontSize: 14,
+                          return Selector<ApplicationState, Set<String>>(
+                            selector: (_, appState) => appState.visitedPlaces,
+                            builder: (context, visitedSites, _) {
+                              return Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: appState.historicalSites
+                                    .where((site) =>
+                                        appState.hasVisited(site.name))
+                                    .map((place) {
+                                  return Chip(
+                                    backgroundColor: Colors.green[100],
+                                    avatar: Icon(
+                                      Icons.emoji_events,
+                                      color: Colors.green,
+                                      size: 18,
                                     ),
-                                  ),
-                                ),
-                                side: BorderSide(color: Colors.green),
+                                    label: Text(
+                                      place.name,
+                                      style: GoogleFonts.rakkas(
+                                        textStyle: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .secondary,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    side: BorderSide(color: Colors.green),
+                                  );
+                                }).toList(),
                               );
-                            }).toList(),
+                            },
                           );
                         },
                       ),
@@ -498,118 +485,285 @@ class _ProfilePageState extends State<ProfilePage>
             const SizedBox(height: 24),
 
             // Password card
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
+            ExpansionTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Change Password',
-                          style: GoogleFonts.ultra(
-                            textStyle: const TextStyle(
-                              color: Color.fromARGB(255, 72, 52, 52),
-                              fontSize: 16,
-                            ),
+                collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                collapsedBackgroundColor: Theme.of(context).colorScheme.primary,
+                iconColor: Theme.of(context).colorScheme.onPrimary,
+                collapsedIconColor: Theme.of(context).colorScheme.onPrimary,
+                title: Text('Account Actions',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary)),
+                children: [
+                  Container(
+                    width: cardWidth / 1.05,
+                    child: Card(
+                      elevation: 2.0,
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Change Password',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary)),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _currentPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Current Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your current password';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _newPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'New Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a new password';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'Password must be at least 6 characters';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _confirmPasswordController,
+                                decoration: InputDecoration(
+                                  labelText: 'Confirm New Password',
+                                  labelStyle: GoogleFonts.rakkas(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  ),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value != _newPasswordController.text) {
+                                    return 'Passwords do not match';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              if (_errorMessage != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed:
+                                      _isLoading ? null : _changePassword,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                  ),
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator()
+                                      : Text(
+                                          'Update Password',
+                                          style: GoogleFonts.rakkas(
+                                            textStyle: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _currentPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'Current Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Logout card
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Container(
+                      width: cardWidth / 1.05,
+                      child: Card(
+                        elevation: 2.0,
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outline,
                           ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your current password';
-                            }
-                            return null;
-                          },
+                          borderRadius: BorderRadius.circular(12.0),
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _newPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'New Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            border: const OutlineInputBorder(),
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a new password';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _confirmPasswordController,
-                          decoration: InputDecoration(
-                            labelText: 'Confirm New Password',
-                            labelStyle: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            border: const OutlineInputBorder(),
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value != _newPasswordController.text) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
-                        ),
-                        if (_errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _changePassword,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator()
-                                : Text(
-                                    'Update Password',
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: Icon(
+                                    Icons.logout,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                  onPressed: () async {
+                                    // Show confirmation dialog
+                                    final bool? shouldLogout =
+                                        await showDialog<bool>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          title: Text(
+                                            'Logout',
+                                            style: GoogleFonts.ultra(
+                                              textStyle: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          content: Text(
+                                            'Are you sure you want to logout?',
+                                            style: GoogleFonts.rakkas(
+                                              textStyle: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: Text(
+                                                'Cancel',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: Text(
+                                                'Logout',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (shouldLogout == true) {
+                                      await FirebaseAuth.instance.signOut();
+                                      UserCredential user = await FirebaseAuth
+                                          .instance
+                                          .signInAnonymously();
+                                      // i don't think this is necessary
+                                      //User? credential = FirebaseAuth.instance.currentUser;
+                                      //credential = user.user;
+                                      if (mounted) {
+                                        // Navigate to login page and clear the navigation stack
+                                        Navigator.pushNamedAndRemoveUntil(
+                                          context,
+                                          AppRouter.list,
+                                          (route) => false,
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                  ),
+                                  label: Text(
+                                    'Log Out',
                                     style: GoogleFonts.rakkas(
                                       textStyle: TextStyle(
                                         color: Theme.of(context)
@@ -619,147 +773,15 @@ class _ProfilePageState extends State<ProfilePage>
                                       ),
                                     ),
                                   ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Logout card
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Account Actions',
-                        style: GoogleFonts.ultra(
-                          textStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: Icon(
-                            Icons.logout,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          onPressed: () async {
-                            // Show confirmation dialog
-                            final bool? shouldLogout = await showDialog<bool>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.surface,
-                                  title: Text(
-                                    'Logout',
-                                    style: GoogleFonts.ultra(
-                                      textStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  content: Text(
-                                    'Are you sure you want to logout?',
-                                    style: GoogleFonts.rakkas(
-                                      textStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: Text(
-                                        'Cancel',
-                                        style: GoogleFonts.rakkas(
-                                          textStyle: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: Text(
-                                        'Logout',
-                                        style: GoogleFonts.rakkas(
-                                          textStyle: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (shouldLogout == true) {
-                              await FirebaseAuth.instance.signOut();
-                              UserCredential user = await FirebaseAuth.instance
-                                  .signInAnonymously();
-                              // i don't think this is necessary
-                              //User? credential = FirebaseAuth.instance.currentUser;
-                              //credential = user.user;
-                              if (mounted) {
-                                // Navigate to login page and clear the navigation stack
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  AppRouter.list,
-                                  (route) => false,
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          label: Text(
-                            'Log Out',
-                            style: GoogleFonts.rakkas(
-                              textStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontSize: 16,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
+                  )
+                ]),
           ],
         ),
       ),

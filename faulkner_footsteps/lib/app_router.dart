@@ -1,5 +1,6 @@
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
+import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:faulkner_footsteps/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faulkner_footsteps/pages/list_page.dart';
@@ -49,7 +50,7 @@ class AppRouter {
       case loginPage:
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case list:
-        return MaterialPageRoute(builder: (_) => ListPage());
+        return MaterialPageRoute(builder: (_) => HomePage());
       case hsitePage:
         return MaterialPageRoute(
             builder: (_) => HistSitePage(

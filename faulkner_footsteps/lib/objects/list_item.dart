@@ -7,21 +7,23 @@ import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 class ListItem extends StatelessWidget {
-  ListItem(
-      {super.key,
-      required this.siteInfo,
-      required this.app_state,
-      required this.currentPosition});
+  ListItem({
+    super.key,
+    required this.siteInfo,
+    required this.currentPosition,
+  });
   final HistSite siteInfo;
-  final ApplicationState app_state;
   final LatLng currentPosition;
 
   final _distance = new Distance();
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<ApplicationState>(context);
+
     // setImages();
     String siteDistance = (_distance.as(LengthUnit.Meter,
                 LatLng(siteInfo.lat, siteInfo.lng), currentPosition) /
@@ -49,7 +51,6 @@ class ListItem extends StatelessWidget {
           onTap: () {
             AppRouter.navigateTo(context, "/hist", arguments: {
               "info": siteInfo,
-              "app_state": app_state,
               "currentPosition": currentPosition
             });
           },
@@ -60,76 +61,78 @@ class ListItem extends StatelessWidget {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: (siteInfo.imageUrls.isNotEmpty) ?
-                  FutureBuilder<Uint8List?>(
-                    future: app_state.getImage(siteInfo.imageUrls.first),
-                    builder: (context, snapshot) {
-                      if (siteInfo.images.length > 0 &&
-                          siteInfo.images[0] != null) {
-                        print("List item if statement executed");
-                        return Image.memory(
-                          siteInfo.images.first!,
-                          height: 400,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        );
-                      } else if (snapshot.connectionState ==
-                              ConnectionState.done &&
-                          snapshot.data != null) {
-                        print("List item else if statement reached");
-                        return Image.memory(
-                          snapshot.data!,
-                          height: 400,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        );
-                      } else if (snapshot.connectionState ==
-                              ConnectionState.active &&
-                          siteInfo.images.length > 0 &&
-                          siteInfo.images[0] != null) {
-                        print("Stream is still open, image displayed");
-                        return Image.memory(
-                          siteInfo.images.first!,
-                          height: 400,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        );
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.active) {
-                        print("Connection state is active");
-                        return Image.memory(
-                          siteInfo.images.first!,
-                          height: 400,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        );
-                      } else if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        print("Loading cirlce showing");
-                        return Center(
-                            child: Container(
-                                child: CircularProgressIndicator(),
-                                width: double.infinity,
+                  child: (siteInfo.imageUrls.isNotEmpty)
+                      ? FutureBuilder<Uint8List?>(
+                          future: appState.getImage(siteInfo.imageUrls.first),
+                          builder: (context, snapshot) {
+                            if (siteInfo.images.length > 0 &&
+                                siteInfo.images[0] != null) {
+                              print("List item if statement executed");
+                              return Image.memory(
+                                siteInfo.images.first!,
                                 height: 400,
-                                color: //Color.fromARGB(255, 107, 79, 79)
-                                    Theme.of(context).colorScheme.secondary));
-                      } else {
-                        print("List item else statement reached");
-                        return Image.asset(
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            } else if (snapshot.connectionState ==
+                                    ConnectionState.done &&
+                                snapshot.data != null) {
+                              print("List item else if statement reached");
+                              return Image.memory(
+                                snapshot.data!,
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            } else if (snapshot.connectionState ==
+                                    ConnectionState.active &&
+                                siteInfo.images.length > 0 &&
+                                siteInfo.images[0] != null) {
+                              print("Stream is still open, image displayed");
+                              return Image.memory(
+                                siteInfo.images.first!,
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            } else if (snapshot.connectionState ==
+                                ConnectionState.active) {
+                              print("Connection state is active");
+                              return Image.memory(
+                                siteInfo.images.first!,
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            } else if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              print("Loading cirlce showing");
+                              return Center(
+                                  child: Container(
+                                      child: CircularProgressIndicator(),
+                                      width: double.infinity,
+                                      height: 400,
+                                      color: //Color.fromARGB(255, 107, 79, 79)
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .secondary));
+                            } else {
+                              print("List item else statement reached");
+                              return Image.asset(
+                                'assets/images/faulkner_thumbnail.png',
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            }
+                          },
+                        )
+                      : Image.asset(
                           'assets/images/faulkner_thumbnail.png',
                           height: 400,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                        );
-                      }
-                    },
-                  ) :
-                    Image.asset(
-                          'assets/images/faulkner_thumbnail.png',
-                          height: 400,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                   )
+                        )
 
                   // siteInfo.images.length > 0 && siteInfo.images[0] != null
                   //     ? Image.memory(
@@ -203,7 +206,6 @@ class ListItem extends StatelessWidget {
                               AppRouter.navigateTo(context, "/hist",
                                   arguments: {
                                     "info": siteInfo,
-                                    "app_state": app_state,
                                     "currentPosition": currentPosition,
                                   });
                             },
