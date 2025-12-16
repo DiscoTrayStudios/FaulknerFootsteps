@@ -1,10 +1,9 @@
-import 'package:faulkner_footsteps/app_router.dart';
 import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:faulkner_footsteps/pages/list_page.dart';
+import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatelessWidget {
@@ -12,6 +11,9 @@ class LoginPage extends StatelessWidget {
 
   // Static variable to track admin status
   static bool isAdmin = false;
+  
+  // Flag to prevent StreamBuilder navigation when actions handle it
+  static bool _handledByAction = false;
 
   // This checks the 'admins' collection in firebase for authorized accounts
   // The result is stored in the user's app state for later use
@@ -111,58 +113,57 @@ class LoginPage extends StatelessWidget {
               false, // Prevent resizing when keyboard appears
           backgroundColor: customTheme.colorScheme.surface,
           body: StreamBuilder<User?>(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Show loading indicator with theme colors
-                  return const Center(
-                      child: CircularProgressIndicator(
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
                     color: Color.fromARGB(255, 107, 79, 79),
-                  ));
-                }
-
-                final user = snapshot.data;
-                if (user == null) {
-                  return buildSignInScreen();
-                }
-                if (user.isAnonymous) {
-                  // Stay on login page for anonymous users
-                  return buildSignInScreen();
-                }
-
-                // If we already have a user when this widget is built, check admin status and navigate to List page
-
-                return FutureBuilder<void>(
-                  future: handleExistingUser(user, context),
-                  builder: (context, snapshot) {
-                    return const Center(
-                        child: CircularProgressIndicator(
-                      color: Color.fromARGB(255, 107, 79, 79),
-                    ));
-                  },
+                  ),
                 );
-              }),
+              }
+
+              final user = snapshot.data;
+
+              // If no user or anonymous, show login screen
+              if (user == null || user.isAnonymous) {
+                return buildSignInScreen();
+              }
+
+              // User is authenticated, check admin status and navigate
+              // Only navigate if not already handled by action
+              print('StreamBuilder detected user: ${user.email}, isAnonymous: ${user.isAnonymous}');
+              
+              if (_handledByAction) {
+                print('Navigation already handled by action, skipping StreamBuilder navigation');
+                _handledByAction = false; // Reset for next time
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Color.fromARGB(255, 107, 79, 79),
+                  ),
+                );
+              }
+              
+              checkAndStoreAdminStatus(user).then((_) {
+                print('Admin check complete, navigating from StreamBuilder...');
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  );
+                }
+              });
+
+              // Show loading while admin check completes
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Color.fromARGB(255, 107, 79, 79),
+                ),
+              );
+            },
+          ),
         ));
-  }
-
-  // Helper method to check admin status and navigate to the List page
-  Future<void> handleExistingUser(User user, BuildContext context) async {
-    if (user.isAnonymous) {
-      // Stay on login page for anonymous users
-      return;
-    }
-
-    await checkAndStoreAdminStatus(user);
-
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(),
-        ),
-        (route) => false,
-      );
-    }
   }
 
   Widget buildSignInScreen() {
@@ -171,18 +172,52 @@ class LoginPage extends StatelessWidget {
       showAuthActionSwitch: true,
       providers: [EmailAuthProvider()],
       actions: [
+        // This handles BOTH sign in AND sign up
         AuthStateChangeAction<SignedIn>((context, state) async {
-          // Check if user is admin immediately after sign in
-          if (state.user != null) {
+          print('SignedIn action triggered for user: ${state.user?.email}');
+          if (state.user != null && !state.user!.isAnonymous) {
+            _handledByAction = true;
             await checkAndStoreAdminStatus(state.user!);
-
-            // Navigate to the list page for all users
+            
             if (context.mounted) {
+              print('Navigating from SignedIn action');
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => HomePage(),
-                ),
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false,
+              );
+            }
+          }
+        }),
+        // Also handle UserCreated specifically
+        AuthStateChangeAction<UserCreated>((context, state) async {
+          print('UserCreated action triggered for user: ${state.credential.user?.email}');
+          if (state.credential.user != null) {
+            _handledByAction = true;
+            await checkAndStoreAdminStatus(state.credential.user!);
+            
+            if (context.mounted) {
+              print('Navigating from UserCreated action');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false,
+              );
+            }
+          }
+        }),
+        // Handle account linking (anonymous to email)
+        AuthStateChangeAction<CredentialLinked>((context, state) async {
+          print('CredentialLinked action triggered for user: ${state.user?.email}');
+          if (state.user != null && !state.user!.isAnonymous) {
+            _handledByAction = true;
+            await checkAndStoreAdminStatus(state.user!);
+            
+            if (context.mounted) {
+              print('Navigating from CredentialLinked action');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
                 (route) => false,
               );
             }

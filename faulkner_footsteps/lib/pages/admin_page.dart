@@ -1423,94 +1423,111 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
-  Future<void> _showEditSiteImagesDialog(HistSite site) async {
-    List<Uint8List?> siteImages = site.images;
-    List<String> siteImageURLs = site.imageUrls;
-    List<String> originalUrls = List.from(site.imageUrls);
-    List<ImageWithUrl> pairedImages = [];
-    if (tempImageChanges.containsKey(site.name)) {
-      pairedImages = List.from(tempImageChanges[site.name]!);
-    } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-      for (int i = 0; i < siteImageURLs.length; i++) {
-        Uint8List? imageData;
-        if (i < siteImages.length &&
-            siteImages[i] != null &&
-            siteImages[i]!.isNotEmpty) {
-          imageData = siteImages[i];
-        } else {
-          imageData = await app_state.getImage(siteImageURLs[i]);
-        }
-        if (imageData != null && siteImageURLs[i].isNotEmpty) {
-          pairedImages.add(ImageWithUrl(
-            imageData: imageData,
-            url: siteImageURLs[i],
-          ));
-        }
-      }
-      Navigator.pop(context);
-    }
-    await showDialog(
-      barrierDismissible: false,
+
+Future<void> _showEditSiteImagesDialog(HistSite site) async {
+  List<Uint8List?> siteImages = site.images;
+  List<String> siteImageURLs = site.imageUrls;
+  List<String> originalUrls = List.from(site.imageUrls);
+  List<ImageWithUrl> pairedImages = [];
+  
+  // Track newly added files with their corresponding ImageWithUrl
+  Map<ImageWithUrl, File> newImageMap = {};
+  
+  if (tempImageChanges.containsKey(site.name)) {
+    pairedImages = List.from(tempImageChanges[site.name]!);
+  } else {
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return Theme(
-          data: adminPageTheme,
-          child: Builder(builder: (context) {
-            return ListEdit<ImageWithUrl>(
-              title: "Edit Images",
-              items: pairedImages,
-              itemBuilder: (imageWithUrl) {
-                if (imageWithUrl.imageData != null &&
-                    imageWithUrl.imageData!.isNotEmpty) {
-                  return Image.memory(imageWithUrl.imageData!,
-                      fit: BoxFit.contain);
-                }
-                return Text(
-                    "You do not have any Images uplodaed to this site.");
-              },
-              addButtonText: "Add Images",
-              deleteButtonText: "Delete Images",
-              onAddItem: () async {
-                await pickImages();
-                if (images != null) {
-                  for (File imageFile in images!) {
-                    newlyAddedFiles.add(imageFile);
-                    Uint8List newFile = await imageFile.readAsBytes();
-                    pairedImages.add(ImageWithUrl(
-                      imageData: newFile,
-                      url: "",
-                    ));
-                  }
-                  images = null;
-                }
-              },
-              onSubmit: () async {
-                tempImageChanges[site.name] = List.from(pairedImages);
-                Set<String> remainingUrls = pairedImages
-                    .where((img) => img.url.isNotEmpty)
-                    .map((img) => img.url)
-                    .toSet();
-
-                List<String> urlsToDelete = originalUrls
-                    .where((url) => !remainingUrls.contains(url))
-                    .toList();
-                tempDeletedUrls[site.name] = urlsToDelete;
-              },
-            );
-          }),
-        );
-      },
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
-
-    setState(() {}); // Refresh the parent dialog
+    for (int i = 0; i < siteImageURLs.length; i++) {
+      Uint8List? imageData;
+      if (i < siteImages.length &&
+          siteImages[i] != null &&
+          siteImages[i]!.isNotEmpty) {
+        imageData = siteImages[i];
+      } else {
+        imageData = await app_state.getImage(siteImageURLs[i]);
+      }
+      if (imageData != null && siteImageURLs[i].isNotEmpty) {
+        pairedImages.add(ImageWithUrl(
+          imageData: imageData,
+          url: siteImageURLs[i],
+        ));
+      }
+    }
+    Navigator.pop(context);
   }
+  
+  await showDialog(
+    barrierDismissible: false,
+    context: context,
+    builder: (BuildContext context) {
+      return Theme(
+        data: adminPageTheme,
+        child: Builder(builder: (context) {
+          return ListEdit<ImageWithUrl>(
+            title: "Edit Images",
+            items: pairedImages,
+            itemBuilder: (imageWithUrl) {
+              if (imageWithUrl.imageData != null &&
+                  imageWithUrl.imageData!.isNotEmpty) {
+                return Image.memory(imageWithUrl.imageData!,
+                    fit: BoxFit.contain);
+              }
+              return Text(
+                  "You do not have any Images uploaded to this site.");
+            },
+            addButtonText: "Add Images",
+            deleteButtonText: "Delete Images",
+            onAddItem: () async {
+              await pickImages();
+              if (images != null) {
+                for (File imageFile in images!) {
+                  Uint8List newFile = await imageFile.readAsBytes();
+                  ImageWithUrl newImageWithUrl = ImageWithUrl(
+                    imageData: newFile,
+                    url: "",
+                  );
+                  pairedImages.add(newImageWithUrl);
+                  // Track the mapping between ImageWithUrl and File
+                  newImageMap[newImageWithUrl] = imageFile;
+                }
+                images = null;
+              }
+            },
+            onSubmit: () async {
+              tempImageChanges[site.name] = List.from(pairedImages);
+              
+              // Only add files to newlyAddedFiles if their ImageWithUrl is still in pairedImages
+              newlyAddedFiles.clear();
+              for (var entry in newImageMap.entries) {
+                if (pairedImages.contains(entry.key)) {
+                  newlyAddedFiles.add(entry.value);
+                }
+              }
+              
+              Set<String> remainingUrls = pairedImages
+                  .where((img) => img.url.isNotEmpty)
+                  .map((img) => img.url)
+                  .toSet();
+
+              List<String> urlsToDelete = originalUrls
+                  .where((url) => !remainingUrls.contains(url))
+                  .toList();
+              tempDeletedUrls[site.name] = urlsToDelete;
+            },
+          );
+        }),
+      );
+    },
+  );
+
+  setState(() {}); // Refresh the parent dialog
+}
 
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
@@ -1548,7 +1565,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     }
                   }
                   await app_state.saveFilterOrder();
-                },
+                }
               );
             },
           ),
