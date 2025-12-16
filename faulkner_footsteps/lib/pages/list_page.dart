@@ -63,39 +63,20 @@ class _ListPageState extends State<ListPage> {
   void initState() {
     getlocation();
     super.initState();
-    print("reached init state");
   }
 
   bool _initialized = false;
 
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print("Didchangedependencies ran");
     if (_initialized) return;
-    // print("reached didchange dependencies");
     app_state = Provider.of<ApplicationState>(context, listen: false);
     setState(() {
-      print("reached");
       activeFilters.clear();
       activeFilters.addAll(app_state.siteFilters);
-      for (var filter in activeFilters) {
-        print("Filter: ${filter.name}, Order: ${filter.order}");
-      }
-      for (int i = 0; i < activeFilters.length; i++) {
-        final filter = activeFilters[i];
-        print("[$i] Filter: ${filter.name}, Order: ${filter.order}");
-      }
     });
 
     _searchController = SearchController();
-
-    // app_state.addListener(() {
-    //   // print("historical sites list has changed!!!");
-    //   setState(() {
-    //     print("setdisplayitems called!");
-    //     setDisplayItems();
-    //   });
-    // });
     _initialized = true;
   }
 

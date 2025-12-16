@@ -4,7 +4,6 @@ import 'package:faulkner_footsteps/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:faulkner_footsteps/pages/list_page.dart';
 import 'package:faulkner_footsteps/pages/login_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:faulkner_footsteps/pages/hist_site_page.dart';
 import 'package:faulkner_footsteps/pages/start_page.dart';
 
