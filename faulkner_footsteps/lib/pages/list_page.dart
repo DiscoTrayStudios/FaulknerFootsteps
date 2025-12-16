@@ -111,27 +111,58 @@ class ListPage2 extends StatelessWidget {
   }
 
   @override
-  void initState() {
-    getlocation();
-    super.initState();
+  Widget build(BuildContext context) {
+    return _buildHomeContent(context);
   }
 }
 
 // class ListPage extends StatefulWidget {
 //   ListPage({super.key});
 
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialized) return;
-    app_state = Provider.of<ApplicationState>(context, listen: false);
-    setState(() {
-      activeFilters.clear();
-      activeFilters.addAll(app_state.siteFilters);
-    });
+//   @override
+//   State<ListPage> createState() => _ListPageState();
+// }
 
-    _searchController = SearchController();
-    _initialized = true;
-  }
+// class _ListPageState extends State<ListPage> {
+//   late ApplicationState app_state;
+//   static LatLng? _currentPosition;
+//   void getlocation() async {
+//     bool serviceEnabled;
+//     LocationPermission permission;
+//     serviceEnabled = await Geolocator.isLocationServiceEnabled();
+//     if (!serviceEnabled) {
+//       return Future.error('Location services are disabled.');
+//     }
+//     permission = await Geolocator.checkPermission();
+//     if (permission == LocationPermission.denied) {
+//       permission = await Geolocator.requestPermission();
+//       if (permission == LocationPermission.denied) {
+//         return Future.error('Location permissions are denied');
+//       }
+//     }
+//     if (permission == LocationPermission.deniedForever) {
+//       return Future.error(
+//           'Location permissions are permanently denied, we cannot request permissions.');
+//     }
+//     final LocationSettings locationSettings = LocationSettings(
+//       accuracy: LocationAccuracy.high,
+//     );
+//     Position position =
+//         await Geolocator.getCurrentPosition(locationSettings: locationSettings);
+//     double lat = position.latitude;
+//     double long = position.longitude;
+//     setState(() {
+//       _currentPosition = LatLng(lat, long);
+//     });
+//   }
+
+//   late Timer updateTimer;
+//   late SearchController _searchController;
+//   final Distance distance = new Distance();
+//   late Map<String, LatLng> siteLocations;
+//   late Map<String, double> siteDistances;
+//   late var sorted;
+//   late List<SiteFilter> activeFilters = [];
 
 //   @override
 //   void initState() {

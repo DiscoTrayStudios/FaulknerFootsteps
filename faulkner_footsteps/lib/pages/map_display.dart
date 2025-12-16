@@ -109,25 +109,6 @@ class MapDisplay2 extends StatelessWidget {
       locationDialog(context);
     });
 
-    // Only run this once
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = widget.centerPosition!;
-      _mapController.move(target, 14.0);
-      print("CenterPosition = ${widget.centerPosition}");
-      print("CurrentPosition = ${widget.currentPosition}");
-      print("Map Reopened? ");
-    });
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  void locationDialog(context) {
-    final appState = Provider.of<ApplicationState>(context, listen: false);
-
     // First, check if there are any sites close enough
     if (sorted.isEmpty || sorted.values.first >= 30000.0) {
       // No sites nearby or sites too far away
@@ -158,15 +139,8 @@ class MapDisplay2 extends StatelessWidget {
         ratingAmount: 0,
       ),
     );
-    final achievementState = AchievementsPageState();
-                          achievementState.visitPlace(
-                              context, selectedSite.name);
-                          setState(() {
-                            visited = true;
-                          });
 
     // Show the dialog
-     // Show the dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -260,8 +234,8 @@ class MapDisplay2 extends StatelessWidget {
                       // Visit Site Button
                       _buildRoundedButton(
                         context: context,
-                        text: "More Info",
-                        icon: Icons.info,
+                        text: "Visit Site",
+                        icon: Icons.location_on,
                         onPressed: () {
                           Navigator.of(context).pop();
                           // Navigate User to the HistSitePage
@@ -270,13 +244,69 @@ class MapDisplay2 extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => HistSitePage(
                                 histSite: selectedSite,
-                                currentPosition: widget.currentPosition,
+                                currentPosition: currentPosition,
                               ),
                             ),
                           );
                         },
                       ),
 
+                      // Discover Button
+                      _buildRoundedButton(
+                        context: context,
+                        text: "Discover",
+                        icon: Icons.emoji_events,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // Mark site as visited for achievements
+                          // achievementState.visitPlace(
+                          //     context, selectedSite.name);
+
+                          if (!appState.hasVisited(selectedSite.name)) {
+                            appState.saveAchievement(selectedSite.name);
+
+                            //if (!mounted) return;
+                          }
+
+                          // Show achievement popup dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surface,
+                              title: Text(
+                                "Achievement Unlocked!",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              content: Text(
+                                "You have visited ${selectedSite.name}.",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text(
+                                    "OK",
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          // visited = true;
+                        },
+                      ),
                     ],
                   ),
                 ),
