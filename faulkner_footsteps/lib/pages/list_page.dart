@@ -18,12 +18,14 @@ class ListPage2 extends StatelessWidget {
       required this.siteFilters,
       required this.activeFilters,
       required this.currentPosition,
-      required this.onFilterChanged});
+      required this.onFilterChanged,
+      required this.onFiltersCleared});
   final List<HistSite> sites;
   final Set<SiteFilter> siteFilters;
   final LatLng currentPosition;
   final Set<SiteFilter> activeFilters;
   final void Function(SiteFilter) onFilterChanged;
+  final void Function() onFiltersCleared;
 
   Widget _buildFilterBar(BuildContext context) {
     return Column(
@@ -54,7 +56,7 @@ class ListPage2 extends StatelessWidget {
         ),
         if (activeFilters.isNotEmpty)
           TextButton(
-            onPressed: () => activeFilters.clear(),
+            onPressed: () => onFiltersCleared(),
             child: Text(
               "Clear (${activeFilters.length})",
               style: Theme.of(context).textTheme.bodySmall,

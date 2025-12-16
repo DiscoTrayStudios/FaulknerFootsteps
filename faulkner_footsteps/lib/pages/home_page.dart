@@ -283,6 +283,11 @@ class _HomePageState extends State<HomePage> {
                               .removeWhere((f) => f.name == filter.name);
                     });
                   },
+                  onFiltersCleared: () {
+                    setState(() {
+                      activeFilters.clear();
+                    });
+                  },
                 )
               : MapDisplay2(
                   currentPosition: _currentPosition!,
