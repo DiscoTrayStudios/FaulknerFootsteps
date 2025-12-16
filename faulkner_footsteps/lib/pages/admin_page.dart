@@ -1547,7 +1547,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     }
                   }
                   await app_state.saveFilterOrder();
-                },
+                }
               );
             },
           ),
