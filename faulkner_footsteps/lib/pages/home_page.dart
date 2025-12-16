@@ -284,9 +284,10 @@ class _HomePageState extends State<HomePage> {
                     });
                   },
                 )
-              : MapDisplay(
+              : MapDisplay2(
                   currentPosition: _currentPosition!,
-                  initialPosition: _currentPosition!,
+                  sites: getFilteredSites(appState.historicalSites),
+                  centerPosition: _currentPosition!,
                 ),
           bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
