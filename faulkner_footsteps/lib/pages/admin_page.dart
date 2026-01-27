@@ -1462,7 +1462,7 @@ class _AdminListPageState extends State<AdminListPage> {
         });
   }
 
-  Widget _buildAdminContent() {
+  Widget _buildAdminContent(BuildContext context) {
     return Column(
       children: [
         Padding(
@@ -1471,7 +1471,7 @@ class _AdminListPageState extends State<AdminListPage> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            onPressed: _showAddSiteDialog,
+            onPressed: () => showSiteEditorDialog(context: context),
             child: Text(
               'Add New Historical Site',
               style: GoogleFonts.ultra(
@@ -1560,7 +1560,8 @@ class _AdminListPageState extends State<AdminListPage> {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Site'),
-                                onPressed: () => _showEditSiteDialog(site),
+                                onPressed: () => showSiteEditorDialog(
+                                    context: context, existingSite: site),
                               ),
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.delete),
@@ -1625,6 +1626,589 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
+  Future<void> saveEditedSite(
+    HistSite originalSite,
+    String newName,
+    String newDescription,
+    List<InfoText> blurbs,
+    List<SiteFilter> filters,
+    String latText,
+    String lngText,
+  ) async {
+    final originalName = originalSite.name;
+    final oldDocRef =
+        FirebaseFirestore.instance.collection('sites').doc(originalName);
+
+    // Load paired images from temp cache
+    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ?? [];
+
+    // Determine which URLs were removed
+    Set<String> remainingUrls = pairedImages
+        .where((img) => img.url.isNotEmpty)
+        .map((img) => img.url)
+        .toSet();
+
+    List<String> urlsToDelete = originalSite.imageUrls
+        .where((url) => !remainingUrls.contains(url))
+        .toList();
+
+    // Delete removed images from Firebase Storage
+    for (String url in urlsToDelete) {
+      try {
+        await storageRef.child(url).delete();
+      } catch (e) {
+        print("Error deleting image: $e");
+      }
+    }
+
+    // Start with existing URLs that remain
+    List<String> finalPaths = remainingUrls.toList();
+
+    // Upload newly added files
+    if (newlyAddedFiles.isNotEmpty) {
+      final folderName = originalName.replaceAll(' ', '');
+      List<String> randomNames =
+          List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+
+      List<String> uploadedPaths = await uploadImages(
+        folderName,
+        randomNames,
+        files: newlyAddedFiles,
+      );
+
+      finalPaths.addAll(uploadedPaths);
+    }
+
+    // Build updated site
+    final updatedSite = HistSite(
+      name: newName,
+      description: newDescription,
+      blurbs: blurbs,
+      imageUrls: finalPaths,
+      avgRating: originalSite.avgRating,
+      ratingAmount: originalSite.ratingAmount,
+      filters: filters.isEmpty ? [SiteFilter(name: "Other")] : filters,
+      lat: double.tryParse(latText) ?? originalSite.lat,
+      lng: double.tryParse(lngText) ?? originalSite.lng,
+    );
+
+    // If the name changed, delete old doc and create new one
+    if (originalName != newName) {
+      await oldDocRef.delete();
+      app_state.addSite(updatedSite);
+    } else {
+      // Update existing doc
+      app_state.addSite(updatedSite);
+    }
+
+    // Cleanup
+    newlyAddedFiles.clear();
+    tempImageChanges.remove(originalName);
+    tempDeletedUrls.remove(originalName);
+  }
+
+  Future<void> saveNewSite(
+    String name,
+    String description,
+    List<InfoText> blurbs,
+    List<SiteFilter> filters,
+    String latText,
+    String lngText,
+  ) async {
+    // Ensure folder name is Firebase-safe
+    final folderName = name.replaceAll(' ', '');
+
+    // These are the actual image files selected by the user
+    final List<File> filesToUpload = newlyAddedFiles;
+
+    // Generate random filenames for each image
+    List<String> randomNames =
+        List.generate(filesToUpload.length, (_) => uuid.v4());
+
+    // Upload all images for this new site
+    List<String> uploadedPaths = await uploadImages(
+      folderName,
+      randomNames,
+      files: filesToUpload,
+    );
+
+    final newSite = HistSite(
+      name: name,
+      description: description,
+      blurbs: blurbs,
+      imageUrls: uploadedPaths,
+      avgRating: 0.0,
+      ratingAmount: 0,
+      filters: filters.isEmpty ? [SiteFilter(name: "Other")] : filters,
+      lat: double.tryParse(latText) ?? 0.0,
+      lng: double.tryParse(lngText) ?? 0.0,
+    );
+
+    // Save to Firestore
+    app_state.addSite(newSite);
+
+    // Cleanup temporary image tracking
+    newlyAddedFiles.clear();
+    tempImageChanges.remove(name);
+    tempDeletedUrls.remove(name);
+  }
+
+  Future<void> showSiteEditorDialog({
+    required BuildContext context,
+    HistSite? existingSite,
+  }) async {
+    final isEdit = existingSite != null;
+
+    final ScrollController _scrollController = ScrollController();
+
+    // Text Controllers
+    final nameController =
+        TextEditingController(text: existingSite?.name ?? "");
+    final descriptionController =
+        TextEditingController(text: existingSite?.description ?? "");
+    final latController =
+        TextEditingController(text: existingSite?.lat.toString() ?? "0.0");
+    final lngController =
+        TextEditingController(text: existingSite?.lng.toString() ?? "0.0");
+
+    // Data
+    List<InfoText> blurbs = existingSite?.blurbs.toList() ?? [];
+    List<SiteFilter> chosenFilters = existingSite?.filters.toList() ?? [];
+
+    List<ImageWithUrl> pairedImages = [];
+
+    if (isEdit) {
+      // Load existing images
+      for (int i = 0; i < existingSite.imageUrls.length; i++) {
+        Uint8List? data = await app_state.getImage(existingSite.imageUrls[i]);
+        if (data != null) {
+          pairedImages.add(
+              ImageWithUrl(imageData: data, url: existingSite.imageUrls[i]));
+        }
+      }
+    }
+
+    // Error strings to help user
+    String? nameError;
+    String? descriptionError;
+    String? blurbError;
+    String? imageError;
+
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Theme(
+              data: adminPageTheme,
+              child: AlertDialog(
+                backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                title: Text(
+                  isEdit ? "Edit Historical Site" : "Add New Historical Site",
+                  style: GoogleFonts.ultra(
+                    textStyle:
+                        const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+                  ),
+                ),
+
+                content: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16, left: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(padding: const EdgeInsets.only(top: 8.0)),
+                          // Name
+                          TextField(
+                            controller: nameController,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: "Site Name",
+                              errorText: nameError,
+                            ),
+                            onChanged: (value) {
+                              if (value.isNotEmpty && nameError != null)
+                                setState(() {
+                                  nameError = null;
+                                });
+                            },
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // Description
+                          TextField(
+                            controller: descriptionController,
+                            maxLines: 3,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: "Description",
+                              errorText: descriptionError,
+                            ),
+                            onChanged: (value) {
+                              if (value.isNotEmpty && descriptionError != null)
+                                setState(() {
+                                  descriptionError = null;
+                                });
+                            },
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // Lat / Long
+                          ElevatedButton.icon(
+                              icon: const Icon(Icons.my_location),
+                              label: const Text("Get Location"),
+                              onPressed: () async {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (_) => const Center(
+                                      child: CircularProgressIndicator()),
+                                );
+                                bool serviceEnabled =
+                                    await Geolocator.isLocationServiceEnabled();
+                                if (!serviceEnabled) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Location services are disabled.')),
+                                  );
+                                  return;
+                                }
+                                LocationPermission permission =
+                                    await Geolocator.checkPermission();
+                                if (permission == LocationPermission.denied) {
+                                  permission =
+                                      await Geolocator.requestPermission();
+                                  if (permission == LocationPermission.denied) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Location permission denied.')),
+                                    );
+                                    return;
+                                  }
+                                }
+                                if (permission ==
+                                    LocationPermission.deniedForever) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Location permissions are permanently denied. Open settings to enable.')),
+                                  );
+                                  return;
+                                }
+                                try {
+                                  final pos =
+                                      await Geolocator.getCurrentPosition(
+                                          desiredAccuracy:
+                                              LocationAccuracy.best);
+                                  latController.text =
+                                      pos.latitude.toStringAsFixed(6);
+                                  lngController.text =
+                                      pos.longitude.toStringAsFixed(6);
+                                  setState(() {});
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('Failed to get position: $e')),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color.fromARGB(255, 218, 186, 130),
+                              )),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: latController,
+                                  keyboardType: TextInputType.numberWithOptions(
+                                      decimal: true),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Lat',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: TextField(
+                                  controller: lngController,
+                                  keyboardType: TextInputType.numberWithOptions(
+                                      decimal: true),
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Lng',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Blurb stuff
+                          if (blurbError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(blurbError!,
+                                  style: const TextStyle(
+                                      color: Colors.red, fontSize: 12)),
+                            ),
+
+                          ...blurbs.asMap().entries.map((entry) {
+                            int idx = entry.key;
+                            InfoText blurb = entry.value;
+                            return Column(
+                              children: [
+                                ListTile(
+                                  title: Text(
+                                    blurb.title,
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  subtitle: Text(
+                                    blurb.value,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () async {
+                                        await _showEditBlurbDialog(blurbs, idx);
+                                        setState(() {});
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        setState(() {
+                                          blurbs.removeAt(idx);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                )
+                              ],
+                            );
+                          }).toList(),
+
+                          ElevatedButton(
+                            onPressed: () async {
+                              await _showAddBlurbDialog(blurbs);
+                              if (blurbs.isNotEmpty && blurbError != null) {
+                                setState(() {
+                                  blurbError = null;
+                                });
+                              }
+                              setState(() {});
+                            },
+                            child: const Text("Add Blurb"),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Filter stuff
+                          MenuAnchor(
+                              style: MenuStyle(
+                                  side: WidgetStatePropertyAll(BorderSide(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
+                                      width: 2.0)),
+                                  shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20.0)))),
+                              builder: (BuildContext context,
+                                  MenuController controller, Widget? child) {
+                                return ElevatedButton(
+                                    onPressed: () {
+                                      if (controller.isOpen) {
+                                        controller.close();
+                                      } else {
+                                        controller.open();
+                                      }
+                                    },
+                                    child: const Text("Add Filters"));
+                              },
+                              menuChildren: acceptableFilters
+                                  .map((filter) => CheckboxMenuButton(
+                                      style: ButtonStyle(
+                                        textStyle: WidgetStatePropertyAll(
+                                            TextStyle(
+                                                color: Color.fromARGB(
+                                                    255, 72, 52, 52),
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                      closeOnActivate: false,
+                                      value: chosenFilters.contains(filter),
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          if (!chosenFilters.contains(filter)) {
+                                            chosenFilters.add(filter);
+                                            print(chosenFilters);
+                                          } else {
+                                            chosenFilters.remove(filter);
+                                            print(chosenFilters);
+                                          }
+                                        });
+                                      },
+                                      child: Text(
+                                        (filter.name),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      )))
+                                  .toList()),
+
+                          if (chosenFilters.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text('Selected Filters:'),
+                            Wrap(
+                              spacing: 8.0,
+                              runSpacing: 4.0,
+                              children: chosenFilters.map((filter) {
+                                return Chip(
+                                  label: Text(
+                                    filter.name,
+                                    style: const TextStyle(
+                                      color: Color.fromARGB(255, 255, 243, 228),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 107, 79, 79),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+
+                          const SizedBox(height: 20),
+
+                          // Image stuff
+                          ElevatedButton(
+                            onPressed: () async {
+                              await _showEditSiteImagesDialog(
+                                existingSite ??
+                                    HistSite(
+                                      name: nameController.text,
+                                      description: descriptionController.text,
+                                      blurbs: blurbs,
+                                      imageUrls: [],
+                                      avgRating: 0,
+                                      ratingAmount: 0,
+                                      filters: chosenFilters,
+                                      lat: 0,
+                                      lng: 0,
+                                    ),
+                              );
+                              setState(() {});
+                            },
+                            child: Text(isEdit ? "Edit Images" : "Add Images"),
+                          ),
+
+                          if (imageError != null)
+                            Text(imageError!,
+                                style: const TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Cancel
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                  // Save
+                  ElevatedButton(
+                    onPressed: () async {
+                      // Handle Error checks
+                      bool hasErrors = false;
+
+                      if (nameController.text.isEmpty) {
+                        nameError = "Site name is required";
+                        hasErrors = true;
+                      }
+                      if (descriptionController.text.isEmpty) {
+                        descriptionError = "Description is required";
+                        hasErrors = true;
+                      }
+                      if (blurbs.isEmpty) {
+                        blurbError = "At least one blurb is required";
+                        hasErrors = true;
+                      }
+
+                      // images tracked with tempImageChanges
+                      final imageList = tempImageChanges[nameController.text] ??
+                          tempImageChanges[existingSite?.name] ??
+                          [];
+
+                      if (imageList.isEmpty) {
+                        imageError = "At least one image is required";
+                        hasErrors = true;
+                      }
+
+                      if (hasErrors) {
+                        setState(() {});
+                        return;
+                      }
+
+                      // Save the site
+                      if (isEdit) {
+                        await saveEditedSite(
+                          existingSite,
+                          nameController.text,
+                          descriptionController.text,
+                          blurbs,
+                          chosenFilters,
+                          latController.text,
+                          lngController.text,
+                        );
+                      } else {
+                        await saveNewSite(
+                          nameController.text,
+                          descriptionController.text,
+                          blurbs,
+                          chosenFilters,
+                          latController.text,
+                          lngController.text,
+                        );
+                      }
+
+                      Navigator.pop(context);
+                    },
+                    child: Text(isEdit ? "Save Changes" : "Add Site"),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -1643,7 +2227,7 @@ class _AdminListPageState extends State<AdminListPage> {
           ),
         ),
         body: _selectedIndex == 0
-            ? _buildAdminContent()
+            ? _buildAdminContent(context)
             : MapDisplay2(
                 currentPosition: const LatLng(2, 2),
                 sites: app_state.historicalSites,
