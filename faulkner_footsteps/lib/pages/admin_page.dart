@@ -36,14 +36,11 @@ class ImageWithUrl {
 
 class _AdminListPageState extends State<AdminListPage> {
   late ApplicationState app_state;
-  late Timer updateTimer;
   int _selectedIndex = 0;
-  File? image;
   List<File>? images;
   final storage = FirebaseStorage.instance;
   final storageRef = FirebaseStorage.instance.ref();
   var uuid = Uuid();
-  // List<SiteFilter> chosenFilters = [];
   List<SiteFilter> acceptableFilters = [];
   List<File> newlyAddedFiles = [];
   Map<String, List<ImageWithUrl>> tempImageChanges = {};
@@ -52,9 +49,6 @@ class _AdminListPageState extends State<AdminListPage> {
   @override
   void initState() {
     super.initState();
-    updateTimer = Timer.periodic(const Duration(milliseconds: 500), _update);
-    // acceptableFilters.addAll(siteFilter.values);
-    // acceptableFilters.remove(siteFilter.Other);
   }
 
   void didChangeDependencies() {
@@ -65,20 +59,7 @@ class _AdminListPageState extends State<AdminListPage> {
     app_state.addListener(() {
       print("Appstate has changed!");
       setState(() {});
-      // if (mounted) {
-      // setState(() {
-      //   acceptableFilters =
-      //       app_state.siteFilters; // Might be necessary, idk really
-      // });
-      // }
     });
-  }
-
-  void _update(Timer timer) {
-    setState(() {});
-    if (app_state.historicalSites.isNotEmpty) {
-      updateTimer.cancel();
-    }
   }
 
   Future<void> pickImages() async {
@@ -127,22 +108,6 @@ class _AdminListPageState extends State<AdminListPage> {
       format: CompressFormat.jpeg,
     );
     return result != null ? File(result.path) : null;
-  }
-
-  Future pickImage() async {
-    try {
-      final image = await ImagePicker().pickImage(
-          source: ImageSource
-              .gallery); //could be camera so user can just take picture
-      if (image == null) return;
-      final imageTemporary = File(image.path);
-      setState(() {
-        this.image = imageTemporary;
-      });
-    } on PlatformException catch (e) {
-      print("Failed to pick image: $e");
-    }
-    setState(() {});
   }
 
   Future<List<String>> uploadImages(String folderName, List<String> fileNames,
@@ -197,47 +162,6 @@ class _AdminListPageState extends State<AdminListPage> {
     }
 
     return paths;
-  }
-
-  Future<String> uploadImage(String folderName, String fileName) async {
-// // Create the file metadata
-    final metadata = SettableMetadata(contentType: "image/jpeg");
-
-// Change the filename to a string that has no spaces
-    // folderName.replaceAll(' ', '_');
-    // folderName.split(" ").join("_");\
-    folderName = folderName.replaceAll(' ', '');
-    // print("${folderName.replaceAll(' ', '')}");
-    print("FileName: $folderName");
-
-// Upload file and metadata. Metadata ensures it is saved in jpg format
-    final path = "images/$folderName/$fileName.jpg";
-    final uploadTask = storageRef.child(path).putFile(image!, metadata);
-
-// Listen for state changes, errors, and completion of the upload.
-    uploadTask.snapshotEvents.listen((TaskSnapshot taskSnapshot) {
-      switch (taskSnapshot.state) {
-        case TaskState.running:
-          final progress =
-              100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
-          print("Upload is $progress% complete.");
-          break;
-        case TaskState.paused:
-          print("Upload is paused.");
-          break;
-        case TaskState.canceled:
-          print("Upload was canceled");
-          break;
-        case TaskState.error:
-          // Handle unsuccessful uploads
-          break;
-        case TaskState.success:
-          // Handle successful uploads on complete
-          // ...
-          break;
-      }
-    });
-    return path; //path is what we will store in firebase
   }
 
   void _onItemTapped(int index) {
@@ -476,7 +400,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                         ))
                                     .toList(),
                               ],
-
                               MenuAnchor(
                                   style: MenuStyle(
                                       backgroundColor: WidgetStatePropertyAll(
@@ -528,17 +451,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                                 .textTheme
                                                 .bodyMedium,
                                           )))
-                                      .toList()
-
-                                  // [
-                                  //   CheckboxMenuButton(
-                                  //       value: false,
-                                  //       onChanged: (bool? value) {
-                                  //         print("changed");
-                                  //       },
-                                  //       child: const Text("Message"))
-                                  // ]
-                                  ),
+                                      .toList()),
                               if (chosenFilters.isNotEmpty) ...[
                                 const SizedBox(height: 10),
                                 const Text('Selected Filters:'),
@@ -573,46 +486,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                 },
                                 child: const Text('Add Image'),
                               ),
-                              //NEW STUFF
-                              // ListView.builder(
-                              //   physics: NeverScrollableScrollPhysics(),
-                              //   shrinkWrap: true,
-                              //   itemCount: siteFilter.values.length,
-                              //   scrollDirection: Axis.horizontal,
-                              //   itemBuilder: (context, index) {
-                              //     siteFilter currentFilter = siteFilter.values[index];
-                              //     return Padding(
-                              //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
-                              //       // padding: EdgeInsets.all(8),
-                              //       child: FilterChip(
-                              //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
-                              //         disabledColor: Color.fromARGB(255, 255, 243, 228),
-                              //         selectedColor: Color.fromARGB(255, 107, 79, 79),
-                              //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
-                              //         label: Text(currentFilter.name,
-                              //             style: GoogleFonts.ultra(
-                              //                 textStyle: TextStyle(
-                              //                     color: chosenFilters
-                              //                             .contains(currentFilter)
-                              //                         ? Color.fromARGB(255, 255, 243, 228)
-                              //                         : Color.fromARGB(255, 107, 79, 79),
-                              //                     fontSize: 14))),
-                              //         selected: chosenFilters.contains(currentFilter),
-                              //         onSelected: (bool selected) {
-                              //           setState(() {
-                              //             if (selected) {
-                              //               chosenFilters.add(currentFilter);
-                              //             } else {
-                              //               chosenFilters.remove(currentFilter);
-                              //             }
-                              //             // filterChangedCallback();
-                              //           });
-                              //         },
-                              //       ),
-                              //     );
-                              //   },
-                              //   // children: siteFilter.values.map((siteFilter filter) {
-                              // ),
                               if (imageError != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -624,16 +497,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                     ),
                                   ),
                                 ),
-                              if (image != null) ...[
-                                const SizedBox(height: 10),
-                                const Text("Current Image: "),
-                                image != null
-                                    ? Image.file(image!,
-                                        width: 160,
-                                        height: 160,
-                                        fit: BoxFit.contain)
-                                    : FlutterLogo()
-                              ],
                               if (images != null) ...[
                                 SizedBox(
                                   //todo: replace with media.sizequery?
@@ -718,9 +581,6 @@ class _AdminListPageState extends State<AdminListPage> {
                             List<String> paths = await uploadImages(
                                 nameController.text, randomNames);
                             print("Made it past uploading images");
-                            // String randomName = uuid.v4();
-                            // String path =
-                            // await uploadImage(nameController.text, randomName);
                             final newSite = HistSite(
                               name: nameController.text,
                               description: descriptionController.text,
@@ -784,11 +644,6 @@ class _AdminListPageState extends State<AdminListPage> {
     final titleController = TextEditingController();
     final valueController = TextEditingController();
     final dateController = TextEditingController();
-
-    // preset the datecontroller
-    // I actually think its better to be left blank
-    // dateController.text =
-    //     "${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}";
 
     return showDialog(
       barrierDismissible: false,
@@ -1102,7 +957,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                 builder: (BuildContext context,
                                     MenuController controller, Widget? child) {
                                   return ElevatedButton(
-                                      // focusNode: _buttonFocusNode,
                                       onPressed: () {
                                         if (controller.isOpen) {
                                           controller.close();
@@ -1142,17 +996,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                               .textTheme
                                               .bodyMedium,
                                         )))
-                                    .toList()
-
-                                // [
-                                //   CheckboxMenuButton(
-                                //       value: false,
-                                //       onChanged: (bool? value) {
-                                //         print("changed");
-                                //       },
-                                //       child: const Text("Message"))
-                                // ]
-                                ),
+                                    .toList()),
                             if (chosenFilters.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               const Text('Selected Filters:'),
@@ -1180,9 +1024,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                 _showEditSiteImagesDialog(site);
                                 print("Reached post dialog opening");
                                 print("Length p: ${site.images.length}");
-                                for (Uint8List? s in site.images) {
-                                  //print("Image: $s");
-                                }
+                                for (Uint8List? s in site.images) {}
                               },
                               child: const Text('Edit Images'),
                             ),
@@ -1244,49 +1086,6 @@ class _AdminListPageState extends State<AdminListPage> {
                           }
                         }
 
-                        /* print("Length of site list: ${site.images.length}");
-
-                    // remove any deleted images
-                    // NOTE: it may be better to handle this when we delete items.
-                    // I could probably also reorder things there very easily.
-                    // TODO: see above
-                    if (site.images.length < site.imageUrls.length) {
-                      // this means that an image has been deleted
-                      print("If statement reached. An item has been deleted");
-                      for (Uint8List? image in copyOfOriginalImageList) {
-                        print("image being ichecked");
-                        // check to see if image is in current list
-                        if (!site.images.contains(image)) {
-                          // image is not in current images. thus we must remove it from imageurls
-                          final index = copyOfOriginalImageList.indexOf(image);
-
-                          // remove site.imageUrls[index] so the delted item is removed
-                          String url = site.imageUrls.removeAt(index);
-
-                          storageRef.child("$url").delete();
-                          print("Item deleted: $url");
-                          print("An item has been removed!");
-                        }
-                      }
-                    }
-
-                    // add all site images to the paths
-                    paths.addAll(site.imageUrls);
-                    print("Paths size: ${paths.length}");
-                    List<ImageWithUrl> pairedImages = [];
-                    for (int i = 0; i < site.imageUrls.length; i++) {
-                    Uint8List? imageData;
-                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
-                      imageData = site.images[i];
-                    } else {
-                      imageData = await app_state.getImage(site.imageUrls[i]);
-                    }
-                    if (imageData != null && site.imageUrls[i].isNotEmpty){
-                    pairedImages.add(ImageWithUrl(
-                      imageData: imageData,
-                      url: site.imageUrls[i],
-                    ));
-                    }} */
                         if (nameController.text.isNotEmpty &&
                             descriptionController.text.isNotEmpty) {
                           List<String> urlsToDelete = [];
@@ -1322,58 +1121,6 @@ class _AdminListPageState extends State<AdminListPage> {
                             paths.addAll(uploadedPaths);
                             newlyAddedFiles.clear();
                           }
-                          /*if (site.images != copyOfOriginalImageList) {
-                        // // delete the old images
-                        // print("Deleting ${refName}");
-                        // final path = "images/$refName";
-
-                        // storageRef.child("$path").delete();
-
-                        //make a name for each new image added.
-                        List<String> randomNames = [];
-                        int i = 0;
-                        if (images != null) {
-                          //if we never added new images, then we don't need to upload anything
-                          print("images length: ${images!.length}");
-                          while (i < images!.length) {
-                            randomNames.add(uuid.v4());
-                            print("Random name thing executed");
-                            i += 1;
-                          }
-                          // this will make the images into files so the images list can have them
-                          /*
-                            I suspect that the issue lies here. I am trying to re upload all the files
-                            within site.images. The issue is that they are in a Uint8list format. 
-                            It appears to work okay (it doesn't throw errors) but when I try to upload them, 
-                            it says they don't exist. When I try to view the images in the images list, my terminal
-                            starts speaking in tongues. 
-
-                            Solution Ideas: 
-                            I previously wanted to delete all files, then reupload them to the storage
-                            If I cannot reupload previously uploaded files (they are currently uint8list)
-                            then I need to only reupload the files I just added. 
-
-                            If a previously uploaded file is no longer withing the list, i need to delete it
-
-
-
-                            Current state: 
-                            The paths are replaced by only the new items
-                            Not terrible
-                          */
-
-                          //upload all new images
-                          final refName = originalName.replaceAll(' ', '');
-                          List<String> newPaths =
-                              await uploadImages(refName, randomNames);
-                          print("Made it past uploading images");
-
-                          // add new paths to old paths
-                          paths.addAll(newPaths);
-                        }
-                      }*/
-
-                          // add "other" if chosenFilters is empty
 
                           if (chosenFilters.isEmpty) {
                             chosenFilters.add(SiteFilter(name: "Other"));
@@ -1676,11 +1423,6 @@ class _AdminListPageState extends State<AdminListPage> {
                           color: Color.fromARGB(255, 76, 32, 8),
                         ),
                       ),
-                      // style: GoogleFonts.ultra(
-                      //     //   textStyle: const TextStyle(
-                      //     // color: Color.fromARGB(255, 76, 32, 8),
-                      //     // )
-                      //     ),
                     ),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -1930,7 +1672,6 @@ class _AdminListPageState extends State<AdminListPage> {
 
   @override
   void dispose() {
-    updateTimer.cancel();
     super.dispose();
   }
 }
