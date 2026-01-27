@@ -5,6 +5,7 @@ import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/main.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:faulkner_footsteps/widgets/profile_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating/flutter_rating.dart';
@@ -126,6 +127,7 @@ class _HistSitePage extends State<HistSitePage> {
     return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
+          actions: [ProfileButton()],
           leading: BackButton(
               // color: Color.fromARGB(255, 255, 243, 228),
               ),
@@ -178,7 +180,7 @@ class _HistSitePage extends State<HistSitePage> {
                                                 backgroundColor:
                                                     Theme.of(context)
                                                         .colorScheme
-                                                        .onPrimary,
+                                                        .secondary,
                                                 elevation: 5.0,
                                                 title: Container(
                                                   constraints: BoxConstraints(
