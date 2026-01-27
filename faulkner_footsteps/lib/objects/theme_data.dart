@@ -171,7 +171,7 @@ final ThemeData adminPageTheme = ThemeData(
   ),
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Color.fromARGB(255, 76, 32, 8),
-    selectionColor: Color.fromARGB(255, 76, 32, 8),
+    selectionColor: Color.fromARGB(255, 219, 196, 166),
     selectionHandleColor: Color.fromARGB(255, 76, 32, 8),
   ),
   checkboxTheme: CheckboxThemeData(
@@ -235,11 +235,3 @@ final ThemeData adminPageTheme = ThemeData(
   //         textStyle: WidgetStatePropertyAll(GoogleFonts.ultra(
   //             color: adminPageTheme.colorScheme.tertiary))))
 );
-
-/// TODO: 
-/// Change purple to brown on the buttons
-/// edit and delete blurb should be underneath blurb (taking up too much real estate rn)
-/// editing text should not be bolded. It should be a defaultish serif font. 
-/// Hard to see cancel button. it should have an "outer" button (like the other buttons do)
-/// Change white on the buttons to the nice brown. It will be easier to see and read
-/// 
