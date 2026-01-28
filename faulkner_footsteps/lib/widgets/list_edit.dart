@@ -173,6 +173,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                 },
                 child: Text(widget.deleteButtonText),
               ),
+              //const SizedBox(width: 8),
               if (widget.onAddItem != null)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -187,35 +188,40 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                   child: Text(widget.addButtonText),
                 ),
             ],
-          )
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  widget.items.clear();
+                  widget.items.addAll(originalList);
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancel'),
+              ),
+              //const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+                ),
+                onPressed: () async {
+                  widget.items.clear();
+                  widget.items.addAll(workingList);
+
+                  if (widget.onSubmit != null) {
+                    await widget.onSubmit!();
+                  }
+                  Navigator.pop(context);
+                },
+                child: const Text("Submit"),
+              ),
+            ],
+          ),
         ],
       ),
-      actionsAlignment: MainAxisAlignment.spaceEvenly,
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            widget.items.clear();
-            widget.items.addAll(originalList);
-            Navigator.pop(context);
-          },
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-          ),
-          onPressed: () async {
-            widget.items.clear();
-            widget.items.addAll(workingList);
-
-            if (widget.onSubmit != null) {
-              await widget.onSubmit!();
-            }
-            Navigator.pop(context);
-          },
-          child: const Text("Submit Changes"),
-        )
-      ],
     );
   }
 }
