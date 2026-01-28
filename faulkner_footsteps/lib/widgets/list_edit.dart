@@ -173,7 +173,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                 },
                 child: Text(widget.deleteButtonText),
               ),
-              const SizedBox(width: 8),
+              //const SizedBox(width: 8),
               if (widget.onAddItem != null)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -191,8 +191,8 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
           ),
           const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
             children: [
               ElevatedButton(
                 onPressed: () {
@@ -202,7 +202,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                 },
                 child: const Text('Cancel'),
               ),
-              const SizedBox(width: 8),
+              //const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 218, 186, 130),
@@ -217,7 +217,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                   Navigator.pop(context);
                 },
                 child: const Text("Submit"),
-              )
+              ),
             ],
           ),
         ],
