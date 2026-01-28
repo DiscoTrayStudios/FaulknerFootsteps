@@ -1818,7 +1818,6 @@ class _AdminListPageState extends State<AdminListPage> {
                             color: Color.fromARGB(255, 76, 32, 8)),
                       ),
                     ),
-
                     content: Scrollbar(
                       controller: _scrollController,
                       thumbVisibility: true,
@@ -1845,7 +1844,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                 },
                               ),
 
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 20),
 
                               // Description
                               TextField(
@@ -2043,9 +2042,32 @@ class _AdminListPageState extends State<AdminListPage> {
                                 child: const Text("Add Blurb"),
                               ),
 
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 10),
 
                               // Filter stuff
+
+                              if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                               MenuAnchor(
                                   style: MenuStyle(
                                       side: WidgetStatePropertyAll(BorderSide(
@@ -2069,7 +2091,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                             controller.open();
                                           }
                                         },
-                                        child: const Text("Add Filters"));
+                                        child: const Text("Edit Filters"));
                                   },
                                   menuChildren: acceptableFilters
                                       .map((filter) => CheckboxMenuButton(
@@ -2104,30 +2126,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                           )))
                                       .toList()),
 
-                              if (chosenFilters.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                const Text('Selected Filters:'),
-                                Wrap(
-                                  spacing: 8.0,
-                                  runSpacing: 4.0,
-                                  children: chosenFilters.map((filter) {
-                                    return Chip(
-                                      label: Text(
-                                        filter.name,
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 255, 243, 228),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 107, 79, 79),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
-
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 10),
 
                               // Image stuff
                               ElevatedButton(
@@ -2161,9 +2160,9 @@ class _AdminListPageState extends State<AdminListPage> {
                         ),
                       ),
                     ),
-
-                    // Cancel
+                    actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
+                      // Cancel
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text("Cancel"),
