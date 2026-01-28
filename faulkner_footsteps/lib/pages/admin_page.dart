@@ -503,7 +503,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                             controller.open();
                                           }
                                         },
-                                        child: const Text("Add Filters"));
+                                        child: const Text("Add"));
                                   },
                                   menuChildren: acceptableFilters
                                       .map((filter) => CheckboxMenuButton(
@@ -1110,7 +1110,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                           controller.open();
                                         }
                                       },
-                                      child: const Text("Add Filters"));
+                                      child: const Text("Ads"));
                                 },
                                 menuChildren: acceptableFilters
                                     .map((filter) => CheckboxMenuButton(
@@ -1481,8 +1481,8 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
               return Text(
                   "You do not have any Images uploaded to this site.");
             },
-            addButtonText: "Add Images",
-            deleteButtonText: "Delete Images",
+            addButtonText: "Add",
+            deleteButtonText: "Delete",
             onAddItem: () async {
               await pickImages();
               if (images != null) {
@@ -1538,34 +1538,36 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
           data: adminPageTheme,
           child: Builder(
             builder: (context) {
-              return ListEdit<SiteFilter>(
-                title: "Edit Filters",
-                items: app_state.siteFilters,
-                itemBuilder: (filter) => Text(filter.name,
-                    style: Theme.of(context).textTheme.bodyMedium),
-                addButtonText: "Add Filter",
-                deleteButtonText: "Delete Filters",
-                onAddItem: () async {
-                  await showAddFilterDialog();
-                },
-                onSubmit: () async {
-                  final snapshot = await FirebaseFirestore.instance
-                      .collection("filters")
-                      .get();
-                  Set<String> firestoreFilterNames = {};
-                  for (var doc in snapshot.docs) {
-                    firestoreFilterNames.add(doc.get("name"));
-                  }
-                  for (String filterName in firestoreFilterNames) {
-                    bool stillExists =
-                        app_state.siteFilters.any((f) => f.name == filterName);
-                    if (!stillExists) {
-                      await app_state.removeFilter(filterName);
-                      print("Removed filter: $filterName");
+              return SingleChildScrollView(
+                child: ListEdit<SiteFilter>(
+                  title: "Edit Filters",
+                  items: app_state.siteFilters,
+                  itemBuilder: (filter) => Text(filter.name,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  addButtonText: "Add",
+                  deleteButtonText: "Delete",
+                  onAddItem: () async {
+                    await showAddFilterDialog();
+                  },
+                  onSubmit: () async {
+                    final snapshot = await FirebaseFirestore.instance
+                        .collection("filters")
+                        .get();
+                    Set<String> firestoreFilterNames = {};
+                    for (var doc in snapshot.docs) {
+                      firestoreFilterNames.add(doc.get("name"));
                     }
+                    for (String filterName in firestoreFilterNames) {
+                      bool stillExists =
+                          app_state.siteFilters.any((f) => f.name == filterName);
+                      if (!stillExists) {
+                        await app_state.removeFilter(filterName);
+                        print("Removed filter: $filterName");
+                      }
+                    }
+                    await app_state.saveFilterOrder();
                   }
-                  await app_state.saveFilterOrder();
-                }
+                ),
               );
             },
           ),
