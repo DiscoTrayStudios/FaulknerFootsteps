@@ -1110,7 +1110,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                           controller.open();
                                         }
                                       },
-                                      child: const Text("Ads"));
+                                      child: const Text("Add Filter"));
                                 },
                                 menuChildren: acceptableFilters
                                     .map((filter) => CheckboxMenuButton(
