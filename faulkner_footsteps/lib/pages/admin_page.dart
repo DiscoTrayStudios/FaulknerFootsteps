@@ -1749,8 +1749,8 @@ class _AdminListPageState extends State<AdminListPage> {
 
     // Cleanup temporary image tracking
     newlyAddedFiles.clear();
-    tempImageChanges.remove(name);
-    tempDeletedUrls.remove(name);
+    tempImageChanges.remove("new_site");
+    tempDeletedUrls.remove("new_site");
   }
 
   Future<void> showSiteEditorDialog({
@@ -1777,6 +1777,9 @@ class _AdminListPageState extends State<AdminListPage> {
 
     List<ImageWithUrl> pairedImages = [];
 
+    // Exists for a unifide key for storing in the pairedImages map.
+    final String pairKey = existingSite?.name ?? "new_site";
+
     if (isEdit) {
       // Load existing images
       for (int i = 0; i < existingSite.imageUrls.length; i++) {
@@ -1802,405 +1805,433 @@ class _AdminListPageState extends State<AdminListPage> {
           builder: (context, setState) {
             return Theme(
               data: adminPageTheme,
-              child: AlertDialog(
-                backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-                title: Text(
-                  isEdit ? "Edit Historical Site" : "Add New Historical Site",
-                  style: GoogleFonts.ultra(
-                    textStyle:
-                        const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                    title: Text(
+                      isEdit
+                          ? "Edit Historical Site"
+                          : "Add New Historical Site",
+                      style: GoogleFonts.ultra(
+                        textStyle: const TextStyle(
+                            color: Color.fromARGB(255, 76, 32, 8)),
+                      ),
+                    ),
 
-                content: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 16, left: 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(padding: const EdgeInsets.only(top: 8.0)),
-                          // Name
-                          TextField(
-                            controller: nameController,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: InputDecoration(
-                              labelText: "Site Name",
-                              errorText: nameError,
-                            ),
-                            onChanged: (value) {
-                              if (value.isNotEmpty && nameError != null)
-                                setState(() {
-                                  nameError = null;
-                                });
-                            },
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // Description
-                          TextField(
-                            controller: descriptionController,
-                            maxLines: 3,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration: InputDecoration(
-                              labelText: "Description",
-                              errorText: descriptionError,
-                            ),
-                            onChanged: (value) {
-                              if (value.isNotEmpty && descriptionError != null)
-                                setState(() {
-                                  descriptionError = null;
-                                });
-                            },
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // Lat / Long
-                          ElevatedButton.icon(
-                              icon: const Icon(Icons.my_location),
-                              label: const Text("Get Location"),
-                              onPressed: () async {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (_) => const Center(
-                                      child: CircularProgressIndicator()),
-                                );
-                                bool serviceEnabled =
-                                    await Geolocator.isLocationServiceEnabled();
-                                if (!serviceEnabled) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            'Location services are disabled.')),
-                                  );
-                                  return;
-                                }
-                                LocationPermission permission =
-                                    await Geolocator.checkPermission();
-                                if (permission == LocationPermission.denied) {
-                                  permission =
-                                      await Geolocator.requestPermission();
-                                  if (permission == LocationPermission.denied) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Location permission denied.')),
-                                    );
-                                    return;
-                                  }
-                                }
-                                if (permission ==
-                                    LocationPermission.deniedForever) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text(
-                                            'Location permissions are permanently denied. Open settings to enable.')),
-                                  );
-                                  return;
-                                }
-                                try {
-                                  final pos =
-                                      await Geolocator.getCurrentPosition(
-                                          desiredAccuracy:
-                                              LocationAccuracy.best);
-                                  latController.text =
-                                      pos.latitude.toStringAsFixed(6);
-                                  lngController.text =
-                                      pos.longitude.toStringAsFixed(6);
-                                  setState(() {});
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pop();
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('Failed to get position: $e')),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromARGB(255, 218, 186, 130),
-                              )),
-                          const SizedBox(height: 10),
-                          Row(
+                    content: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16, left: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
                             children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: latController,
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Lat',
-                                  ),
+                              Padding(padding: const EdgeInsets.only(top: 8.0)),
+                              // Name
+                              TextField(
+                                controller: nameController,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: InputDecoration(
+                                  labelText: "Site Name",
+                                  errorText: nameError,
                                 ),
+                                onChanged: (value) {
+                                  if (value.isNotEmpty && nameError != null)
+                                    setState(() {
+                                      nameError = null;
+                                    });
+                                },
                               ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: TextField(
-                                  controller: lngController,
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Lng',
-                                  ),
+
+                              const SizedBox(height: 10),
+
+                              // Description
+                              TextField(
+                                controller: descriptionController,
+                                maxLines: 3,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: InputDecoration(
+                                  labelText: "Description",
+                                  errorText: descriptionError,
                                 ),
+                                onChanged: (value) {
+                                  if (value.isNotEmpty &&
+                                      descriptionError != null)
+                                    setState(() {
+                                      descriptionError = null;
+                                    });
+                                },
                               ),
-                              const SizedBox(width: 8),
-                            ],
-                          ),
 
-                          const SizedBox(height: 20),
+                              const SizedBox(height: 10),
 
-                          // Blurb stuff
-                          if (blurbError != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(blurbError!,
-                                  style: const TextStyle(
-                                      color: Colors.red, fontSize: 12)),
-                            ),
-
-                          ...blurbs.asMap().entries.map((entry) {
-                            int idx = entry.key;
-                            InfoText blurb = entry.value;
-                            return Column(
-                              children: [
-                                ListTile(
-                                  title: Text(
-                                    blurb.title,
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  subtitle: Text(
-                                    blurb.value,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () async {
-                                        await _showEditBlurbDialog(blurbs, idx);
-                                        setState(() {});
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () {
-                                        setState(() {
-                                          blurbs.removeAt(idx);
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                )
-                              ],
-                            );
-                          }).toList(),
-
-                          ElevatedButton(
-                            onPressed: () async {
-                              await _showAddBlurbDialog(blurbs);
-                              if (blurbs.isNotEmpty && blurbError != null) {
-                                setState(() {
-                                  blurbError = null;
-                                });
-                              }
-                              setState(() {});
-                            },
-                            child: const Text("Add Blurb"),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Filter stuff
-                          MenuAnchor(
-                              style: MenuStyle(
-                                  side: WidgetStatePropertyAll(BorderSide(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
-                                      width: 2.0)),
-                                  shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20.0)))),
-                              builder: (BuildContext context,
-                                  MenuController controller, Widget? child) {
-                                return ElevatedButton(
-                                    onPressed: () {
-                                      if (controller.isOpen) {
-                                        controller.close();
-                                      } else {
-                                        controller.open();
+                              // Lat / Long
+                              ElevatedButton.icon(
+                                  icon: const Icon(Icons.my_location),
+                                  label: const Text("Get Location"),
+                                  onPressed: () async {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(
+                                          child: CircularProgressIndicator()),
+                                    );
+                                    bool serviceEnabled = await Geolocator
+                                        .isLocationServiceEnabled();
+                                    if (!serviceEnabled) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Location services are disabled.')),
+                                      );
+                                      return;
+                                    }
+                                    LocationPermission permission =
+                                        await Geolocator.checkPermission();
+                                    if (permission ==
+                                        LocationPermission.denied) {
+                                      permission =
+                                          await Geolocator.requestPermission();
+                                      if (permission ==
+                                          LocationPermission.denied) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Location permission denied.')),
+                                        );
+                                        return;
                                       }
-                                    },
-                                    child: const Text("Add Filters"));
-                              },
-                              menuChildren: acceptableFilters
-                                  .map((filter) => CheckboxMenuButton(
-                                      style: ButtonStyle(
-                                        textStyle: WidgetStatePropertyAll(
-                                            TextStyle(
-                                                color: Color.fromARGB(
-                                                    255, 72, 52, 52),
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold)),
+                                    }
+                                    if (permission ==
+                                        LocationPermission.deniedForever) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Location permissions are permanently denied. Open settings to enable.')),
+                                      );
+                                      return;
+                                    }
+                                    try {
+                                      final pos =
+                                          await Geolocator.getCurrentPosition(
+                                              desiredAccuracy:
+                                                  LocationAccuracy.best);
+                                      latController.text =
+                                          pos.latitude.toStringAsFixed(6);
+                                      lngController.text =
+                                          pos.longitude.toStringAsFixed(6);
+                                      setState(() {});
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pop();
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Failed to get position: $e')),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 218, 186, 130),
+                                  )),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: latController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lat',
                                       ),
-                                      closeOnActivate: false,
-                                      value: chosenFilters.contains(filter),
-                                      onChanged: (bool? value) {
-                                        setState(() {
-                                          if (!chosenFilters.contains(filter)) {
-                                            chosenFilters.add(filter);
-                                            print(chosenFilters);
-                                          } else {
-                                            chosenFilters.remove(filter);
-                                            print(chosenFilters);
-                                          }
-                                        });
-                                      },
-                                      child: Text(
-                                        (filter.name),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: lngController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lng',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Blurb stuff
+                              if (blurbError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(blurbError!,
+                                      style: const TextStyle(
+                                          color: Colors.red, fontSize: 12)),
+                                ),
+
+                              ...blurbs.asMap().entries.map((entry) {
+                                int idx = entry.key;
+                                InfoText blurb = entry.value;
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      title: Text(blurb.title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium),
+                                      subtitle: Text(
+                                        blurb.value,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium,
-                                      )))
-                                  .toList()),
-
-                          if (chosenFilters.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            const Text('Selected Filters:'),
-                            Wrap(
-                              spacing: 8.0,
-                              runSpacing: 4.0,
-                              children: chosenFilters.map((filter) {
-                                return Chip(
-                                  label: Text(
-                                    filter.name,
-                                    style: const TextStyle(
-                                      color: Color.fromARGB(255, 255, 243, 228),
-                                      fontSize: 12,
+                                      ),
                                     ),
-                                  ),
-                                  backgroundColor:
-                                      const Color.fromARGB(255, 107, 79, 79),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () async {
+                                            await _showEditBlurbDialog(
+                                                blurbs, idx);
+                                            setState(() {});
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () {
+                                            setState(() {
+                                              blurbs.removeAt(idx);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    )
+                                  ],
                                 );
                               }).toList(),
-                            ),
-                          ],
 
-                          const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _showAddBlurbDialog(blurbs);
+                                  if (blurbs.isNotEmpty && blurbError != null) {
+                                    setState(() {
+                                      blurbError = null;
+                                    });
+                                  }
+                                  setState(() {});
+                                },
+                                child: const Text("Add Blurb"),
+                              ),
 
-                          // Image stuff
-                          ElevatedButton(
-                            onPressed: () async {
-                              await _showEditSiteImagesDialog(
-                                existingSite ??
-                                    HistSite(
-                                      name: nameController.text,
-                                      description: descriptionController.text,
-                                      blurbs: blurbs,
-                                      imageUrls: [],
-                                      avgRating: 0,
-                                      ratingAmount: 0,
-                                      filters: chosenFilters,
-                                      lat: 0,
-                                      lng: 0,
-                                    ),
-                              );
-                              setState(() {});
-                            },
-                            child: Text(isEdit ? "Edit Images" : "Add Images"),
+                              const SizedBox(height: 20),
+
+                              // Filter stuff
+                              MenuAnchor(
+                                  style: MenuStyle(
+                                      side: WidgetStatePropertyAll(BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
+                                          width: 2.0)),
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20.0)))),
+                                  builder: (BuildContext context,
+                                      MenuController controller,
+                                      Widget? child) {
+                                    return ElevatedButton(
+                                        onPressed: () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        },
+                                        child: const Text("Add Filters"));
+                                  },
+                                  menuChildren: acceptableFilters
+                                      .map((filter) => CheckboxMenuButton(
+                                          style: ButtonStyle(
+                                            textStyle: WidgetStatePropertyAll(
+                                                TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 72, 52, 52),
+                                                    fontSize: 16.0,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ),
+                                          closeOnActivate: false,
+                                          value: chosenFilters.contains(filter),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              if (!chosenFilters
+                                                  .contains(filter)) {
+                                                chosenFilters.add(filter);
+                                                print(chosenFilters);
+                                              } else {
+                                                chosenFilters.remove(filter);
+                                                print(chosenFilters);
+                                              }
+                                            });
+                                          },
+                                          child: Text(
+                                            (filter.name),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium,
+                                          )))
+                                      .toList()),
+
+                              if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+
+                              const SizedBox(height: 20),
+
+                              // Image stuff
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _showEditSiteImagesDialog(
+                                    existingSite ??
+                                        HistSite(
+                                          name: pairKey,
+                                          description:
+                                              descriptionController.text,
+                                          blurbs: blurbs,
+                                          imageUrls: [],
+                                          avgRating: 0,
+                                          ratingAmount: 0,
+                                          filters: chosenFilters,
+                                          lat: 0,
+                                          lng: 0,
+                                        ),
+                                  );
+                                  setState(() {});
+                                },
+                                child:
+                                    Text(isEdit ? "Edit Images" : "Add Images"),
+                              ),
+
+                              if (imageError != null)
+                                Text(imageError!,
+                                    style: const TextStyle(color: Colors.red)),
+                            ],
                           ),
-
-                          if (imageError != null)
-                            Text(imageError!,
-                                style: const TextStyle(color: Colors.red)),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // Cancel
-                actions: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Cancel"),
-                  ),
-                  // Save
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Handle Error checks
-                      bool hasErrors = false;
+                    // Cancel
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Cancel"),
+                      ),
+                      // Save
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Handle Error checks
+                          bool hasErrors = false;
 
-                      if (nameController.text.isEmpty) {
-                        nameError = "Site name is required";
-                        hasErrors = true;
-                      }
-                      if (descriptionController.text.isEmpty) {
-                        descriptionError = "Description is required";
-                        hasErrors = true;
-                      }
-                      if (blurbs.isEmpty) {
-                        blurbError = "At least one blurb is required";
-                        hasErrors = true;
-                      }
+                          if (nameController.text.isEmpty) {
+                            nameError = "Site name is required";
+                            hasErrors = true;
+                          }
+                          if (descriptionController.text.isEmpty) {
+                            descriptionError = "Description is required";
+                            hasErrors = true;
+                          }
+                          if (blurbs.isEmpty) {
+                            blurbError = "At least one blurb is required";
+                            hasErrors = true;
+                          }
 
-                      // images tracked with tempImageChanges
-                      final imageList = tempImageChanges[nameController.text] ??
-                          tempImageChanges[existingSite?.name] ??
-                          [];
+                          // images tracked with tempImageChanges
+                          final imageList =
+                              tempImageChanges[nameController.text] ??
+                                  tempImageChanges[existingSite?.name] ??
+                                  [];
 
-                      if (imageList.isEmpty) {
-                        imageError = "At least one image is required";
-                        hasErrors = true;
-                      }
+                          if (imageList.isEmpty) {
+                            imageError = "At least one image is required";
+                            hasErrors = true;
+                          }
 
-                      if (hasErrors) {
-                        setState(() {});
-                        return;
-                      }
+                          if (hasErrors) {
+                            setState(() {});
+                            return;
+                          }
 
-                      // Save the site
-                      if (isEdit) {
-                        await saveEditedSite(
-                          existingSite,
-                          nameController.text,
-                          descriptionController.text,
-                          blurbs,
-                          chosenFilters,
-                          latController.text,
-                          lngController.text,
-                        );
-                      } else {
-                        await saveNewSite(
-                          nameController.text,
-                          descriptionController.text,
-                          blurbs,
-                          chosenFilters,
-                          latController.text,
-                          lngController.text,
-                        );
-                      }
+                          // Save the site
+                          if (isEdit) {
+                            await saveEditedSite(
+                              existingSite,
+                              nameController.text,
+                              descriptionController.text,
+                              blurbs,
+                              chosenFilters,
+                              latController.text,
+                              lngController.text,
+                            );
+                          } else {
+                            await saveNewSite(
+                              nameController.text,
+                              descriptionController.text,
+                              blurbs,
+                              chosenFilters,
+                              latController.text,
+                              lngController.text,
+                            );
+                          }
 
-                      Navigator.pop(context);
-                    },
-                    child: Text(isEdit ? "Save Changes" : "Add Site"),
-                  ),
-                ],
+                          Navigator.pop(context);
+                        },
+                        child: Text(isEdit ? "Save Changes" : "Add Site"),
+                      ),
+                    ],
+                  );
+                },
               ),
             );
           },
