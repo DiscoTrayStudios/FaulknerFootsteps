@@ -1797,6 +1797,10 @@ class _AdminListPageState extends State<AdminListPage> {
     String? blurbError;
     String? imageError;
 
+    // Focus Nodes for lat / lang fields
+    final latFocus = FocusNode();
+    final lngFocus = FocusNode();
+
     return showDialog(
       barrierDismissible: false,
       context: context,
@@ -1807,6 +1811,26 @@ class _AdminListPageState extends State<AdminListPage> {
               data: adminPageTheme,
               child: Builder(
                 builder: (context) {
+                  latFocus.addListener(() {
+                    if (!latFocus.hasFocus) {
+                      if (latController.text.isEmpty) {
+                        latController.text = "0.0";
+                        latController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: latController.text.length),
+                        );
+                      }
+                    }
+                  });
+                  lngFocus.addListener(() {
+                    if (!lngFocus.hasFocus) {
+                      if (lngController.text.isEmpty) {
+                        lngController.text = "0.0";
+                        lngController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: lngController.text.length),
+                        );
+                      }
+                    }
+                  });
                   return AlertDialog(
                     backgroundColor: const Color.fromARGB(255, 238, 214, 196),
                     title: Text(
@@ -1830,19 +1854,21 @@ class _AdminListPageState extends State<AdminListPage> {
                               Padding(padding: const EdgeInsets.only(top: 8.0)),
                               // Name
                               TextField(
-                                controller: nameController,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                decoration: InputDecoration(
-                                  labelText: "Site Name",
-                                  errorText: nameError,
-                                ),
-                                onChanged: (value) {
-                                  if (value.isNotEmpty && nameError != null)
-                                    setState(() {
-                                      nameError = null;
-                                    });
-                                },
-                              ),
+                                  controller: nameController,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: InputDecoration(
+                                    labelText: "Site Name",
+                                    errorText: nameError,
+                                  ),
+                                  onChanged: (value) {
+                                    if (value.isNotEmpty)
+                                      setState(() {
+                                        nameError = null;
+                                      });
+                                    else {
+                                      nameError = "Site name is required";
+                                    }
+                                  }),
 
                               const SizedBox(height: 20),
 
@@ -1856,11 +1882,14 @@ class _AdminListPageState extends State<AdminListPage> {
                                   errorText: descriptionError,
                                 ),
                                 onChanged: (value) {
-                                  if (value.isNotEmpty &&
-                                      descriptionError != null)
+                                  if (value.isNotEmpty)
                                     setState(() {
                                       descriptionError = null;
                                     });
+                                  else {
+                                    descriptionError =
+                                        "Description is required";
+                                  }
                                 },
                               ),
 
@@ -1945,6 +1974,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                 children: [
                                   Expanded(
                                     child: TextField(
+                                      focusNode: latFocus,
                                       controller: latController,
                                       keyboardType:
                                           TextInputType.numberWithOptions(
@@ -1960,6 +1990,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                   const SizedBox(width: 20),
                                   Expanded(
                                     child: TextField(
+                                      focusNode: lngFocus,
                                       controller: lngController,
                                       keyboardType:
                                           TextInputType.numberWithOptions(
@@ -2032,10 +2063,13 @@ class _AdminListPageState extends State<AdminListPage> {
                               ElevatedButton(
                                 onPressed: () async {
                                   await _showAddBlurbDialog(blurbs);
-                                  if (blurbs.isNotEmpty && blurbError != null) {
+                                  if (blurbs.isNotEmpty) {
                                     setState(() {
                                       blurbError = null;
                                     });
+                                  } else {
+                                    blurbError =
+                                        "At least one blurb is required";
                                   }
                                   setState(() {});
                                 },
@@ -2169,63 +2203,67 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                       // Save
                       ElevatedButton(
-                        onPressed: () async {
-                          // Handle Error checks
-                          bool hasErrors = false;
+                        onPressed: nameController.text.isEmpty ||
+                                descriptionController.text.isEmpty ||
+                                blurbs.isEmpty
+                            ? null
+                            : () async {
+                                // Handle Error checks
+                                bool hasErrors = false;
 
-                          if (nameController.text.isEmpty) {
-                            nameError = "Site name is required";
-                            hasErrors = true;
-                          }
-                          if (descriptionController.text.isEmpty) {
-                            descriptionError = "Description is required";
-                            hasErrors = true;
-                          }
-                          if (blurbs.isEmpty) {
-                            blurbError = "At least one blurb is required";
-                            hasErrors = true;
-                          }
+                                if (nameController.text.isEmpty) {
+                                  nameError = "Site name is required";
+                                  hasErrors = true;
+                                }
+                                if (descriptionController.text.isEmpty) {
+                                  descriptionError = "Description is required";
+                                  hasErrors = true;
+                                }
+                                if (blurbs.isEmpty) {
+                                  blurbError = "At least one blurb is required";
+                                  hasErrors = true;
+                                }
 
-                          // images tracked with tempImageChanges
-                          final imageList =
-                              tempImageChanges[nameController.text] ??
-                                  tempImageChanges[existingSite?.name] ??
-                                  [];
+                                // images tracked with tempImageChanges
+                                final imageList =
+                                    tempImageChanges[nameController.text] ??
+                                        tempImageChanges[existingSite?.name] ??
+                                        [];
 
-                          if (imageList.isEmpty) {
-                            imageError = "At least one image is required";
-                            hasErrors = true;
-                          }
+                                if (imageList.isEmpty) {
+                                  imageError = "At least one image is required";
+                                  hasErrors = true;
+                                }
 
-                          if (hasErrors) {
-                            setState(() {});
-                            return;
-                          }
+                                if (hasErrors) {
+                                  setState(() {});
+                                  return;
+                                }
 
-                          // Save the site
-                          if (isEdit) {
-                            await saveEditedSite(
-                              existingSite,
-                              nameController.text,
-                              descriptionController.text,
-                              blurbs,
-                              chosenFilters,
-                              latController.text,
-                              lngController.text,
-                            );
-                          } else {
-                            await saveNewSite(
-                              nameController.text,
-                              descriptionController.text,
-                              blurbs,
-                              chosenFilters,
-                              latController.text,
-                              lngController.text,
-                            );
-                          }
+                                // Save the site
+                                if (isEdit) {
+                                  await saveEditedSite(
+                                    existingSite,
+                                    nameController.text,
+                                    descriptionController.text,
+                                    blurbs,
+                                    chosenFilters,
+                                    latController.text,
+                                    lngController.text,
+                                  );
+                                } else {
+                                  await saveNewSite(
+                                    nameController.text,
+                                    descriptionController.text,
+                                    blurbs,
+                                    chosenFilters,
+                                    latController.text,
+                                    lngController.text,
+                                  );
+                                }
 
-                          Navigator.pop(context);
-                        },
+                                Navigator.pop(context);
+                              },
                         child: Text(isEdit ? "Save Changes" : "Add Site"),
                       ),
                     ],
