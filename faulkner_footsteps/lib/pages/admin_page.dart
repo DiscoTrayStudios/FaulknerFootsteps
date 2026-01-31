@@ -1780,6 +1780,8 @@ class _AdminListPageState extends State<AdminListPage> {
     // Exists for a unifide key for storing in the pairedImages map.
     final String pairKey = existingSite?.name ?? "new_site";
 
+    // detects when the user can submit the form
+
     if (isEdit) {
       // Load existing images
       for (int i = 0; i < existingSite.imageUrls.length; i++) {
@@ -1805,32 +1807,61 @@ class _AdminListPageState extends State<AdminListPage> {
       barrierDismissible: false,
       context: context,
       builder: (context) {
+        latFocus.addListener(() {
+          if (!latFocus.hasFocus) {
+            if (latController.text.isEmpty) {
+              latController.text = "0.0";
+              latController.selection = TextSelection.fromPosition(
+                TextPosition(offset: latController.text.length),
+              );
+            }
+          }
+        });
+        lngFocus.addListener(() {
+          if (!lngFocus.hasFocus) {
+            if (lngController.text.isEmpty) {
+              lngController.text = "0.0";
+              lngController.selection = TextSelection.fromPosition(
+                TextPosition(offset: lngController.text.length),
+              );
+            }
+          }
+        });
+
         return StatefulBuilder(
           builder: (context, setState) {
             return Theme(
               data: adminPageTheme,
               child: Builder(
                 builder: (context) {
-                  latFocus.addListener(() {
-                    if (!latFocus.hasFocus) {
-                      if (latController.text.isEmpty) {
-                        latController.text = "0.0";
-                        latController.selection = TextSelection.fromPosition(
-                          TextPosition(offset: latController.text.length),
-                        );
+                  List<dynamic> getImageList() {
+                    final editedImages = tempImageChanges[pairKey];
+
+                    if (isEdit) {
+                      // If user has edited images, use those
+                      if (editedImages != null && editedImages.isNotEmpty) {
+                        return editedImages;
                       }
+
+                      // Otherwise fall back to existing images
+                      return existingSite!.imageUrls;
                     }
-                  });
-                  lngFocus.addListener(() {
-                    if (!lngFocus.hasFocus) {
-                      if (lngController.text.isEmpty) {
-                        lngController.text = "0.0";
-                        lngController.selection = TextSelection.fromPosition(
-                          TextPosition(offset: lngController.text.length),
-                        );
-                      }
-                    }
-                  });
+
+                    // New site: only use temp images
+                    return editedImages ?? [];
+                  }
+
+                  bool checkCanSubmit() {
+                    final imageList = getImageList();
+
+                    return nameController.text.isNotEmpty &&
+                        descriptionController.text.isNotEmpty &&
+                        blurbs.isNotEmpty &&
+                        imageList.isNotEmpty;
+                  }
+
+                  bool canSubmit = checkCanSubmit();
+
                   return AlertDialog(
                     backgroundColor: const Color.fromARGB(255, 238, 214, 196),
                     title: Text(
@@ -1861,13 +1892,14 @@ class _AdminListPageState extends State<AdminListPage> {
                                     errorText: nameError,
                                   ),
                                   onChanged: (value) {
-                                    if (value.isNotEmpty)
-                                      setState(() {
-                                        nameError = null;
-                                      });
-                                    else {
+                                    if (value.isNotEmpty) {
+                                      nameError = null;
+                                    } else {
                                       nameError = "Site name is required";
                                     }
+                                    setState(() {
+                                      canSubmit = checkCanSubmit();
+                                    });
                                   }),
 
                               const SizedBox(height: 20),
@@ -1882,14 +1914,15 @@ class _AdminListPageState extends State<AdminListPage> {
                                   errorText: descriptionError,
                                 ),
                                 onChanged: (value) {
-                                  if (value.isNotEmpty)
-                                    setState(() {
-                                      descriptionError = null;
-                                    });
-                                  else {
+                                  if (value.isNotEmpty) {
+                                    descriptionError = null;
+                                  } else {
                                     descriptionError =
                                         "Description is required";
                                   }
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
                                 },
                               ),
 
@@ -2071,7 +2104,9 @@ class _AdminListPageState extends State<AdminListPage> {
                                     blurbError =
                                         "At least one blurb is required";
                                   }
-                                  setState(() {});
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
                                 },
                                 child: const Text("Add Blurb"),
                               ),
@@ -2180,7 +2215,9 @@ class _AdminListPageState extends State<AdminListPage> {
                                           lng: 0,
                                         ),
                                   );
-                                  setState(() {});
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
                                 },
                                 child:
                                     Text(isEdit ? "Edit Images" : "Add Images"),
@@ -2203,12 +2240,20 @@ class _AdminListPageState extends State<AdminListPage> {
                       ),
                       // Save
                       ElevatedButton(
-                        onPressed: nameController.text.isEmpty ||
-                                descriptionController.text.isEmpty ||
-                                blurbs.isEmpty
-                            ? null
-                            : () async {
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: canSubmit
+                              ? Theme.of(context)
+                                  .elevatedButtonTheme
+                                  .style
+                                  ?.backgroundColor
+                                  ?.resolve({WidgetState.pressed})
+                              : Colors.grey,
+                        ),
+                        onPressed: canSubmit
+                            ? () async {
                                 // Handle Error checks
+                                // Error checks should be redundant due to button disabling,
+                                // but just in case
                                 bool hasErrors = false;
 
                                 if (nameController.text.isEmpty) {
@@ -2225,14 +2270,15 @@ class _AdminListPageState extends State<AdminListPage> {
                                 }
 
                                 // images tracked with tempImageChanges
-                                final imageList =
-                                    tempImageChanges[nameController.text] ??
-                                        tempImageChanges[existingSite?.name] ??
-                                        [];
+                                final String pairKey =
+                                    existingSite?.name ?? "new_site";
+
+                                // images tracked with tempImageChanges
+                                final imageList = getImageList();
 
                                 if (imageList.isEmpty) {
+                                  print("${imageList.length} images");
                                   imageError = "At least one image is required";
-                                  hasErrors = true;
                                 }
 
                                 if (hasErrors) {
@@ -2263,6 +2309,28 @@ class _AdminListPageState extends State<AdminListPage> {
                                 }
 
                                 Navigator.pop(context);
+                              }
+                            : () {
+                                if (nameController.text.isEmpty) {
+                                  nameError = "Site name is required";
+                                }
+                                if (descriptionController.text.isEmpty) {
+                                  descriptionError = "Description is required";
+                                }
+                                if (blurbs.isEmpty) {
+                                  blurbError = "At least one blurb is required";
+                                }
+
+                                // images tracked with tempImageChanges
+                                final imageList = getImageList();
+
+                                if (imageList.isEmpty) {
+                                  print("${imageList.length} images");
+                                  imageError = "At least one image is required";
+                                }
+
+                                setState(() {});
+                                return;
                               },
                         child: Text(isEdit ? "Save Changes" : "Add Site"),
                       ),
