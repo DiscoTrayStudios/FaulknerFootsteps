@@ -426,7 +426,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                             controller.open();
                                           }
                                         },
-                                        child: const Text("Add Filters"));
+                                        child: const Text("Add"));
                                   },
                                   menuChildren: acceptableFilters
                                       .map((filter) => CheckboxMenuButton(
@@ -964,7 +964,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                           controller.open();
                                         }
                                       },
-                                      child: const Text("Add Filters"));
+                                      child: const Text("Add Filter"));
                                 },
                                 menuChildren: acceptableFilters
                                     .map((filter) => CheckboxMenuButton(
@@ -1223,6 +1223,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     imageWithUrl.imageData!.isNotEmpty) {
                   return Image.memory(imageWithUrl.imageData!,
                       fit: BoxFit.contain);
+
                 }
                 return Text(
                     "You do not have any Images uploaded to this site.");
@@ -1285,12 +1286,12 @@ class _AdminListPageState extends State<AdminListPage> {
           child: Builder(
             builder: (context) {
               return ListEdit<SiteFilter>(
+
                   title: "Edit Filters",
                   items: app_state.siteFilters,
                   itemBuilder: (filter) => Text(filter.name,
                       style: Theme.of(context).textTheme.bodyMedium),
-                  addButtonText: "Add Filter",
-                  deleteButtonText: "Delete Filters",
+
                   onAddItem: () async {
                     await showAddFilterDialog();
                   },
@@ -1305,6 +1306,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     for (String filterName in firestoreFilterNames) {
                       bool stillExists = app_state.siteFilters
                           .any((f) => f.name == filterName);
+
                       if (!stillExists) {
                         await app_state.removeFilter(filterName);
                         print("Removed filter: $filterName");
@@ -1312,6 +1314,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     }
                     await app_state.saveFilterOrder();
                   });
+
             },
           ),
         );
