@@ -36,14 +36,11 @@ class ImageWithUrl {
 
 class _AdminListPageState extends State<AdminListPage> {
   late ApplicationState app_state;
-  late Timer updateTimer;
   int _selectedIndex = 0;
-  File? image;
   List<File>? images;
   final storage = FirebaseStorage.instance;
   final storageRef = FirebaseStorage.instance.ref();
   var uuid = Uuid();
-  // List<SiteFilter> chosenFilters = [];
   List<SiteFilter> acceptableFilters = [];
   List<File> newlyAddedFiles = [];
   Map<String, List<ImageWithUrl>> tempImageChanges = {};
@@ -52,9 +49,6 @@ class _AdminListPageState extends State<AdminListPage> {
   @override
   void initState() {
     super.initState();
-    updateTimer = Timer.periodic(const Duration(milliseconds: 500), _update);
-    // acceptableFilters.addAll(siteFilter.values);
-    // acceptableFilters.remove(siteFilter.Other);
   }
 
   void didChangeDependencies() {
@@ -65,20 +59,7 @@ class _AdminListPageState extends State<AdminListPage> {
     app_state.addListener(() {
       print("Appstate has changed!");
       setState(() {});
-      // if (mounted) {
-      // setState(() {
-      //   acceptableFilters =
-      //       app_state.siteFilters; // Might be necessary, idk really
-      // });
-      // }
     });
-  }
-
-  void _update(Timer timer) {
-    setState(() {});
-    if (app_state.historicalSites.isNotEmpty) {
-      updateTimer.cancel();
-    }
   }
 
   Future<void> pickImages() async {
@@ -127,22 +108,6 @@ class _AdminListPageState extends State<AdminListPage> {
       format: CompressFormat.jpeg,
     );
     return result != null ? File(result.path) : null;
-  }
-
-  Future pickImage() async {
-    try {
-      final image = await ImagePicker().pickImage(
-          source: ImageSource
-              .gallery); //could be camera so user can just take picture
-      if (image == null) return;
-      final imageTemporary = File(image.path);
-      setState(() {
-        this.image = imageTemporary;
-      });
-    } on PlatformException catch (e) {
-      print("Failed to pick image: $e");
-    }
-    setState(() {});
   }
 
   Future<List<String>> uploadImages(String folderName, List<String> fileNames,
@@ -197,47 +162,6 @@ class _AdminListPageState extends State<AdminListPage> {
     }
 
     return paths;
-  }
-
-  Future<String> uploadImage(String folderName, String fileName) async {
-// // Create the file metadata
-    final metadata = SettableMetadata(contentType: "image/jpeg");
-
-// Change the filename to a string that has no spaces
-    // folderName.replaceAll(' ', '_');
-    // folderName.split(" ").join("_");\
-    folderName = folderName.replaceAll(' ', '');
-    // print("${folderName.replaceAll(' ', '')}");
-    print("FileName: $folderName");
-
-// Upload file and metadata. Metadata ensures it is saved in jpg format
-    final path = "images/$folderName/$fileName.jpg";
-    final uploadTask = storageRef.child(path).putFile(image!, metadata);
-
-// Listen for state changes, errors, and completion of the upload.
-    uploadTask.snapshotEvents.listen((TaskSnapshot taskSnapshot) {
-      switch (taskSnapshot.state) {
-        case TaskState.running:
-          final progress =
-              100.0 * (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
-          print("Upload is $progress% complete.");
-          break;
-        case TaskState.paused:
-          print("Upload is paused.");
-          break;
-        case TaskState.canceled:
-          print("Upload was canceled");
-          break;
-        case TaskState.error:
-          // Handle unsuccessful uploads
-          break;
-        case TaskState.success:
-          // Handle successful uploads on complete
-          // ...
-          break;
-      }
-    });
-    return path; //path is what we will store in firebase
   }
 
   void _onItemTapped(int index) {
@@ -476,7 +400,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                         ))
                                     .toList(),
                               ],
-
                               MenuAnchor(
                                   style: MenuStyle(
                                       backgroundColor: WidgetStatePropertyAll(
@@ -528,17 +451,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                                 .textTheme
                                                 .bodyMedium,
                                           )))
-                                      .toList()
-
-                                  // [
-                                  //   CheckboxMenuButton(
-                                  //       value: false,
-                                  //       onChanged: (bool? value) {
-                                  //         print("changed");
-                                  //       },
-                                  //       child: const Text("Message"))
-                                  // ]
-                                  ),
+                                      .toList()),
                               if (chosenFilters.isNotEmpty) ...[
                                 const SizedBox(height: 10),
                                 const Text('Selected Filters:'),
@@ -573,46 +486,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                 },
                                 child: const Text('Add Image'),
                               ),
-                              //NEW STUFF
-                              // ListView.builder(
-                              //   physics: NeverScrollableScrollPhysics(),
-                              //   shrinkWrap: true,
-                              //   itemCount: siteFilter.values.length,
-                              //   scrollDirection: Axis.horizontal,
-                              //   itemBuilder: (context, index) {
-                              //     siteFilter currentFilter = siteFilter.values[index];
-                              //     return Padding(
-                              //       padding: EdgeInsets.fromLTRB(8, 32, 8, 16),
-                              //       // padding: EdgeInsets.all(8),
-                              //       child: FilterChip(
-                              //         backgroundColor: Color.fromARGB(255, 255, 243, 228),
-                              //         disabledColor: Color.fromARGB(255, 255, 243, 228),
-                              //         selectedColor: Color.fromARGB(255, 107, 79, 79),
-                              //         checkmarkColor: Color.fromARGB(255, 255, 243, 228),
-                              //         label: Text(currentFilter.name,
-                              //             style: GoogleFonts.ultra(
-                              //                 textStyle: TextStyle(
-                              //                     color: chosenFilters
-                              //                             .contains(currentFilter)
-                              //                         ? Color.fromARGB(255, 255, 243, 228)
-                              //                         : Color.fromARGB(255, 107, 79, 79),
-                              //                     fontSize: 14))),
-                              //         selected: chosenFilters.contains(currentFilter),
-                              //         onSelected: (bool selected) {
-                              //           setState(() {
-                              //             if (selected) {
-                              //               chosenFilters.add(currentFilter);
-                              //             } else {
-                              //               chosenFilters.remove(currentFilter);
-                              //             }
-                              //             // filterChangedCallback();
-                              //           });
-                              //         },
-                              //       ),
-                              //     );
-                              //   },
-                              //   // children: siteFilter.values.map((siteFilter filter) {
-                              // ),
                               if (imageError != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -624,16 +497,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                     ),
                                   ),
                                 ),
-                              if (image != null) ...[
-                                const SizedBox(height: 10),
-                                const Text("Current Image: "),
-                                image != null
-                                    ? Image.file(image!,
-                                        width: 160,
-                                        height: 160,
-                                        fit: BoxFit.contain)
-                                    : FlutterLogo()
-                              ],
                               if (images != null) ...[
                                 SizedBox(
                                   //todo: replace with media.sizequery?
@@ -718,9 +581,6 @@ class _AdminListPageState extends State<AdminListPage> {
                             List<String> paths = await uploadImages(
                                 nameController.text, randomNames);
                             print("Made it past uploading images");
-                            // String randomName = uuid.v4();
-                            // String path =
-                            // await uploadImage(nameController.text, randomName);
                             final newSite = HistSite(
                               name: nameController.text,
                               description: descriptionController.text,
@@ -784,11 +644,6 @@ class _AdminListPageState extends State<AdminListPage> {
     final titleController = TextEditingController();
     final valueController = TextEditingController();
     final dateController = TextEditingController();
-
-    // preset the datecontroller
-    // I actually think its better to be left blank
-    // dateController.text =
-    //     "${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}";
 
     return showDialog(
       barrierDismissible: false,
@@ -1102,7 +957,6 @@ class _AdminListPageState extends State<AdminListPage> {
                                 builder: (BuildContext context,
                                     MenuController controller, Widget? child) {
                                   return ElevatedButton(
-                                      // focusNode: _buttonFocusNode,
                                       onPressed: () {
                                         if (controller.isOpen) {
                                           controller.close();
@@ -1142,17 +996,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                               .textTheme
                                               .bodyMedium,
                                         )))
-                                    .toList()
-
-                                // [
-                                //   CheckboxMenuButton(
-                                //       value: false,
-                                //       onChanged: (bool? value) {
-                                //         print("changed");
-                                //       },
-                                //       child: const Text("Message"))
-                                // ]
-                                ),
+                                    .toList()),
                             if (chosenFilters.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               const Text('Selected Filters:'),
@@ -1180,9 +1024,7 @@ class _AdminListPageState extends State<AdminListPage> {
                                 _showEditSiteImagesDialog(site);
                                 print("Reached post dialog opening");
                                 print("Length p: ${site.images.length}");
-                                for (Uint8List? s in site.images) {
-                                  //print("Image: $s");
-                                }
+                                for (Uint8List? s in site.images) {}
                               },
                               child: const Text('Edit Images'),
                             ),
@@ -1244,49 +1086,6 @@ class _AdminListPageState extends State<AdminListPage> {
                           }
                         }
 
-                        /* print("Length of site list: ${site.images.length}");
-
-                    // remove any deleted images
-                    // NOTE: it may be better to handle this when we delete items.
-                    // I could probably also reorder things there very easily.
-                    // TODO: see above
-                    if (site.images.length < site.imageUrls.length) {
-                      // this means that an image has been deleted
-                      print("If statement reached. An item has been deleted");
-                      for (Uint8List? image in copyOfOriginalImageList) {
-                        print("image being ichecked");
-                        // check to see if image is in current list
-                        if (!site.images.contains(image)) {
-                          // image is not in current images. thus we must remove it from imageurls
-                          final index = copyOfOriginalImageList.indexOf(image);
-
-                          // remove site.imageUrls[index] so the delted item is removed
-                          String url = site.imageUrls.removeAt(index);
-
-                          storageRef.child("$url").delete();
-                          print("Item deleted: $url");
-                          print("An item has been removed!");
-                        }
-                      }
-                    }
-
-                    // add all site images to the paths
-                    paths.addAll(site.imageUrls);
-                    print("Paths size: ${paths.length}");
-                    List<ImageWithUrl> pairedImages = [];
-                    for (int i = 0; i < site.imageUrls.length; i++) {
-                    Uint8List? imageData;
-                    if (i < site.images.length && site.images[i] != null && site.images[i]!.isNotEmpty) {
-                      imageData = site.images[i];
-                    } else {
-                      imageData = await app_state.getImage(site.imageUrls[i]);
-                    }
-                    if (imageData != null && site.imageUrls[i].isNotEmpty){
-                    pairedImages.add(ImageWithUrl(
-                      imageData: imageData,
-                      url: site.imageUrls[i],
-                    ));
-                    }} */
                         if (nameController.text.isNotEmpty &&
                             descriptionController.text.isNotEmpty) {
                           List<String> urlsToDelete = [];
@@ -1322,58 +1121,6 @@ class _AdminListPageState extends State<AdminListPage> {
                             paths.addAll(uploadedPaths);
                             newlyAddedFiles.clear();
                           }
-                          /*if (site.images != copyOfOriginalImageList) {
-                        // // delete the old images
-                        // print("Deleting ${refName}");
-                        // final path = "images/$refName";
-
-                        // storageRef.child("$path").delete();
-
-                        //make a name for each new image added.
-                        List<String> randomNames = [];
-                        int i = 0;
-                        if (images != null) {
-                          //if we never added new images, then we don't need to upload anything
-                          print("images length: ${images!.length}");
-                          while (i < images!.length) {
-                            randomNames.add(uuid.v4());
-                            print("Random name thing executed");
-                            i += 1;
-                          }
-                          // this will make the images into files so the images list can have them
-                          /*
-                            I suspect that the issue lies here. I am trying to re upload all the files
-                            within site.images. The issue is that they are in a Uint8list format. 
-                            It appears to work okay (it doesn't throw errors) but when I try to upload them, 
-                            it says they don't exist. When I try to view the images in the images list, my terminal
-                            starts speaking in tongues. 
-
-                            Solution Ideas: 
-                            I previously wanted to delete all files, then reupload them to the storage
-                            If I cannot reupload previously uploaded files (they are currently uint8list)
-                            then I need to only reupload the files I just added. 
-
-                            If a previously uploaded file is no longer withing the list, i need to delete it
-
-
-
-                            Current state: 
-                            The paths are replaced by only the new items
-                            Not terrible
-                          */
-
-                          //upload all new images
-                          final refName = originalName.replaceAll(' ', '');
-                          List<String> newPaths =
-                              await uploadImages(refName, randomNames);
-                          print("Made it past uploading images");
-
-                          // add new paths to old paths
-                          paths.addAll(newPaths);
-                        }
-                      }*/
-
-                          // add "other" if chosenFilters is empty
 
                           if (chosenFilters.isEmpty) {
                             chosenFilters.add(SiteFilter(name: "Other"));
@@ -1423,111 +1170,111 @@ class _AdminListPageState extends State<AdminListPage> {
     );
   }
 
+  Future<void> _showEditSiteImagesDialog(HistSite site) async {
+    List<Uint8List?> siteImages = site.images;
+    List<String> siteImageURLs = site.imageUrls;
+    List<String> originalUrls = List.from(site.imageUrls);
+    List<ImageWithUrl> pairedImages = [];
 
-Future<void> _showEditSiteImagesDialog(HistSite site) async {
-  List<Uint8List?> siteImages = site.images;
-  List<String> siteImageURLs = site.imageUrls;
-  List<String> originalUrls = List.from(site.imageUrls);
-  List<ImageWithUrl> pairedImages = [];
-  
-  // Track newly added files with their corresponding ImageWithUrl
-  Map<ImageWithUrl, File> newImageMap = {};
-  
-  if (tempImageChanges.containsKey(site.name)) {
-    pairedImages = List.from(tempImageChanges[site.name]!);
-  } else {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-    for (int i = 0; i < siteImageURLs.length; i++) {
-      Uint8List? imageData;
-      if (i < siteImages.length &&
-          siteImages[i] != null &&
-          siteImages[i]!.isNotEmpty) {
-        imageData = siteImages[i];
-      } else {
-        imageData = await app_state.getImage(siteImageURLs[i]);
-      }
-      if (imageData != null && siteImageURLs[i].isNotEmpty) {
-        pairedImages.add(ImageWithUrl(
-          imageData: imageData,
-          url: siteImageURLs[i],
-        ));
-      }
-    }
-    Navigator.pop(context);
-  }
-  
-  await showDialog(
-    barrierDismissible: false,
-    context: context,
-    builder: (BuildContext context) {
-      return Theme(
-        data: adminPageTheme,
-        child: Builder(builder: (context) {
-          return ListEdit<ImageWithUrl>(
-            title: "Edit Images",
-            items: pairedImages,
-            itemBuilder: (imageWithUrl) {
-              if (imageWithUrl.imageData != null &&
-                  imageWithUrl.imageData!.isNotEmpty) {
-                return Image.memory(imageWithUrl.imageData!,
-                    fit: BoxFit.contain);
-              }
-              return Text(
-                  "You do not have any Images uploaded to this site.");
-            },
-            addButtonText: "Add",
-            deleteButtonText: "Delete",
-            onAddItem: () async {
-              await pickImages();
-              if (images != null) {
-                for (File imageFile in images!) {
-                  Uint8List newFile = await imageFile.readAsBytes();
-                  ImageWithUrl newImageWithUrl = ImageWithUrl(
-                    imageData: newFile,
-                    url: "",
-                  );
-                  pairedImages.add(newImageWithUrl);
-                  // Track the mapping between ImageWithUrl and File
-                  newImageMap[newImageWithUrl] = imageFile;
-                }
-                images = null;
-              }
-            },
-            onSubmit: () async {
-              tempImageChanges[site.name] = List.from(pairedImages);
-              
-              // Only add files to newlyAddedFiles if their ImageWithUrl is still in pairedImages
-              newlyAddedFiles.clear();
-              for (var entry in newImageMap.entries) {
-                if (pairedImages.contains(entry.key)) {
-                  newlyAddedFiles.add(entry.value);
-                }
-              }
-              
-              Set<String> remainingUrls = pairedImages
-                  .where((img) => img.url.isNotEmpty)
-                  .map((img) => img.url)
-                  .toSet();
+    // Track newly added files with their corresponding ImageWithUrl
+    Map<ImageWithUrl, File> newImageMap = {};
 
-              List<String> urlsToDelete = originalUrls
-                  .where((url) => !remainingUrls.contains(url))
-                  .toList();
-              tempDeletedUrls[site.name] = urlsToDelete;
-            },
-          );
-        }),
+    if (tempImageChanges.containsKey(site.name)) {
+      pairedImages = List.from(tempImageChanges[site.name]!);
+    } else {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
-    },
-  );
+      for (int i = 0; i < siteImageURLs.length; i++) {
+        Uint8List? imageData;
+        if (i < siteImages.length &&
+            siteImages[i] != null &&
+            siteImages[i]!.isNotEmpty) {
+          imageData = siteImages[i];
+        } else {
+          imageData = await app_state.getImage(siteImageURLs[i]);
+        }
+        if (imageData != null && siteImageURLs[i].isNotEmpty) {
+          pairedImages.add(ImageWithUrl(
+            imageData: imageData,
+            url: siteImageURLs[i],
+          ));
+        }
+      }
+      Navigator.pop(context);
+    }
 
-  setState(() {}); // Refresh the parent dialog
-}
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return Theme(
+          data: adminPageTheme,
+          child: Builder(builder: (context) {
+            return ListEdit<ImageWithUrl>(
+              title: "Edit Images",
+              items: pairedImages,
+              itemBuilder: (imageWithUrl) {
+                if (imageWithUrl.imageData != null &&
+                    imageWithUrl.imageData!.isNotEmpty) {
+                  return Image.memory(imageWithUrl.imageData!,
+                      fit: BoxFit.contain);
+
+                }
+                return Text(
+                    "You do not have any Images uploaded to this site.");
+              },
+              addButtonText: "Add Images",
+              deleteButtonText: "Delete Images",
+              onAddItem: () async {
+                await pickImages();
+                if (images != null) {
+                  for (File imageFile in images!) {
+                    Uint8List newFile = await imageFile.readAsBytes();
+                    ImageWithUrl newImageWithUrl = ImageWithUrl(
+                      imageData: newFile,
+                      url: "",
+                    );
+                    pairedImages.add(newImageWithUrl);
+                    // Track the mapping between ImageWithUrl and File
+                    newImageMap[newImageWithUrl] = imageFile;
+                  }
+                  images = null;
+                }
+              },
+              onSubmit: () async {
+                tempImageChanges[site.name] = List.from(pairedImages);
+
+                // Only add files to newlyAddedFiles if their ImageWithUrl is still in pairedImages
+                newlyAddedFiles.clear();
+                for (var entry in newImageMap.entries) {
+                  if (pairedImages.contains(entry.key)) {
+                    newlyAddedFiles.add(entry.value);
+                  }
+                }
+
+                Set<String> remainingUrls = pairedImages
+                    .where((img) => img.url.isNotEmpty)
+                    .map((img) => img.url)
+                    .toSet();
+
+                List<String> urlsToDelete = originalUrls
+                    .where((url) => !remainingUrls.contains(url))
+                    .toList();
+                tempDeletedUrls[site.name] = urlsToDelete;
+              },
+            );
+          }),
+        );
+      },
+    );
+
+    setState(() {}); // Refresh the parent dialog
+  }
 
   Future<void> _showEditFiltersDialog() async {
     await showDialog(
@@ -1538,14 +1285,13 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
           data: adminPageTheme,
           child: Builder(
             builder: (context) {
-              return SingleChildScrollView(
-                child: ListEdit<SiteFilter>(
+              return ListEdit<SiteFilter>(
+
                   title: "Edit Filters",
                   items: app_state.siteFilters,
                   itemBuilder: (filter) => Text(filter.name,
                       style: Theme.of(context).textTheme.bodyMedium),
-                  addButtonText: "Add",
-                  deleteButtonText: "Delete",
+
                   onAddItem: () async {
                     await showAddFilterDialog();
                   },
@@ -1558,17 +1304,17 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
                       firestoreFilterNames.add(doc.get("name"));
                     }
                     for (String filterName in firestoreFilterNames) {
-                      bool stillExists =
-                          app_state.siteFilters.any((f) => f.name == filterName);
+                      bool stillExists = app_state.siteFilters
+                          .any((f) => f.name == filterName);
+
                       if (!stillExists) {
                         await app_state.removeFilter(filterName);
                         print("Removed filter: $filterName");
                       }
                     }
                     await app_state.saveFilterOrder();
-                  }
-                ),
-              );
+                  });
+
             },
           ),
         );
@@ -1680,11 +1426,6 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
                           color: Color.fromARGB(255, 76, 32, 8),
                         ),
                       ),
-                      // style: GoogleFonts.ultra(
-                      //     //   textStyle: const TextStyle(
-                      //     // color: Color.fromARGB(255, 76, 32, 8),
-                      //     // )
-                      //     ),
                     ),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -1724,7 +1465,7 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
         });
   }
 
-  Widget _buildAdminContent() {
+  Widget _buildAdminContent(BuildContext context) {
     return Column(
       children: [
         Padding(
@@ -1733,7 +1474,7 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            onPressed: _showAddSiteDialog,
+            onPressed: () => showSiteEditorDialog(context: context),
             child: Text(
               'Add New Historical Site',
               style: GoogleFonts.ultra(
@@ -1822,7 +1563,8 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.edit),
                                 label: const Text('Edit Site'),
-                                onPressed: () => _showEditSiteDialog(site),
+                                onPressed: () => showSiteEditorDialog(
+                                    context: context, existingSite: site),
                               ),
                               ElevatedButton.icon(
                                 icon: const Icon(Icons.delete),
@@ -1887,25 +1629,744 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
     );
   }
 
+  Future<void> saveEditedSite(
+    HistSite originalSite,
+    String newName,
+    String newDescription,
+    List<InfoText> blurbs,
+    List<SiteFilter> filters,
+    String latText,
+    String lngText,
+  ) async {
+    final originalName = originalSite.name;
+    final oldDocRef =
+        FirebaseFirestore.instance.collection('sites').doc(originalName);
+
+    // Load paired images from temp cache
+    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ?? [];
+
+    // Determine which URLs were removed
+    Set<String> remainingUrls = pairedImages
+        .where((img) => img.url.isNotEmpty)
+        .map((img) => img.url)
+        .toSet();
+
+    List<String> urlsToDelete = originalSite.imageUrls
+        .where((url) => !remainingUrls.contains(url))
+        .toList();
+
+    // Delete removed images from Firebase Storage
+    for (String url in urlsToDelete) {
+      try {
+        await storageRef.child(url).delete();
+      } catch (e) {
+        print("Error deleting image: $e");
+      }
+    }
+
+    // Start with existing URLs that remain
+    List<String> finalPaths = remainingUrls.toList();
+
+    // Upload newly added files
+    if (newlyAddedFiles.isNotEmpty) {
+      final folderName = originalName.replaceAll(' ', '');
+      List<String> randomNames =
+          List.generate(newlyAddedFiles.length, (_) => uuid.v4());
+
+      List<String> uploadedPaths = await uploadImages(
+        folderName,
+        randomNames,
+        files: newlyAddedFiles,
+      );
+
+      finalPaths.addAll(uploadedPaths);
+    }
+
+    // Build updated site
+    final updatedSite = HistSite(
+      name: newName,
+      description: newDescription,
+      blurbs: blurbs,
+      imageUrls: finalPaths,
+      avgRating: originalSite.avgRating,
+      ratingAmount: originalSite.ratingAmount,
+      filters: filters.isEmpty ? [SiteFilter(name: "Other")] : filters,
+      lat: double.tryParse(latText) ?? originalSite.lat,
+      lng: double.tryParse(lngText) ?? originalSite.lng,
+    );
+
+    // If the name changed, delete old doc and create new one
+    if (originalName != newName) {
+      await oldDocRef.delete();
+      app_state.addSite(updatedSite);
+    } else {
+      // Update existing doc
+      app_state.addSite(updatedSite);
+    }
+
+    // Cleanup
+    newlyAddedFiles.clear();
+    tempImageChanges.remove(originalName);
+    tempDeletedUrls.remove(originalName);
+  }
+
+  Future<void> saveNewSite(
+    String name,
+    String description,
+    List<InfoText> blurbs,
+    List<SiteFilter> filters,
+    String latText,
+    String lngText,
+  ) async {
+    // Ensure folder name is Firebase-safe
+    final folderName = name.replaceAll(' ', '');
+
+    // These are the actual image files selected by the user
+    final List<File> filesToUpload = newlyAddedFiles;
+
+    // Generate random filenames for each image
+    List<String> randomNames =
+        List.generate(filesToUpload.length, (_) => uuid.v4());
+
+    // Upload all images for this new site
+    List<String> uploadedPaths = await uploadImages(
+      folderName,
+      randomNames,
+      files: filesToUpload,
+    );
+
+    final newSite = HistSite(
+      name: name,
+      description: description,
+      blurbs: blurbs,
+      imageUrls: uploadedPaths,
+      avgRating: 0.0,
+      ratingAmount: 0,
+      filters: filters.isEmpty ? [SiteFilter(name: "Other")] : filters,
+      lat: double.tryParse(latText) ?? 0.0,
+      lng: double.tryParse(lngText) ?? 0.0,
+    );
+
+    // Save to Firestore
+    app_state.addSite(newSite);
+
+    // Cleanup temporary image tracking
+    newlyAddedFiles.clear();
+    tempImageChanges.remove("new_site");
+    tempDeletedUrls.remove("new_site");
+  }
+
+  Future<void> showSiteEditorDialog({
+    required BuildContext context,
+    HistSite? existingSite,
+  }) async {
+    final isEdit = existingSite != null;
+
+    final ScrollController _scrollController = ScrollController();
+
+    // Text Controllers
+    final nameController =
+        TextEditingController(text: existingSite?.name ?? "");
+    final descriptionController =
+        TextEditingController(text: existingSite?.description ?? "");
+    final latController =
+        TextEditingController(text: existingSite?.lat.toString() ?? "0.0");
+    final lngController =
+        TextEditingController(text: existingSite?.lng.toString() ?? "0.0");
+
+    // Data
+    List<InfoText> blurbs = existingSite?.blurbs.toList() ?? [];
+    List<SiteFilter> chosenFilters = existingSite?.filters.toList() ?? [];
+
+    List<ImageWithUrl> pairedImages = [];
+
+    // Exists for a unifide key for storing in the pairedImages map.
+    final String pairKey = existingSite?.name ?? "new_site";
+
+    // detects when the user can submit the form
+
+    if (isEdit) {
+      // Load existing images
+      for (int i = 0; i < existingSite.imageUrls.length; i++) {
+        Uint8List? data = await app_state.getImage(existingSite.imageUrls[i]);
+        if (data != null) {
+          pairedImages.add(
+              ImageWithUrl(imageData: data, url: existingSite.imageUrls[i]));
+        }
+      }
+    }
+
+    // Error strings to help user
+    String? nameError;
+    String? descriptionError;
+    String? blurbError;
+    String? imageError;
+
+    // Focus Nodes for lat / lang fields
+    final latFocus = FocusNode();
+    final lngFocus = FocusNode();
+
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        latFocus.addListener(() {
+          if (!latFocus.hasFocus) {
+            if (latController.text.isEmpty) {
+              latController.text = "0.0";
+              latController.selection = TextSelection.fromPosition(
+                TextPosition(offset: latController.text.length),
+              );
+            }
+          }
+        });
+        lngFocus.addListener(() {
+          if (!lngFocus.hasFocus) {
+            if (lngController.text.isEmpty) {
+              lngController.text = "0.0";
+              lngController.selection = TextSelection.fromPosition(
+                TextPosition(offset: lngController.text.length),
+              );
+            }
+          }
+        });
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Theme(
+              data: adminPageTheme,
+              child: Builder(
+                builder: (context) {
+                  List<dynamic> getImageList() {
+                    final editedImages = tempImageChanges[pairKey];
+
+                    if (isEdit) {
+                      // If user has edited images, use those
+                      if (editedImages != null && editedImages.isNotEmpty) {
+                        return editedImages;
+                      }
+
+                      // Otherwise fall back to existing images
+                      return existingSite!.imageUrls;
+                    }
+
+                    // New site: only use temp images
+                    return editedImages ?? [];
+                  }
+
+                  bool checkCanSubmit() {
+                    final imageList = getImageList();
+
+                    return nameController.text.isNotEmpty &&
+                        descriptionController.text.isNotEmpty &&
+                        blurbs.isNotEmpty &&
+                        imageList.isNotEmpty;
+                  }
+
+                  bool canSubmit = checkCanSubmit();
+
+                  return AlertDialog(
+                    backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+                    title: Text(
+                      isEdit
+                          ? "Edit Historical Site"
+                          : "Add New Historical Site",
+                      style: GoogleFonts.ultra(
+                        textStyle: const TextStyle(
+                            color: Color.fromARGB(255, 76, 32, 8)),
+                      ),
+                    ),
+                    content: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16, left: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(padding: const EdgeInsets.only(top: 8.0)),
+                              // Name
+                              TextField(
+                                  controller: nameController,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  decoration: InputDecoration(
+                                    labelText: "Site Name",
+                                    errorText: nameError,
+                                  ),
+                                  onChanged: (value) {
+                                    if (value.isNotEmpty) {
+                                      nameError = null;
+                                    } else {
+                                      nameError = "Site name is required";
+                                    }
+                                    setState(() {
+                                      canSubmit = checkCanSubmit();
+                                    });
+                                  }),
+
+                              const SizedBox(height: 20),
+
+                              // Description
+                              TextField(
+                                controller: descriptionController,
+                                maxLines: 3,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                decoration: InputDecoration(
+                                  labelText: "Description",
+                                  errorText: descriptionError,
+                                ),
+                                onChanged: (value) {
+                                  if (value.isNotEmpty) {
+                                    descriptionError = null;
+                                  } else {
+                                    descriptionError =
+                                        "Description is required";
+                                  }
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
+                                },
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Lat / Long
+                              ElevatedButton.icon(
+                                  icon: const Icon(Icons.my_location),
+                                  label: const Text("Get Location"),
+                                  onPressed: () async {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(
+                                          child: CircularProgressIndicator()),
+                                    );
+                                    bool serviceEnabled = await Geolocator
+                                        .isLocationServiceEnabled();
+                                    if (!serviceEnabled) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Location services are disabled.')),
+                                      );
+                                      return;
+                                    }
+                                    LocationPermission permission =
+                                        await Geolocator.checkPermission();
+                                    if (permission ==
+                                        LocationPermission.denied) {
+                                      permission =
+                                          await Geolocator.requestPermission();
+                                      if (permission ==
+                                          LocationPermission.denied) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Location permission denied.')),
+                                        );
+                                        return;
+                                      }
+                                    }
+                                    if (permission ==
+                                        LocationPermission.deniedForever) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Location permissions are permanently denied. Open settings to enable.')),
+                                      );
+                                      return;
+                                    }
+                                    try {
+                                      final pos =
+                                          await Geolocator.getCurrentPosition(
+                                              desiredAccuracy:
+                                                  LocationAccuracy.best);
+                                      latController.text =
+                                          pos.latitude.toStringAsFixed(6);
+                                      lngController.text =
+                                          pos.longitude.toStringAsFixed(6);
+                                      setState(() {});
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pop();
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Failed to get position: $e')),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(
+                                        255, 218, 186, 130),
+                                  )),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      focusNode: latFocus,
+                                      controller: latController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lat',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: TextField(
+                                      focusNode: lngFocus,
+                                      controller: lngController,
+                                      keyboardType:
+                                          TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Lng',
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Blurb stuff
+                              if (blurbError != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(blurbError!,
+                                      style: const TextStyle(
+                                          color: Colors.red, fontSize: 12)),
+                                ),
+
+                              ...blurbs.asMap().entries.map((entry) {
+                                int idx = entry.key;
+                                InfoText blurb = entry.value;
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      title: Text(blurb.title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium),
+                                      subtitle: Text(
+                                        blurb.value,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () async {
+                                            await _showEditBlurbDialog(
+                                                blurbs, idx);
+                                            setState(() {});
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () {
+                                            setState(() {
+                                              blurbs.removeAt(idx);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                );
+                              }).toList(),
+
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _showAddBlurbDialog(blurbs);
+                                  if (blurbs.isNotEmpty) {
+                                    setState(() {
+                                      blurbError = null;
+                                    });
+                                  } else {
+                                    blurbError =
+                                        "At least one blurb is required";
+                                  }
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
+                                },
+                                child: const Text("Add Blurb"),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Filter stuff
+
+                              if (chosenFilters.isNotEmpty) ...[
+                                const SizedBox(height: 10),
+                                const Text('Selected Filters:'),
+                                Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 4.0,
+                                  children: chosenFilters.map((filter) {
+                                    return Chip(
+                                      label: Text(
+                                        filter.name,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 243, 228),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 107, 79, 79),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                              MenuAnchor(
+                                  style: MenuStyle(
+                                      side: WidgetStatePropertyAll(BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
+                                          width: 2.0)),
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      20.0)))),
+                                  builder: (BuildContext context,
+                                      MenuController controller,
+                                      Widget? child) {
+                                    return ElevatedButton(
+                                        onPressed: () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        },
+                                        child: const Text("Edit Filters"));
+                                  },
+                                  menuChildren: acceptableFilters
+                                      .map((filter) => CheckboxMenuButton(
+                                          style: ButtonStyle(
+                                            textStyle: WidgetStatePropertyAll(
+                                                TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 72, 52, 52),
+                                                    fontSize: 16.0,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ),
+                                          closeOnActivate: false,
+                                          value: chosenFilters.contains(filter),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              if (!chosenFilters
+                                                  .contains(filter)) {
+                                                chosenFilters.add(filter);
+                                                print(chosenFilters);
+                                              } else {
+                                                chosenFilters.remove(filter);
+                                                print(chosenFilters);
+                                              }
+                                            });
+                                          },
+                                          child: Text(
+                                            (filter.name),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium,
+                                          )))
+                                      .toList()),
+
+                              const SizedBox(height: 10),
+
+                              // Image stuff
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await _showEditSiteImagesDialog(
+                                    existingSite ??
+                                        HistSite(
+                                          name: pairKey,
+                                          description:
+                                              descriptionController.text,
+                                          blurbs: blurbs,
+                                          imageUrls: [],
+                                          avgRating: 0,
+                                          ratingAmount: 0,
+                                          filters: chosenFilters,
+                                          lat: 0,
+                                          lng: 0,
+                                        ),
+                                  );
+                                  setState(() {
+                                    canSubmit = checkCanSubmit();
+                                  });
+                                },
+                                child:
+                                    Text(isEdit ? "Edit Images" : "Add Images"),
+                              ),
+
+                              if (imageError != null)
+                                Text(imageError!,
+                                    style: const TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    actionsAlignment: MainAxisAlignment.spaceBetween,
+                    actions: [
+                      // Cancel
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Cancel"),
+                      ),
+                      // Save
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: canSubmit
+                              ? Theme.of(context)
+                                  .elevatedButtonTheme
+                                  .style
+                                  ?.backgroundColor
+                                  ?.resolve({WidgetState.pressed})
+                              : Colors.grey,
+                        ),
+                        onPressed: canSubmit
+                            ? () async {
+                                // Handle Error checks
+                                // Error checks should be redundant due to button disabling,
+                                // but just in case
+                                bool hasErrors = false;
+
+                                if (nameController.text.isEmpty) {
+                                  nameError = "Site name is required";
+                                  hasErrors = true;
+                                }
+                                if (descriptionController.text.isEmpty) {
+                                  descriptionError = "Description is required";
+                                  hasErrors = true;
+                                }
+                                if (blurbs.isEmpty) {
+                                  blurbError = "At least one blurb is required";
+                                  hasErrors = true;
+                                }
+
+                                // images tracked with tempImageChanges
+                                final String pairKey =
+                                    existingSite?.name ?? "new_site";
+
+                                // images tracked with tempImageChanges
+                                final imageList = getImageList();
+
+                                if (imageList.isEmpty) {
+                                  print("${imageList.length} images");
+                                  imageError = "At least one image is required";
+                                }
+
+                                if (hasErrors) {
+                                  setState(() {});
+                                  return;
+                                }
+
+                                // Save the site
+                                if (isEdit) {
+                                  await saveEditedSite(
+                                    existingSite,
+                                    nameController.text,
+                                    descriptionController.text,
+                                    blurbs,
+                                    chosenFilters,
+                                    latController.text,
+                                    lngController.text,
+                                  );
+                                } else {
+                                  await saveNewSite(
+                                    nameController.text,
+                                    descriptionController.text,
+                                    blurbs,
+                                    chosenFilters,
+                                    latController.text,
+                                    lngController.text,
+                                  );
+                                }
+
+                                Navigator.pop(context);
+                              }
+                            : () {
+                                if (nameController.text.isEmpty) {
+                                  nameError = "Site name is required";
+                                }
+                                if (descriptionController.text.isEmpty) {
+                                  descriptionError = "Description is required";
+                                }
+                                if (blurbs.isEmpty) {
+                                  blurbError = "At least one blurb is required";
+                                }
+
+                                // images tracked with tempImageChanges
+                                final imageList = getImageList();
+
+                                if (imageList.isEmpty) {
+                                  print("${imageList.length} images");
+                                  imageError = "At least one image is required";
+                                }
+
+                                setState(() {});
+                                return;
+                              },
+                        child: Text(isEdit ? "Save Changes" : "Add Site"),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
       data: adminPageTheme,
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 219, 196, 166),
+        backgroundColor: adminPageTheme.colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+          backgroundColor: adminPageTheme.colorScheme.secondary,
           elevation: 12.0,
           shadowColor: const Color.fromARGB(135, 255, 255, 255),
           title: Text(
             _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
             style: GoogleFonts.ultra(
-              textStyle: const TextStyle(color: Color.fromARGB(255, 76, 32, 8)),
+              textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
           ),
         ),
         body: _selectedIndex == 0
-            ? _buildAdminContent()
+            ? _buildAdminContent(context)
             : MapDisplay2(
                 currentPosition: const LatLng(2, 2),
                 sites: app_state.historicalSites,
@@ -1934,7 +2395,6 @@ Future<void> _showEditSiteImagesDialog(HistSite site) async {
 
   @override
   void dispose() {
-    updateTimer.cancel();
     super.dispose();
   }
 }
