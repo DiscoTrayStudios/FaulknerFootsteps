@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MapDisplay2 extends StatefulWidget {
   final LatLng currentPosition;
@@ -350,6 +351,15 @@ class _MapDisplay2State extends State<MapDisplay2> {
           MarkerLayer(
             markers: markers,
           ),
+          RichAttributionWidget(
+          attributions: [
+            // Suggested attribution for the OpenStreetMap public tile server
+            TextSourceAttribution(
+              'OpenStreetMap contributors',
+              onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+            ),
+          ],
+        ),
         ],
       ),
     );
