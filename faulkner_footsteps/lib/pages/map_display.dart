@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MapDisplay2 extends StatefulWidget {
   final LatLng currentPosition;
@@ -110,8 +111,8 @@ class _MapDisplay2State extends State<MapDisplay2> {
   Map<String, double> getDistances(Map<String, LatLng> locations) {
     Map<String, double> distances = {};
     for (int i = 0; i < locations.length; i++) {
-      distances[locations.keys.elementAt(i)] = distance.as(
-          LengthUnit.Meter, locations.values.elementAt(i), widget.currentPosition);
+      distances[locations.keys.elementAt(i)] = distance.as(LengthUnit.Meter,
+          locations.values.elementAt(i), widget.currentPosition);
     }
     return distances;
   }
@@ -157,7 +158,7 @@ class _MapDisplay2State extends State<MapDisplay2> {
     );
 
     // Show the dialog
-        showDialog(
+    showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -266,7 +267,6 @@ class _MapDisplay2State extends State<MapDisplay2> {
                           );
                         },
                       ),
-
                     ],
                   ),
                 ),
@@ -337,18 +337,29 @@ class _MapDisplay2State extends State<MapDisplay2> {
             widget
                 .currentPosition), // will force an update when map changes its centerPosition
         options: MapOptions(
-          initialCenter:
-              widget.centerPosition == null ? widget.currentPosition : widget.centerPosition!,
+          initialCenter: widget.centerPosition == null
+              ? widget.currentPosition
+              : widget.centerPosition!,
           initialZoom: 14.0,
         ),
         children: [
           TileLayer(
+            userAgentPackageName: "com.example.faulkner_footsteps",
             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             subdomains: ['a', 'b', 'c'],
           ),
           MarkerLayer(
             markers: markers,
           ),
+          RichAttributionWidget(
+          attributions: [
+            // Suggested attribution for the OpenStreetMap public tile server
+            TextSourceAttribution(
+              'OpenStreetMap contributors',
+              onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+            ),
+          ],
+        ),
         ],
       ),
     );
