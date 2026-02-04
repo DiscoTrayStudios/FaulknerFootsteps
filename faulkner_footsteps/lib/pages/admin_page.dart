@@ -1357,7 +1357,10 @@ class _AdminListPageState extends State<AdminListPage> {
                     actions: [
                       // Cancel
                       ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // Cleanup temp image changes
+                        },
                         child: const Text("Cancel"),
                       ),
                       // Save
@@ -1464,7 +1467,12 @@ class _AdminListPageState extends State<AdminListPage> {
           },
         );
       },
-    );
+    ).then((_) {
+      pairedImages.clear();
+      newlyAddedFiles.clear();
+      tempImageChanges.remove(isEdit ? existingSite.name : pairKey);
+      tempDeletedUrls.remove(isEdit ? existingSite.name : pairKey);
+    });
   }
 
   @override
