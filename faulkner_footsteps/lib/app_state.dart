@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'firebase_options.dart';
+import 'package:faulkner_footsteps/objects/progress_achievement.dart';
 
 class ApplicationState extends ChangeNotifier {
   ApplicationState() {
@@ -25,8 +26,9 @@ class ApplicationState extends ChangeNotifier {
   bool get loggedIn => _loggedIn;
 
   StreamSubscription<QuerySnapshot>? _siteSubscription;
-
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
+  StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
+
 
   Set<String> _visitedPlaces = {};
   Set<String> get visitedPlaces => _visitedPlaces;
@@ -36,6 +38,12 @@ class ApplicationState extends ChangeNotifier {
 
   List<SiteFilter> _siteFilters = [];
   List<SiteFilter> get siteFilters => _siteFilters;
+  List<SiteFilter> _achievements = [];
+  List<SiteFilter> get achievements => _achievements;
+
+  List<ProgressAchievement> _progressAchievements = [];
+  List<ProgressAchievement> get progressAchievements => _progressAchievements;
+
 
   Future<void> init() async {
     await Firebase.initializeApp(
@@ -52,7 +60,7 @@ class ApplicationState extends ChangeNotifier {
         // Check if user is admin and update status
         await checkAdminStatus(user);
 
-        // Load filters
+        // Load filtersFuture<void> loadProgressAchievements() async 
         await loadFilters();
 
         _achievementsSubscription = FirebaseFirestore.instance
@@ -123,6 +131,7 @@ class ApplicationState extends ChangeNotifier {
         _visitedPlaces = {};
         _siteSubscription?.cancel();
         _achievementsSubscription?.cancel();
+        _userAchievementsSubscription?.cancel();
       }
       notifyListeners();
     });
@@ -361,6 +370,38 @@ class ApplicationState extends ChangeNotifier {
     } catch (e) {
       print("Error loading filters: $e");
     }
+
+    // Load progress achievements after filters are loaded
+    await loadProgressAchievements();
+  }
+
+  Future<void> loadProgressAchievements() async {
+    if (!_loggedIn) return;
+
+    try {
+      _progressAchievements.clear();
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('progress_achievements')
+          .get();
+
+      for (final document in snapshot.docs) {
+        final title = document.get('title') as String;
+        final description = document.get('description') as String;
+        final requiredSites = List<String>.from(document.get('requiredSites') as List);
+
+        _progressAchievements.add(ProgressAchievement(
+          title: title,
+          description: description,
+          requiredSites: requiredSites,
+        ));
+      }
+
+      notifyListeners();
+      print('Loaded ${_progressAchievements.length} progress achievements');
+    } catch (e) {
+      print('Error loading progress achievements: $e');
+    }
   }
 
   Future<void> addFilter(String name) async {
@@ -461,4 +502,5 @@ class ApplicationState extends ChangeNotifier {
     }
     return sites;
   }
+
 }

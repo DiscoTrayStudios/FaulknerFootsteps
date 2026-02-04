@@ -1,8 +1,5 @@
 import 'package:faulkner_footsteps/app_router.dart';
-import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/progress_achievement.dart';
-import 'package:faulkner_footsteps/objects/site_filter.dart';
-import 'package:faulkner_footsteps/pages/achievement.dart';
 import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/login_page.dart';
 import 'package:faulkner_footsteps/widgets/achievement_item.dart';
@@ -11,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -33,11 +29,6 @@ class _ProfilePageState extends State<ProfilePage>
   late ApplicationState appState;
   // Animation controller for the achievement button
   late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  // Track notification count
-  int newAchievementCount = 0;
-  bool _hasCheckedAchievements = false;
 
   @override
   void initState() {
@@ -49,61 +40,15 @@ class _ProfilePageState extends State<ProfilePage>
       vsync: this,
     );
 
-    // Create pulsating animation
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
     // Start the animation and make it repeat
     _animationController.repeat(reverse: true);
-
-    // Check for notification count
   }
 
   void didChangeDependencies() {
     super.didChangeDependencies();
     appState = Provider.of<ApplicationState>(context, listen: false);
-    _loadAchievementNotificationStatus();
 
     _initProgressAchievements();
-  }
-
-  // Load achievement notification status
-  Future<void> _loadAchievementNotificationStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastAchievementCount = prefs.getInt('last_achievement_count') ?? 0;
-    final hasViewedAchievements =
-        prefs.getBool('has_viewed_achievements') ?? false;
-
-    // Get current achievements count
-    final currentCount = appState.visitedPlaces.length;
-
-    setState(() {
-      _hasCheckedAchievements = hasViewedAchievements;
-
-      // If user has never viewed achievements or has new ones
-      if (!hasViewedAchievements || currentCount > lastAchievementCount) {
-        newAchievementCount = currentCount - lastAchievementCount;
-        if (!hasViewedAchievements && currentCount == 0) {
-          // For new users who haven't visited any sites
-          newAchievementCount = 1; // Show notification to encourage exploring
-        }
-      } else {
-        newAchievementCount = 0;
-      }
-    });
-  }
-
-  // Save achievement notification status
-  Future<void> _saveAchievementNotificationStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final appState = Provider.of<ApplicationState>(context, listen: false);
-
-    await prefs.setInt('last_achievement_count', appState.visitedPlaces.length);
-    await prefs.setBool('has_viewed_achievements', true);
   }
 
   Future<void> _changePassword() async {
@@ -155,50 +100,11 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
-  void _navigateToAchievementsPage() async {
-    // Reset notification count
-    setState(() {
-      newAchievementCount = 0;
-    });
-  }
-
   late List<ProgressAchievement> progressAchievements;
 
   void _initProgressAchievements() {
-    progressAchievements = [];
-
-    // Find all sites that are monuments
-    List<String> monuments = [];
-    List<String> hendrixSites = [];
-
-    for (var site in appState.historicalSites) {
-      // Fixed: Changed from siteFilter.Monument to checking filter name
-      if (site.filters.any((filter) => filter.name == "Monument")) {
-        monuments.add(site.name);
-      }
-
-      // For demonstrative purposes, let's consider sites with "Hendrix" or "Hall" in the name
-      if (site.name.contains("Hendrix") || site.name.contains("Hall")) {
-        hendrixSites.add(site.name);
-      }
-    }
-
-    // Add the monument achievement
-    progressAchievements.add(ProgressAchievement(
-        title: "Monument Explorer",
-        description: "Visit all monument sites",
-        requiredSites: monuments,
-        filterType:
-            SiteFilter(name: "Monument") // Fixed: Using SiteFilter constructor
-        ));
-
-    // Add the Hendrix sites achievement
-    if (hendrixSites.isNotEmpty) {
-      progressAchievements.add(ProgressAchievement(
-          title: "Hendrix Campus Explorer",
-          description: "Visit all sites at Hendrix",
-          requiredSites: hendrixSites));
-    }
+    // Use achievements from app state (loaded from Firebase)
+    progressAchievements = appState.progressAchievements;
   }
 
   // // Save the current achievement count
@@ -217,17 +123,6 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    // Create color animation (glow effect)
-    late Animation<Color?> _colorAnimation;
-    _colorAnimation = ColorTween(
-      begin: Theme.of(context).colorScheme.onPrimary,
-      end: const Color.fromARGB(255, 76, 175, 80),
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
-    );
     final user = FirebaseAuth.instance.currentUser;
     // Get screen width to set explicit width for all cards
     final screenWidth = MediaQuery.of(context).size.width;
@@ -740,8 +635,7 @@ class _ProfilePageState extends State<ProfilePage>
 
                                     if (shouldLogout == true) {
                                       await FirebaseAuth.instance.signOut();
-                                      UserCredential user = await FirebaseAuth
-                                          .instance
+                                      await FirebaseAuth.instance
                                           .signInAnonymously();
                                       // i don't think this is necessary
                                       //User? credential = FirebaseAuth.instance.currentUser;
