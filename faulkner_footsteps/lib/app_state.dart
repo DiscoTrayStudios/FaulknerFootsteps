@@ -28,6 +28,7 @@ class ApplicationState extends ChangeNotifier {
   StreamSubscription<QuerySnapshot>? _siteSubscription;
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
+  StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
 
 
   Set<String> _visitedPlaces = {};
@@ -60,8 +61,29 @@ class ApplicationState extends ChangeNotifier {
         // Check if user is admin and update status
         await checkAdminStatus(user);
 
-        // Load filtersFuture<void> loadProgressAchievements() async 
+        // Load filters
         await loadFilters();
+
+        // Set up real-time listener for progress achievements
+        _progressAchievementsSubscription = FirebaseFirestore.instance
+            .collection('progress_achievements')
+            .snapshots()
+            .listen((snapshot) {
+          _progressAchievements = [];
+          for (final document in snapshot.docs) {
+            final title = document.get('title') as String;
+            final description = document.get('description') as String;
+            final requiredSites =
+                List<String>.from(document.get('requiredSites') as List);
+
+            _progressAchievements.add(ProgressAchievement(
+              title: title,
+              description: description,
+              requiredSites: requiredSites,
+            ));
+          }
+          notifyListeners();
+        });
 
         _achievementsSubscription = FirebaseFirestore.instance
             .collection('users')
@@ -129,9 +151,11 @@ class ApplicationState extends ChangeNotifier {
         _loggedIn = false;
         _historicalSites = [];
         _visitedPlaces = {};
+        _progressAchievements = [];
         _siteSubscription?.cancel();
         _achievementsSubscription?.cancel();
         _userAchievementsSubscription?.cancel();
+        _progressAchievementsSubscription?.cancel();
       }
       notifyListeners();
     });
