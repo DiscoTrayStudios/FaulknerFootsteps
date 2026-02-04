@@ -1,6 +1,5 @@
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/pin_Dialog.dart';
-import 'package:faulkner_footsteps/pages/achievement.dart';
 import 'package:faulkner_footsteps/pages/hist_site_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
