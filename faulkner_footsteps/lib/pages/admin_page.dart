@@ -54,7 +54,7 @@ class _AdminListPageState extends State<AdminListPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     app_state = Provider.of<ApplicationState>(context, listen: false);
-    print("AppState: ${app_state.historicalSites.length}");
+    // print("AppState: ${app_state.historicalSites.length}");
     acceptableFilters = app_state.siteFilters;
     // app_state.addListener(() {
     //   print("Appstate has changed!");
@@ -905,6 +905,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<InfoText> blurbs = existingSite?.blurbs.toList() ?? [];
     List<SiteFilter> chosenFilters = existingSite?.filters.toList() ?? [];
 
+    bool hasLoadedImages = false;
     List<ImageWithUrl> pairedImages = [];
 
     // Exists for a unifide key for storing in the pairedImages map.
@@ -912,16 +913,6 @@ class _AdminListPageState extends State<AdminListPage> {
 
     // detects when the user can submit the form
 
-    if (isEdit) {
-      // Load existing images
-      for (int i = 0; i < existingSite.imageUrls.length; i++) {
-        Uint8List? data = await app_state.getImage(existingSite.imageUrls[i]);
-        if (data != null) {
-          pairedImages.add(
-              ImageWithUrl(imageData: data, url: existingSite.imageUrls[i]));
-        }
-      }
-    }
     print("paired images length: ${pairedImages.length}");
 
     // Error strings to help user
@@ -961,6 +952,22 @@ class _AdminListPageState extends State<AdminListPage> {
 
         return StatefulBuilder(
           builder: (context, setState) {
+            if (isEdit && !hasLoadedImages) {
+              print(
+                  " loading existing images for edit dialog. Existing urls: ${existingSite!.imageUrls.length} Paired images: ${pairedImages.length}");
+              // Load existing images
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                for (int i = 0; i < existingSite.imageUrls.length; i++) {
+                  Uint8List? data =
+                      await app_state.getImage(existingSite.imageUrls[i]);
+                  if (data != null) {
+                    pairedImages.add(ImageWithUrl(
+                        imageData: data, url: existingSite.imageUrls[i]));
+                  }
+                }
+              });
+              hasLoadedImages = true;
+            }
             return Theme(
               data: adminPageTheme,
               child: Builder(
@@ -1332,6 +1339,8 @@ class _AdminListPageState extends State<AdminListPage> {
                               // Image stuff
                               ElevatedButton(
                                 onPressed: () async {
+                                  hasLoadedImages =
+                                      false; // Force reload of paired images in case of changes. This is lazy, but it works and avoids some complexity around trying to keep the pairedImages list in sync with tempImageChanges
                                   await _showEditSiteImagesDialog(
                                     existingSite ??
                                         HistSite(
