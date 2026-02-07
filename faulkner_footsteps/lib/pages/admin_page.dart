@@ -56,10 +56,10 @@ class _AdminListPageState extends State<AdminListPage> {
     app_state = Provider.of<ApplicationState>(context, listen: false);
     print("AppState: ${app_state.historicalSites.length}");
     acceptableFilters = app_state.siteFilters;
-    app_state.addListener(() {
-      print("Appstate has changed!");
-      setState(() {});
-    });
+    // app_state.addListener(() {
+    //   print("Appstate has changed!");
+    //   setState(() {});
+    // });
   }
 
   Future<void> pickImages() async {
@@ -616,130 +616,137 @@ class _AdminListPageState extends State<AdminListPage> {
                       const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
             )),
         Expanded(
-          child: ListView.builder(
-            itemCount: app_state.historicalSites.length,
-            itemBuilder: (BuildContext context, int index) {
-              final site = app_state.historicalSites[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: const Color.fromARGB(255, 238, 214, 196),
-                child: ExpansionTile(
-                  title: Text(
-                    site.name,
-                    style: GoogleFonts.ultra(
-                      textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 76, 32, 8),
+          child: Consumer<ApplicationState>(
+            builder: (context, appState, chile) {
+              return ListView.builder(
+                itemCount: appState.historicalSites.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final site = appState.historicalSites[index];
+                  return Card(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: const Color.fromARGB(255, 238, 214, 196),
+                    child: ExpansionTile(
+                      title: Text(
+                        site.name,
+                        style: GoogleFonts.ultra(
+                          textStyle: const TextStyle(
+                            color: Color.fromARGB(255, 76, 32, 8),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  subtitle: Text(
-                    site.description,
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Location: ${site.lat}, ${site.lng}',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 76, 32, 8),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Rating: ${site.avgRating.toStringAsFixed(1)} (${site.ratingAmount} ratings)',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 76, 32, 8),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Blurbs:',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...site.blurbs
-                              .map((blurb) => ListTile(
-                                    title: Text(
-                                      blurb.title,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                    subtitle: Text(blurb.value),
-                                    trailing: blurb.date.isNotEmpty
-                                        ? Text('Date: ${blurb.date}')
-                                        : null,
-                                  ))
-                              .toList(),
-                          OverflowBar(
-                            alignment: MainAxisAlignment.spaceEvenly,
+                      subtitle: Text(
+                        site.description,
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.edit),
-                                label: const Text('Edit Site'),
-                                onPressed: () => showSiteEditorDialog(
-                                    context: context, existingSite: site),
+                              Text(
+                                'Location: ${site.lat}, ${site.lng}',
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 76, 32, 8),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.delete),
-                                label: const Text('Delete Site'),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 238, 214, 196),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Rating: ${site.avgRating.toStringAsFixed(1)} (${site.ratingAmount} ratings)',
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 76, 32, 8),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Blurbs:',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              ...site.blurbs
+                                  .map((blurb) => ListTile(
                                         title: Text(
-                                          'Confirm Delete',
-                                          style: GoogleFonts.ultra(
-                                            textStyle: const TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 76, 32, 8),
-                                            ),
-                                          ),
+                                          blurb.title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
                                         ),
-                                        content: Text(
-                                            'Are you sure you want to delete ${site.name}?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              FirebaseFirestore.instance
-                                                  .collection('sites')
-                                                  .doc(site.name)
-                                                  .delete();
-                                              setState(() {
-                                                app_state.historicalSites
-                                                    .removeWhere((s) =>
-                                                        s.name == site.name);
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text('Delete'),
-                                          ),
-                                        ],
+                                        subtitle: Text(blurb.value),
+                                        trailing: blurb.date.isNotEmpty
+                                            ? Text('Date: ${blurb.date}')
+                                            : null,
+                                      ))
+                                  .toList(),
+                              OverflowBar(
+                                alignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.edit),
+                                    label: const Text('Edit Site'),
+                                    onPressed: () => showSiteEditorDialog(
+                                        context: context, existingSite: site),
+                                  ),
+                                  ElevatedButton.icon(
+                                    icon: const Icon(Icons.delete),
+                                    label: const Text('Delete Site'),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            backgroundColor:
+                                                const Color.fromARGB(
+                                                    255, 238, 214, 196),
+                                            title: Text(
+                                              'Confirm Delete',
+                                              style: GoogleFonts.ultra(
+                                                textStyle: const TextStyle(
+                                                  color: Color.fromARGB(
+                                                      255, 76, 32, 8),
+                                                ),
+                                              ),
+                                            ),
+                                            content: Text(
+                                                'Are you sure you want to delete ${site.name}?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  FirebaseFirestore.instance
+                                                      .collection('sites')
+                                                      .doc(site.name)
+                                                      .delete();
+                                                  setState(() {
+                                                    app_state.historicalSites
+                                                        .removeWhere((s) =>
+                                                            s.name ==
+                                                            site.name);
+                                                  });
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Delete'),
+                                              ),
+                                            ],
+                                          );
+                                        },
                                       );
                                     },
-                                  );
-                                },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),
@@ -799,6 +806,7 @@ class _AdminListPageState extends State<AdminListPage> {
       );
 
       finalPaths.addAll(uploadedPaths);
+      print("uploaded paths: ${uploadedPaths.length}");
     }
 
     // Build updated site
@@ -914,6 +922,7 @@ class _AdminListPageState extends State<AdminListPage> {
         }
       }
     }
+    print("paired images length: ${pairedImages.length}");
 
     // Error strings to help user
     String? nameError;
@@ -966,7 +975,8 @@ class _AdminListPageState extends State<AdminListPage> {
                       }
 
                       // Otherwise fall back to existing images
-                      return existingSite!.imageUrls;
+                      print("using existing images");
+                      return existingSite.imageUrls;
                     }
 
                     // New site: only use temp images
