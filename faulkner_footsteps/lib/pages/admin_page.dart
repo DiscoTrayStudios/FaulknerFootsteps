@@ -268,8 +268,9 @@ class _AdminListPageState extends State<AdminListPage> {
                   ),
                 ],
               ),
+              actionsAlignment: MainAxisAlignment.spaceBetween,
               actions: [
-                ElevatedButton(
+                TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
@@ -502,8 +503,9 @@ class _AdminListPageState extends State<AdminListPage> {
                 ),
               ],
             ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancel'),
               ),
@@ -557,7 +559,7 @@ class _AdminListPageState extends State<AdminListPage> {
                       ],
                     ),
                     actions: [
-                      ElevatedButton(
+                      TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: const Text("Cancel")),
                       ElevatedButton(
@@ -1375,7 +1377,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
                       // Cancel
-                      ElevatedButton(
+                      TextButton(
                         onPressed: () {
                           Navigator.pop(context);
                           // Cleanup temp image changes

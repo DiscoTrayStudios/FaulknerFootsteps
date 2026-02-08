@@ -194,7 +194,7 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
       ),
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        ElevatedButton(
+        TextButton(
           onPressed: () {
             widget.items.clear();
             widget.items.addAll(originalList);
