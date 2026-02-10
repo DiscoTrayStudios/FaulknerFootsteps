@@ -6,6 +6,7 @@ import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:faulkner_footsteps/pages/admin_progress_achievements.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -173,6 +174,13 @@ class _AdminListPageState extends State<AdminListPage> {
               currentPosition: const LatLng(2, 2),
               sites: app_state.historicalSites,
               centerPosition: const LatLng(2, 2)),
+        ),
+      );
+    } else if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AdminProgressAchievements(),
         ),
       );
     } else {
@@ -1495,6 +1503,7 @@ class _AdminListPageState extends State<AdminListPage> {
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
           unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.admin_panel_settings),
@@ -1503,6 +1512,10 @@ class _AdminListPageState extends State<AdminListPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.map),
               label: 'Map',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.star),
+              label: 'Achievements',
             ),
           ],
           currentIndex: _selectedIndex,
