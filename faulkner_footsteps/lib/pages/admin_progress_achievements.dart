@@ -315,6 +315,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                         ],
                       ),
                     ),
+                    actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context),
@@ -382,35 +383,8 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: adminPageTheme,
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            backgroundColor: adminPageTheme.colorScheme.surface,
-            appBar: AppBar(
-              backgroundColor: adminPageTheme.colorScheme.secondary,
-              elevation: 12.0,
-              shadowColor: const Color.fromARGB(135, 255, 255, 255),
-              title: Text(
-                "Achievements",
-                style: GoogleFonts.ultra(
-                  textStyle: TextStyle(
-                    color: adminPageTheme.colorScheme.onPrimary,
-                  ),
-                ),
-              ),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            body: Consumer<ApplicationState>(
-              builder: (context, appState, _) => _buildAdminContent(context, appState),
-            ),
-          );
-        },
-      ),
+    return Consumer<ApplicationState>(
+      builder: (context, appState, _) => _buildAdminContent(context, appState),
     );
   }
 }

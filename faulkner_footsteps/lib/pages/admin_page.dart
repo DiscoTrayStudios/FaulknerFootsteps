@@ -166,28 +166,9 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   void _onItemTapped(int index) {
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapDisplay2(
-              currentPosition: const LatLng(2, 2),
-              sites: app_state.historicalSites,
-              centerPosition: const LatLng(2, 2)),
-        ),
-      );
-    } else if (index == 2) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AdminProgressAchievements(),
-        ),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   ///For selecting the date with the blurbs
@@ -1486,7 +1467,11 @@ class _AdminListPageState extends State<AdminListPage> {
           elevation: 12.0,
           shadowColor: const Color.fromARGB(135, 255, 255, 255),
           title: Text(
-            _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
+            _selectedIndex == 0
+                ? "Admin Dashboard"
+                : _selectedIndex == 1
+                    ? "Map Display"
+                    : "Achievements",
             style: GoogleFonts.ultra(
               textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
@@ -1494,11 +1479,13 @@ class _AdminListPageState extends State<AdminListPage> {
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent(context)
-            : MapDisplay2(
-                currentPosition: const LatLng(2, 2),
-                sites: app_state.historicalSites,
-                centerPosition: const LatLng(2, 2),
-              ),
+            : _selectedIndex == 1
+                ? MapDisplay2(
+                    currentPosition: const LatLng(2, 2),
+                    sites: app_state.historicalSites,
+                    centerPosition: const LatLng(2, 2),
+                  )
+                : AdminProgressAchievements(),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
