@@ -31,7 +31,7 @@ class ImageWithUrl {
   Uint8List? imageData;
   String url;
 
-  ImageWithUrl({required this.imageData, required this.url});
+  ImageWithUrl({this.imageData, required this.url});
 }
 
 class _AdminListPageState extends State<AdminListPage> {
@@ -771,7 +771,8 @@ class _AdminListPageState extends State<AdminListPage> {
         FirebaseFirestore.instance.collection('sites').doc(originalName);
 
     // Load paired images from temp cache
-    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ?? [];
+    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ??
+        originalSite.imageUrls.map((url) => ImageWithUrl(url: url)).toList();
 
     // Determine which URLs were removed
     Set<String> remainingUrls = pairedImages
