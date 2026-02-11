@@ -131,13 +131,18 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
     final descriptionController = TextEditingController(
       text: existingAchievement?.description ?? '',
     );
-    final requiredSitesController = TextEditingController(
-      text: existingAchievement?.requiredSites.join('\n') ?? '',
-    );
+    List<String> selectedSites = List.from(existingAchievement?.requiredSites ?? []);
 
     String? titleError;
     String? descriptionError;
     String? sitesError;
+    var oldDocRef;
+    String? oldName = "";
+    if (isEdit){
+      oldName = existingAchievement?.title;
+      oldDocRef =
+        FirebaseFirestore.instance.collection('progress_achievements').doc();
+    }
 
     return showDialog(
       barrierDismissible: false,
@@ -209,13 +214,65 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: TextField(
-                              controller: requiredSitesController,
-                              maxLines: 5,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              decoration: const InputDecoration(
-                                  labelText: 'Required Sites',
-                                  hintText: 'Enter one site per line'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Required Sites',
+                                  style: Theme.of(context).textTheme.labelMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color.fromARGB(255, 220, 180, 140),
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    hint: const Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 12.0),
+                                      child: Text('Select sites...'),
+                                    ),
+                                    underline: const SizedBox(),
+                                    items: app_state.historicalSites.map((site) {
+                                      return DropdownMenuItem<String>(
+                                        value: site.name,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                          child: Text(site.name),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? value) {
+                                      if (value != null && !selectedSites.contains(value)) {
+                                        setState(() {
+                                          selectedSites.add(value);
+                                          sitesError = null;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                if (selectedSites.isNotEmpty)
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: selectedSites.map((site) {
+                                      return Chip(
+                                        label: Text(site),
+                                        onDeleted: () {
+                                          setState(() {
+                                            selectedSites.remove(site);
+                                          });
+                                        },
+                                        backgroundColor: const Color.fromARGB(255, 220, 180, 140),
+                                      );
+                                    }).toList(),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
@@ -240,34 +297,22 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             });
                             return;
                           }
-                          if (requiredSitesController.text.isEmpty) {
+                          if (selectedSites.isEmpty) {
                             setState(() {
                               sitesError = "At least one site is required";
                             });
                             return;
                           }
+                          if (!isEdit || titleController.text == oldName) {
 
                           try {
-                            final sites = requiredSitesController.text
-                                .split('\n')
-                                .where((s) => s.trim().isNotEmpty)
-                                .map((s) => s.trim())
-                                .toList();
-
-                            if (sites.isEmpty) {
-                              setState(() {
-                                sitesError = "At least one site is required";
-                              });
-                              return;
-                            }
-
                             await FirebaseFirestore.instance
                                 .collection('progress_achievements')
-                                .add({
+                                .doc(titleController.text)
+                                .set({
                               'title': titleController.text,
                               'description': descriptionController.text,
-                              'requiredSites': sites,
-                              'timestamp': DateTime.now(),
+                              'requiredSites': selectedSites,
                             });
 
                             Navigator.pop(context);
@@ -275,6 +320,26 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             setState(() {
                               sitesError = "Error saving achievement: $e";
                             });
+                          }
+                          }
+                          else{
+                            try {
+                            await oldDocRef.delete();
+                            await FirebaseFirestore.instance
+                                .collection('progress_achievements')
+                                .add({
+                              'title': titleController.text,
+                              'description': descriptionController.text,
+                              'requiredSites': selectedSites,
+                            });
+
+                            Navigator.pop(context);
+                          } catch (e) {
+                            setState(() {
+                              sitesError = "Error saving achievement: $e";
+                            });
+                          }
+                            
                           }
                         },
                         child: const Text("Add Achievement"),
