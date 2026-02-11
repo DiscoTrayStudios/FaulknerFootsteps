@@ -14,15 +14,7 @@ class AdminProgressAchievements extends StatefulWidget {
 }
 
 class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
-  late ApplicationState app_state;
-
-  @override
-  void initState() {
-    super.initState();
-    app_state = Provider.of<ApplicationState>(context, listen: false);
-  }
-
-  Widget _buildAdminContent(BuildContext context) {
+  Widget _buildAdminContent(BuildContext context, ApplicationState app_state) {
     return Column(
       children: [
         Padding(
@@ -137,11 +129,6 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                                   .collection('progress_achievements')
                                                   .doc(achievement.title)
                                                   .delete();
-                                              setState(() {
-                                                app_state.progressAchievements
-                                                    .removeWhere((a) =>
-                                                        a.title == achievement.title);
-                                              });
                                               Navigator.pop(context);
                                             },
                                             child: const Text('Delete'),
@@ -183,12 +170,9 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
     String? titleError;
     String? descriptionError;
     String? sitesError;
-    var oldDocRef;
     String? oldName = "";
     if (isEdit){
-      oldName = existingAchievement?.title;
-      oldDocRef =
-        FirebaseFirestore.instance.collection('progress_achievements').doc();
+      oldName = existingAchievement!.title;
     }
 
     return showDialog(
@@ -283,7 +267,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                       child: Text('Select sites...'),
                                     ),
                                     underline: const SizedBox(),
-                                    items: app_state.historicalSites.map((site) {
+                                    items: Provider.of<ApplicationState>(context).historicalSites.map((site) {
                                       return DropdownMenuItem<String>(
                                         value: site.name,
                                         child: Padding(
@@ -356,9 +340,17 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             });
                             return;
                           }
-                          if (!isEdit || titleController.text == oldName) {
 
                           try {
+                            // If editing and title changed, delete the old document first
+                            if (isEdit && titleController.text != oldName) {
+                              await FirebaseFirestore.instance
+                                  .collection('progress_achievements')
+                                  .doc(oldName)
+                                  .delete();
+                            }
+
+                            // Create or update the progress achievement
                             await FirebaseFirestore.instance
                                 .collection('progress_achievements')
                                 .doc(titleController.text)
@@ -373,26 +365,6 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             setState(() {
                               sitesError = "Error saving achievement: $e";
                             });
-                          }
-                          }
-                          else{
-                            try {
-                            await oldDocRef.delete();
-                            await FirebaseFirestore.instance
-                                .collection('progress_achievements')
-                                .add({
-                              'title': titleController.text,
-                              'description': descriptionController.text,
-                              'requiredSites': selectedSites,
-                            });
-
-                            Navigator.pop(context);
-                          } catch (e) {
-                            setState(() {
-                              sitesError = "Error saving achievement: $e";
-                            });
-                          }
-                            
                           }
                         },
                         child:  const Text("Submit"),
@@ -433,7 +405,9 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            body: _buildAdminContent(context),
+            body: Consumer<ApplicationState>(
+              builder: (context, appState, _) => _buildAdminContent(context, appState),
+            ),
           );
         },
       ),
