@@ -1469,9 +1469,7 @@ class _AdminListPageState extends State<AdminListPage> {
           title: Text(
             _selectedIndex == 0
                 ? "Admin Dashboard"
-                : _selectedIndex == 1
-                    ? "Map Display"
-                    : "Achievements",
+                : "Achievements",
             style: GoogleFonts.ultra(
               textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
@@ -1479,13 +1477,8 @@ class _AdminListPageState extends State<AdminListPage> {
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent(context)
-            : _selectedIndex == 1
-                ? MapDisplay2(
-                    currentPosition: const LatLng(2, 2),
-                    sites: app_state.historicalSites,
-                    centerPosition: const LatLng(2, 2),
-                  )
-                : AdminProgressAchievements(),
+            :
+                 AdminProgressAchievements(),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
@@ -1495,10 +1488,6 @@ class _AdminListPageState extends State<AdminListPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.admin_panel_settings),
               label: 'Admin',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map),
-              label: 'Map',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.star),
