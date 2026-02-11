@@ -241,7 +241,7 @@ class _AdminListPageState extends State<AdminListPage> {
                     child: TextField(
                       controller: titleController,
                       style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                           labelText: 'Title', hintText: 'Title'),
                     ),
                   ),
@@ -251,7 +251,7 @@ class _AdminListPageState extends State<AdminListPage> {
                       controller: valueController,
                       maxLines: 3,
                       style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                           labelText: 'Content', hintText: 'Content'),
                     ),
                   ),
@@ -262,8 +262,8 @@ class _AdminListPageState extends State<AdminListPage> {
                       style: Theme.of(context).textTheme.bodyMedium,
                       readOnly: true,
                       onTap: () => selectDate(context, dateController),
-                      decoration: const InputDecoration(
-                          labelText: 'Date', hintText: 'Date'),
+                      decoration:
+                          InputDecoration(labelText: 'Date', hintText: 'Date'),
                     ),
                   ),
                 ],
