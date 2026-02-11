@@ -33,10 +33,9 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
             ),
             onPressed: () => showProgressAchievementEditorDialog(context: context),
             child: Text(
-              'Add New Progress Achievement',
+              'Add New Historical Site',
               style: GoogleFonts.ultra(
                 textStyle: const TextStyle(
-                  fontSize: 16,
                   color: Color.fromARGB(255, 76, 32, 8),
                 ),
               ),
@@ -105,6 +104,54 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                       onPressed: () => showProgressAchievementEditorDialog(
                                           context: context, existingAchievement: achievement),
                                     ),
+                                    ElevatedButton.icon(
+                                icon: const Icon(Icons.delete),
+                                label: const Text('Delete Site'),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 238, 214, 196),
+                                        title: Text(
+                                          'Confirm Delete',
+                                          style: GoogleFonts.ultra(
+                                            textStyle: const TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 76, 32, 8),
+                                            ),
+                                          ),
+                                        ),
+                                        content: Text(
+                                            'Are you sure you want to delete ${achievement.title}?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              FirebaseFirestore.instance
+                                                  .collection('progress_achievements')
+                                                  .doc(achievement.title)
+                                                  .delete();
+                                              setState(() {
+                                                app_state.progressAchievements
+                                                    .removeWhere((a) =>
+                                                        a.title == achievement.title);
+                                              });
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
                                   ],
                                 ),
                               ],
@@ -262,13 +309,19 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                     runSpacing: 8,
                                     children: selectedSites.map((site) {
                                       return Chip(
-                                        label: Text(site),
+                                        label: Text(site,
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 243, 228),
+                                          fontSize: 12),
+                                        ),
                                         onDeleted: () {
                                           setState(() {
                                             selectedSites.remove(site);
                                           });
                                         },
-                                        backgroundColor: const Color.fromARGB(255, 220, 180, 140),
+                                        backgroundColor: const Color.fromARGB(
+                                          255, 107, 79, 79),
                                       );
                                     }).toList(),
                                   ),
@@ -279,7 +332,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                       ),
                     ),
                     actions: [
-                      TextButton(
+                      ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel'),
                       ),
@@ -342,7 +395,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                             
                           }
                         },
-                        child: const Text("Add Achievement"),
+                        child:  const Text("Submit"),
                       ),
                     ],
                   );
@@ -368,7 +421,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
               elevation: 12.0,
               shadowColor: const Color.fromARGB(135, 255, 255, 255),
               title: Text(
-                "Progress Achievements",
+                "Achievements",
                 style: GoogleFonts.ultra(
                   textStyle: TextStyle(
                     color: adminPageTheme.colorScheme.onPrimary,
