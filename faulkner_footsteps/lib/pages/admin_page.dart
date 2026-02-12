@@ -212,88 +212,6 @@ class _AdminListPageState extends State<AdminListPage> {
     }
   }
 
-  Future<void> _showAddBlurbDialog(List<InfoText> blurbs) async {
-    final titleController = TextEditingController();
-    final valueController = TextEditingController();
-    final dateController = TextEditingController();
-
-    return showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Theme(
-            data: adminPageTheme,
-            child: AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                'Add Blurb',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
-                  ),
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: titleController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: InputDecoration(
-                          labelText: 'Title', hintText: 'Title'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: valueController,
-                      maxLines: 3,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: InputDecoration(
-                          labelText: 'Content', hintText: 'Content'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: dateController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      readOnly: true,
-                      onTap: () => selectDate(context, dateController),
-                      decoration:
-                          InputDecoration(labelText: 'Date', hintText: 'Date'),
-                    ),
-                  ),
-                ],
-              ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (titleController.text.isNotEmpty &&
-                        valueController.text.isNotEmpty) {
-                      blurbs.add(InfoText(
-                        title: titleController.text,
-                        value: valueController.text,
-                        date: dateController.text,
-                      ));
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Add Blurb'),
-                ),
-              ],
-            ));
-      },
-    );
-  }
-
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
     List<Uint8List?> siteImages = site.images;
     List<String> siteImageURLs = site.imageUrls;
@@ -444,12 +362,15 @@ class _AdminListPageState extends State<AdminListPage> {
     setState(() {});
   }
 
-  Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
-    final titleController = TextEditingController(text: blurbs[index].title);
-    final valueController = TextEditingController(text: blurbs[index].value);
-    final dateController = TextEditingController(text: blurbs[index].date);
+  Future<InfoText?> showBlurbDialog(
+      {required BuildContext context,
+      InfoText? existing,
+      required List<InfoText> blurbs}) async {
+    final titleController = TextEditingController(text: existing?.title ?? "");
+    final valueController = TextEditingController(text: existing?.value ?? "");
+    final dateController = TextEditingController(text: existing?.date ?? "");
 
-    return showDialog(
+    return showDialog<InfoText>(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
@@ -458,7 +379,7 @@ class _AdminListPageState extends State<AdminListPage> {
           child: AlertDialog(
             backgroundColor: const Color.fromARGB(255, 238, 214, 196),
             title: Text(
-              'Edit Blurb',
+              existing == null ? 'Add Blurb' : 'Edit Blurb',
               style: GoogleFonts.ultra(
                 textStyle: const TextStyle(
                   color: Color.fromARGB(255, 76, 32, 8),
@@ -473,32 +394,26 @@ class _AdminListPageState extends State<AdminListPage> {
                   child: TextField(
                     controller: titleController,
                     style: Theme.of(context).textTheme.bodyMedium,
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Title'),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                   child: TextField(
-                    style: Theme.of(context).textTheme.bodyMedium,
                     controller: valueController,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Content',
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    decoration: const InputDecoration(labelText: 'Content'),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
                   child: TextField(
                     controller: dateController,
-                    style: Theme.of(context).textTheme.bodyMedium,
                     readOnly: true,
+                    style: Theme.of(context).textTheme.bodyMedium,
                     onTap: () => selectDate(context, dateController),
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Date'),
                   ),
                 ),
               ],
@@ -511,15 +426,28 @@ class _AdminListPageState extends State<AdminListPage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  print("pressed save changes");
-                  blurbs[index] = InfoText(
+                  if (titleController.text.isEmpty ||
+                      valueController.text.isEmpty) {
+                    return;
+                  }
+
+                  final result = InfoText(
                     title: titleController.text,
                     value: valueController.text,
                     date: dateController.text,
                   );
-                  Navigator.pop(context);
+                  if (existing != null && blurbs != null) {
+                    int index = blurbs.indexOf(existing);
+                    if (index != -1) {
+                      blurbs[index] = result;
+                    }
+                  } else {
+                    blurbs?.add(result);
+                  }
+
+                  Navigator.pop(context, result);
                 },
-                child: const Text('Save Changes'),
+                child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
               ),
             ],
           ),
@@ -1233,8 +1161,11 @@ class _AdminListPageState extends State<AdminListPage> {
                                         IconButton(
                                           icon: const Icon(Icons.edit),
                                           onPressed: () async {
-                                            await _showEditBlurbDialog(
-                                                blurbs, idx);
+                                            await showBlurbDialog(
+                                                context: context,
+                                                existing: blurb,
+                                                blurbs: blurbs);
+
                                             setState(() {});
                                           },
                                         ),
@@ -1254,7 +1185,8 @@ class _AdminListPageState extends State<AdminListPage> {
 
                               ElevatedButton(
                                 onPressed: () async {
-                                  await _showAddBlurbDialog(blurbs);
+                                  await showBlurbDialog(
+                                      context: context, blurbs: blurbs);
                                   if (blurbs.isNotEmpty) {
                                     setState(() {
                                       blurbError = null;
