@@ -6,6 +6,7 @@ import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
+import 'package:faulkner_footsteps/pages/admin_progress_achievements.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -165,21 +166,9 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   void _onItemTapped(int index) {
-    if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapDisplay2(
-              currentPosition: const LatLng(2, 2),
-              sites: app_state.historicalSites,
-              centerPosition: const LatLng(2, 2)),
-        ),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   ///For selecting the date with the blurbs
@@ -1478,7 +1467,9 @@ class _AdminListPageState extends State<AdminListPage> {
           elevation: 12.0,
           shadowColor: const Color.fromARGB(135, 255, 255, 255),
           title: Text(
-            _selectedIndex == 0 ? "Admin Dashboard" : "Map Display",
+            _selectedIndex == 0
+                ? "Admin Dashboard"
+                : "Achievements",
             style: GoogleFonts.ultra(
               textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
@@ -1486,23 +1477,21 @@ class _AdminListPageState extends State<AdminListPage> {
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent(context)
-            : MapDisplay2(
-                currentPosition: const LatLng(2, 2),
-                sites: app_state.historicalSites,
-                centerPosition: const LatLng(2, 2),
-              ),
+            :
+                 AdminProgressAchievements(),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
           unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.admin_panel_settings),
               label: 'Admin',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.map),
-              label: 'Map',
+              icon: Icon(Icons.star),
+              label: 'Achievements',
             ),
           ],
           currentIndex: _selectedIndex,
