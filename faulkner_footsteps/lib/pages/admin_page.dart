@@ -370,75 +370,135 @@ class _AdminListPageState extends State<AdminListPage> {
     final valueController = TextEditingController(text: existing?.value ?? "");
     final dateController = TextEditingController(text: existing?.date ?? "");
 
+    String? titleError;
+    String? contentError;
+
+    bool checkCanSubmit() {
+      return titleController.text.isNotEmpty && valueController.text.isNotEmpty;
+    }
+
+    bool canSubmit = checkCanSubmit();
+
     return showDialog<InfoText>(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-          title: Text(
-            existing == null ? 'Add Blurb' : 'Edit Blurb',
-            style: GoogleFonts.ultra(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 76, 32, 8),
-              ),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                child: TextField(
-                  controller: titleController,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: const InputDecoration(labelText: 'Title'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+              title: Text(
+                existing == null ? 'Add Blurb' : 'Edit Blurb',
+                style: GoogleFonts.ultra(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 76, 32, 8),
+                  ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                child: TextField(
-                  controller: valueController,
-                  maxLines: 3,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  decoration: const InputDecoration(labelText: 'Content'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: titleController,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: InputDecoration(
+                            labelText: 'Title', errorText: titleError),
+                        onChanged: (value) {
+                          if (titleController.text.isNotEmpty) {
+                            titleError = null;
+                          } else {
+                            titleError = "Title is required";
+                          }
+                          setState(() {
+                            canSubmit = checkCanSubmit();
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: valueController,
+                        maxLines: 3,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        decoration: InputDecoration(
+                            labelText: 'Content', errorText: contentError),
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            contentError = null;
+                          } else {
+                            contentError = "Content is required";
+                          }
+                          setState(() {
+                            canSubmit = checkCanSubmit();
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                      child: TextField(
+                        controller: dateController,
+                        readOnly: true,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        onTap: () => selectDate(context, dateController),
+                        decoration: const InputDecoration(labelText: 'Date'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                child: TextField(
-                  controller: dateController,
-                  readOnly: true,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  onTap: () => selectDate(context, dateController),
-                  decoration: const InputDecoration(labelText: 'Date'),
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isEmpty ||
-                    valueController.text.isEmpty) {
-                  return;
-                }
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canSubmit
+                        ? Theme.of(context)
+                                .elevatedButtonTheme
+                                .style
+                                ?.backgroundColor
+                                ?.resolve({WidgetState.pressed}) ??
+                            Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
+                  onPressed: canSubmit
+                      ? () {
+                          if (titleController.text.isEmpty ||
+                              valueController.text.isEmpty) {
+                            return;
+                          }
 
-                final result = InfoText(
-                  title: titleController.text,
-                  value: valueController.text,
-                  date: dateController.text,
-                );
-                Navigator.pop(context, result); // return result on submit
-              },
-              child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
-            ),
-          ],
+                          final result = InfoText(
+                            title: titleController.text,
+                            value: valueController.text,
+                            date: dateController.text,
+                          );
+                          Navigator.pop(
+                              context, result); // return result on submit
+                        }
+                      : () {
+                          // display errors:
+                          if (titleController.text.isEmpty) {
+                            titleError = "Title is required";
+                          }
+                          if (valueController.text.isEmpty) {
+                            contentError = "Content is required";
+                          }
+                          setState(() {});
+                          return;
+                        },
+                  child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
