@@ -395,60 +395,65 @@ class _AdminListPageState extends State<AdminListPage> {
                   ),
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: titleController,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: InputDecoration(
-                            labelText: 'Title', errorText: titleError),
-                        onChanged: (value) {
-                          if (titleController.text.isNotEmpty) {
-                            titleError = null;
-                          } else {
-                            titleError = "Title is required";
-                          }
-                          setState(() {
-                            canSubmit = checkCanSubmit();
-                          });
-                        },
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    minWidth: MediaQuery.of(context).size.width * 0.7),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: titleController,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: InputDecoration(
+                              labelText: 'Title', errorText: titleError),
+                          onChanged: (value) {
+                            if (titleController.text.isNotEmpty) {
+                              titleError = null;
+                            } else {
+                              titleError = "Title is required";
+                            }
+                            setState(() {
+                              canSubmit = checkCanSubmit();
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: valueController,
-                        maxLines: 3,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        decoration: InputDecoration(
-                            labelText: 'Content', errorText: contentError),
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            contentError = null;
-                          } else {
-                            contentError = "Content is required";
-                          }
-                          setState(() {
-                            canSubmit = checkCanSubmit();
-                          });
-                        },
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: valueController,
+                          maxLines: 3,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: InputDecoration(
+                              labelText: 'Content', errorText: contentError),
+                          onChanged: (value) {
+                            if (value.isNotEmpty) {
+                              contentError = null;
+                            } else {
+                              contentError = "Content is required";
+                            }
+                            setState(() {
+                              canSubmit = checkCanSubmit();
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                      child: TextField(
-                        controller: dateController,
-                        readOnly: true,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        onTap: () => selectDate(context, dateController),
-                        decoration: const InputDecoration(labelText: 'Date'),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: dateController,
+                          readOnly: true,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          onTap: () => selectDate(context, dateController),
+                          decoration: const InputDecoration(labelText: 'Date'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               actionsAlignment: MainAxisAlignment.spaceBetween,
