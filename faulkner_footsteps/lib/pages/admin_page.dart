@@ -792,7 +792,8 @@ class _AdminListPageState extends State<AdminListPage> {
     }
 
     // Start with existing URLs that remain
-    List<String> finalPaths = remainingUrls.toList();
+    // List<String> finalPaths = remainingUrls.toList();
+    List<String> uploadedPaths = [];
 
     // Upload newly added files
     if (newlyAddedFiles.isNotEmpty) {
@@ -800,14 +801,24 @@ class _AdminListPageState extends State<AdminListPage> {
       List<String> randomNames =
           List.generate(newlyAddedFiles.length, (_) => uuid.v4());
 
-      List<String> uploadedPaths = await uploadImages(
+      uploadedPaths = await uploadImages(
         folderName,
         randomNames,
         files: newlyAddedFiles,
       );
+    }
 
-      finalPaths.addAll(uploadedPaths);
-      print("uploaded paths: ${uploadedPaths.length}");
+    List<String> finalPaths = [];
+    int uploadedIndex = 0;
+    for (var img in pairedImages) {
+      if (img.url.isNotEmpty) {
+        // Existing image that wasn't removed
+        finalPaths.add(img.url);
+      } else {
+        // url is empty, so this is a newly added image that needs to be uploaded
+        finalPaths.add(uploadedPaths[uploadedIndex]);
+        uploadedIndex++;
+      }
     }
 
     // Build updated site
