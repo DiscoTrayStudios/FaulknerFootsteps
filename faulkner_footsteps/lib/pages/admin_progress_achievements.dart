@@ -322,7 +322,13 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () async {
+                        style: ElevatedButton.styleFrom(
+                          disabledBackgroundColor: Colors.grey,
+                        ),
+                        onPressed: titleController.text.isNotEmpty &&
+                                descriptionController.text.isNotEmpty &&
+                                selectedSites.isNotEmpty
+                            ? () async {
                           if (titleController.text.isEmpty) {
                             setState(() {
                               titleError = "Title is required";
@@ -367,7 +373,8 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                               sitesError = "Error saving achievement: $e";
                             });
                           }
-                        },
+                            }
+                            : null,
                         child:  const Text("Submit"),
                       ),
                     ],
