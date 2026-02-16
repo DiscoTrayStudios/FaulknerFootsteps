@@ -25,7 +25,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
             ),
             onPressed: () => showProgressAchievementEditorDialog(context: context),
             child: Text(
-              'Add New Historical Site',
+              'Add New Achievements',
               style: GoogleFonts.ultra(
                 textStyle: const TextStyle(
                   color: Color.fromARGB(255, 76, 32, 8),
@@ -98,7 +98,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                     ),
                                     ElevatedButton.icon(
                                 icon: const Icon(Icons.delete),
-                                label: const Text('Delete Site'),
+                                label: const Text('Delete Achievement'),
                                 onPressed: () {
                                   showDialog(
                                     context: context,
