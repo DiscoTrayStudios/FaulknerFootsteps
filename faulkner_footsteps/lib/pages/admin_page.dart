@@ -32,7 +32,7 @@ class ImageWithUrl {
   Uint8List? imageData;
   String url;
 
-  ImageWithUrl({required this.imageData, required this.url});
+  ImageWithUrl({this.imageData, required this.url});
 }
 
 class _AdminListPageState extends State<AdminListPage> {
@@ -55,12 +55,12 @@ class _AdminListPageState extends State<AdminListPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     app_state = Provider.of<ApplicationState>(context, listen: false);
-    print("AppState: ${app_state.historicalSites.length}");
+    // print("AppState: ${app_state.historicalSites.length}");
     acceptableFilters = app_state.siteFilters;
-    app_state.addListener(() {
-      print("Appstate has changed!");
-      setState(() {});
-    });
+    // app_state.addListener(() {
+    //   print("Appstate has changed!");
+    //   setState(() {});
+    // });
   }
 
   Future<void> pickImages() async {
@@ -199,87 +199,6 @@ class _AdminListPageState extends State<AdminListPage> {
     if (picked != null) {
       dateController.text = "${picked.month}/${picked.day}/${picked.year}";
     }
-  }
-
-  Future<void> _showAddBlurbDialog(List<InfoText> blurbs) async {
-    final titleController = TextEditingController();
-    final valueController = TextEditingController();
-    final dateController = TextEditingController();
-
-    return showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Theme(
-            data: adminPageTheme,
-            child: AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                'Add Blurb',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
-                  ),
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: titleController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Title', hintText: 'Title'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: valueController,
-                      maxLines: 3,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      decoration: const InputDecoration(
-                          labelText: 'Content', hintText: 'Content'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                    child: TextField(
-                      controller: dateController,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      readOnly: true,
-                      onTap: () => selectDate(context, dateController),
-                      decoration: const InputDecoration(
-                          labelText: 'Date', hintText: 'Date'),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (titleController.text.isNotEmpty &&
-                        valueController.text.isNotEmpty) {
-                      blurbs.add(InfoText(
-                        title: titleController.text,
-                        value: valueController.text,
-                        date: dateController.text,
-                      ));
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Add Blurb'),
-                ),
-              ],
-            ));
-      },
-    );
   }
 
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
@@ -432,84 +351,148 @@ class _AdminListPageState extends State<AdminListPage> {
     setState(() {});
   }
 
-  Future<void> _showEditBlurbDialog(List<InfoText> blurbs, int index) async {
-    final titleController = TextEditingController(text: blurbs[index].title);
-    final valueController = TextEditingController(text: blurbs[index].value);
-    final dateController = TextEditingController(text: blurbs[index].date);
+  Future<InfoText?> showBlurbDialog({
+    required BuildContext context,
+    InfoText? existing,
+  }) async {
+    final titleController = TextEditingController(text: existing?.title ?? "");
+    final valueController = TextEditingController(text: existing?.value ?? "");
+    final dateController = TextEditingController(text: existing?.date ?? "");
 
-    return showDialog(
+    String? titleError;
+    String? contentError;
+
+    bool checkCanSubmit() {
+      return titleController.text.isNotEmpty && valueController.text.isNotEmpty;
+    }
+
+    bool canSubmit = checkCanSubmit();
+
+    return showDialog<InfoText>(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
-        return Theme(
-          data: adminPageTheme,
-          child: AlertDialog(
-            backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-            title: Text(
-              'Edit Blurb',
-              style: GoogleFonts.ultra(
-                textStyle: const TextStyle(
-                  color: Color.fromARGB(255, 76, 32, 8),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
+              title: Text(
+                existing == null ? 'Add Blurb' : 'Edit Blurb',
+                style: GoogleFonts.ultra(
+                  textStyle: const TextStyle(
+                    color: Color.fromARGB(255, 76, 32, 8),
+                  ),
                 ),
               ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                  child: TextField(
-                    controller: titleController,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    decoration: const InputDecoration(
-                      labelText: 'Title',
-                    ),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.9,
+                    minWidth: MediaQuery.of(context).size.width * 0.9),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: titleController,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: InputDecoration(
+                              labelText: 'Title', errorText: titleError),
+                          onChanged: (value) {
+                            if (titleController.text.isNotEmpty) {
+                              titleError = null;
+                            } else {
+                              titleError = "Title is required";
+                            }
+                            setState(() {
+                              canSubmit = checkCanSubmit();
+                            });
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: valueController,
+                          maxLines: 3,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          decoration: InputDecoration(
+                              labelText: 'Content', errorText: contentError),
+                          onChanged: (value) {
+                            if (value.isNotEmpty) {
+                              contentError = null;
+                            } else {
+                              contentError = "Content is required";
+                            }
+                            setState(() {
+                              canSubmit = checkCanSubmit();
+                            });
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                        child: TextField(
+                          controller: dateController,
+                          readOnly: true,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          onTap: () => selectDate(context, dateController),
+                          decoration: const InputDecoration(labelText: 'Date'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                  child: TextField(
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    controller: valueController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Content',
-                    ),
-                  ),
+              ),
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                  child: TextField(
-                    controller: dateController,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    readOnly: true,
-                    onTap: () => selectDate(context, dateController),
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                    ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canSubmit
+                        ? Theme.of(context)
+                                .elevatedButtonTheme
+                                .style
+                                ?.backgroundColor
+                                ?.resolve({WidgetState.pressed}) ??
+                            Theme.of(context).colorScheme.primary
+                        : Colors.grey,
                   ),
+                  onPressed: canSubmit
+                      ? () {
+                          if (titleController.text.isEmpty ||
+                              valueController.text.isEmpty) {
+                            return;
+                          }
+
+                          final result = InfoText(
+                            title: titleController.text,
+                            value: valueController.text,
+                            date: dateController.text,
+                          );
+                          Navigator.pop(
+                              context, result); // return result on submit
+                        }
+                      : () {
+                          // display errors:
+                          if (titleController.text.isEmpty) {
+                            titleError = "Title is required";
+                          }
+                          if (valueController.text.isEmpty) {
+                            contentError = "Content is required";
+                          }
+                          setState(() {});
+                          return;
+                        },
+                  child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
                 ),
               ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  print("pressed save changes");
-                  blurbs[index] = InfoText(
-                    title: titleController.text,
-                    value: valueController.text,
-                    date: dateController.text,
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text('Save Changes'),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -546,7 +529,7 @@ class _AdminListPageState extends State<AdminListPage> {
                       ],
                     ),
                     actions: [
-                      ElevatedButton(
+                      TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: const Text("Cancel")),
                       ElevatedButton(
@@ -605,67 +588,91 @@ class _AdminListPageState extends State<AdminListPage> {
                       const TextStyle(color: Color.fromARGB(255, 76, 32, 8))),
             )),
         Expanded(
-          child: ListView.builder(
-            itemCount: app_state.historicalSites.length,
-            itemBuilder: (BuildContext context, int index) {
-              final site = app_state.historicalSites[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: const Color.fromARGB(255, 238, 214, 196),
-                child: ExpansionTile(
-                  title: Text(
-                    site.name,
-                    style: GoogleFonts.ultra(
-                      textStyle: const TextStyle(
-                        color: Color.fromARGB(255, 76, 32, 8),
+          child: Consumer<ApplicationState>(
+            builder: (context, appState, chile) {
+              return ListView.builder(
+                itemCount: appState.historicalSites.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final site = appState.historicalSites[index];
+                  return Card(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: const Color.fromARGB(255, 238, 214, 196),
+                    child: ExpansionTile(
+                      title: Text(
+                        site.name,
+                        style: GoogleFonts.ultra(
+                          textStyle: const TextStyle(
+                            color: Color.fromARGB(255, 76, 32, 8),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  subtitle: Text(
-                    site.description,
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Location: ${site.lat}, ${site.lng}',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 76, 32, 8),
-                              fontWeight: FontWeight.bold,
+                      subtitle: Text(
+                        site.description,
+                      ),
+                      children: [
+                        ConstrainedBox(
+                          constraints:
+                              BoxConstraints(maxHeight: 300, minHeight: 10),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4.0),
+                            child: Scrollbar(
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Location: ${site.lat}, ${site.lng}',
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 76, 32, 8),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Rating: ${site.avgRating.toStringAsFixed(1)} (${site.ratingAmount} ratings)',
+                                        style: const TextStyle(
+                                          color: Color.fromARGB(255, 76, 32, 8),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Blurbs:',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ...site.blurbs
+                                          .map((blurb) => ListTile(
+                                                title: Text(
+                                                  blurb.title,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium,
+                                                ),
+                                                subtitle: Text(blurb.value),
+                                                trailing: blurb.date.isNotEmpty
+                                                    ? Text(
+                                                        'Date: ${blurb.date}')
+                                                    : null,
+                                              ))
+                                          .toList(),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Rating: ${site.avgRating.toStringAsFixed(1)} (${site.ratingAmount} ratings)',
-                            style: const TextStyle(
-                              color: Color.fromARGB(255, 76, 32, 8),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Blurbs:',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          ...site.blurbs
-                              .map((blurb) => ListTile(
-                                    title: Text(
-                                      blurb.title,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                    subtitle: Text(blurb.value),
-                                    trailing: blurb.date.isNotEmpty
-                                        ? Text('Date: ${blurb.date}')
-                                        : null,
-                                  ))
-                              .toList(),
-                          OverflowBar(
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
+                          child: OverflowBar(
                             alignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               ElevatedButton.icon(
@@ -724,11 +731,11 @@ class _AdminListPageState extends State<AdminListPage> {
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),
@@ -751,7 +758,8 @@ class _AdminListPageState extends State<AdminListPage> {
         FirebaseFirestore.instance.collection('sites').doc(originalName);
 
     // Load paired images from temp cache
-    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ?? [];
+    List<ImageWithUrl> pairedImages = tempImageChanges[originalName] ??
+        originalSite.imageUrls.map((url) => ImageWithUrl(url: url)).toList();
 
     // Determine which URLs were removed
     Set<String> remainingUrls = pairedImages
@@ -773,7 +781,8 @@ class _AdminListPageState extends State<AdminListPage> {
     }
 
     // Start with existing URLs that remain
-    List<String> finalPaths = remainingUrls.toList();
+    // List<String> finalPaths = remainingUrls.toList();
+    List<String> uploadedPaths = [];
 
     // Upload newly added files
     if (newlyAddedFiles.isNotEmpty) {
@@ -781,13 +790,24 @@ class _AdminListPageState extends State<AdminListPage> {
       List<String> randomNames =
           List.generate(newlyAddedFiles.length, (_) => uuid.v4());
 
-      List<String> uploadedPaths = await uploadImages(
+      uploadedPaths = await uploadImages(
         folderName,
         randomNames,
         files: newlyAddedFiles,
       );
+    }
 
-      finalPaths.addAll(uploadedPaths);
+    List<String> finalPaths = [];
+    int uploadedIndex = 0;
+    for (var img in pairedImages) {
+      if (img.url.isNotEmpty) {
+        // Existing image that wasn't removed
+        finalPaths.add(img.url);
+      } else {
+        // url is empty, so this is a newly added image that needs to be uploaded
+        finalPaths.add(uploadedPaths[uploadedIndex]);
+        uploadedIndex++;
+      }
     }
 
     // Build updated site
@@ -886,6 +906,7 @@ class _AdminListPageState extends State<AdminListPage> {
     List<InfoText> blurbs = existingSite?.blurbs.toList() ?? [];
     List<SiteFilter> chosenFilters = existingSite?.filters.toList() ?? [];
 
+    bool hasLoadedImages = false;
     List<ImageWithUrl> pairedImages = [];
 
     // Exists for a unifide key for storing in the pairedImages map.
@@ -893,16 +914,7 @@ class _AdminListPageState extends State<AdminListPage> {
 
     // detects when the user can submit the form
 
-    if (isEdit) {
-      // Load existing images
-      for (int i = 0; i < existingSite.imageUrls.length; i++) {
-        Uint8List? data = await app_state.getImage(existingSite.imageUrls[i]);
-        if (data != null) {
-          pairedImages.add(
-              ImageWithUrl(imageData: data, url: existingSite.imageUrls[i]));
-        }
-      }
-    }
+    print("paired images length: ${pairedImages.length}");
 
     // Error strings to help user
     String? nameError;
@@ -941,6 +953,22 @@ class _AdminListPageState extends State<AdminListPage> {
 
         return StatefulBuilder(
           builder: (context, setState) {
+            if (isEdit && !hasLoadedImages) {
+              print(
+                  " loading existing images for edit dialog. Existing urls: ${existingSite!.imageUrls.length} Paired images: ${pairedImages.length}");
+              // Load existing images
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                for (int i = 0; i < existingSite.imageUrls.length; i++) {
+                  Uint8List? data =
+                      await app_state.getImage(existingSite.imageUrls[i]);
+                  if (data != null) {
+                    pairedImages.add(ImageWithUrl(
+                        imageData: data, url: existingSite.imageUrls[i]));
+                  }
+                }
+              });
+              hasLoadedImages = true;
+            }
             return Theme(
               data: adminPageTheme,
               child: Builder(
@@ -955,7 +983,8 @@ class _AdminListPageState extends State<AdminListPage> {
                       }
 
                       // Otherwise fall back to existing images
-                      return existingSite!.imageUrls;
+                      print("using existing images");
+                      return existingSite.imageUrls;
                     }
 
                     // New site: only use temp images
@@ -1185,8 +1214,15 @@ class _AdminListPageState extends State<AdminListPage> {
                                         IconButton(
                                           icon: const Icon(Icons.edit),
                                           onPressed: () async {
-                                            await _showEditBlurbDialog(
-                                                blurbs, idx);
+                                            final updated =
+                                                await showBlurbDialog(
+                                              context: context,
+                                              existing: blurb,
+                                            );
+                                            if (updated != null) {
+                                              blurbs[idx] = updated;
+                                            }
+
                                             setState(() {});
                                           },
                                         ),
@@ -1206,7 +1242,12 @@ class _AdminListPageState extends State<AdminListPage> {
 
                               ElevatedButton(
                                 onPressed: () async {
-                                  await _showAddBlurbDialog(blurbs);
+                                  final newBlurb = await showBlurbDialog(
+                                    context: context,
+                                  );
+                                  if (newBlurb != null) {
+                                    blurbs.add(newBlurb);
+                                  }
                                   if (blurbs.isNotEmpty) {
                                     setState(() {
                                       blurbError = null;
@@ -1311,6 +1352,8 @@ class _AdminListPageState extends State<AdminListPage> {
                               // Image stuff
                               ElevatedButton(
                                 onPressed: () async {
+                                  hasLoadedImages =
+                                      false; // Force reload of paired images in case of changes. This is lazy, but it works and avoids some complexity around trying to keep the pairedImages list in sync with tempImageChanges
                                   await _showEditSiteImagesDialog(
                                     existingSite ??
                                         HistSite(
@@ -1345,8 +1388,11 @@ class _AdminListPageState extends State<AdminListPage> {
                     actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
                       // Cancel
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          // Cleanup temp image changes
+                        },
                         child: const Text("Cancel"),
                       ),
                       // Save
@@ -1453,7 +1499,12 @@ class _AdminListPageState extends State<AdminListPage> {
           },
         );
       },
-    );
+    ).then((_) {
+      pairedImages.clear();
+      newlyAddedFiles.clear();
+      tempImageChanges.remove(isEdit ? existingSite.name : pairKey);
+      tempDeletedUrls.remove(isEdit ? existingSite.name : pairKey);
+    });
   }
 
   @override
