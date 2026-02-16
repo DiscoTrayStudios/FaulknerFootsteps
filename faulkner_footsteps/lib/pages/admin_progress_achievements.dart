@@ -313,7 +313,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                     ),
                     actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
-                      ElevatedButton(
+                      TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel'),
                       ),
