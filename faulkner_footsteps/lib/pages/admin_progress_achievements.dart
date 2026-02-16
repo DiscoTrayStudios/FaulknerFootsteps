@@ -260,30 +260,26 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                     ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: DropdownButton<String>(
-                                    isExpanded: true,
-                                    hint: const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 12.0),
-                                      child: Text('Select sites...'),
+                                  constraints: const BoxConstraints(maxHeight: 200),
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: Provider.of<ApplicationState>(context).historicalSites.map((site) {
+                                        return CheckboxListTile(
+                                          title: Text(site.name),
+                                          value: selectedSites.contains(site.name),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                selectedSites.add(site.name);
+                                                sitesError = null;
+                                              } else {
+                                                selectedSites.remove(site.name);
+                                              }
+                                            });
+                                          },
+                                        );
+                                      }).toList(),
                                     ),
-                                    underline: const SizedBox(),
-                                    items: Provider.of<ApplicationState>(context).historicalSites.map((site) {
-                                      return DropdownMenuItem<String>(
-                                        value: site.name,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                          child: Text(site.name),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? value) {
-                                      if (value != null && !selectedSites.contains(value)) {
-                                        setState(() {
-                                          selectedSites.add(value);
-                                          sitesError = null;
-                                        });
-                                      }
-                                    },
                                   ),
                                 ),
                                 const SizedBox(height: 12),
