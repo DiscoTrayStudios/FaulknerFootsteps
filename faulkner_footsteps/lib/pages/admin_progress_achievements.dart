@@ -10,7 +10,8 @@ class AdminProgressAchievements extends StatefulWidget {
   AdminProgressAchievements({super.key});
 
   @override
-  State<AdminProgressAchievements> createState() => _AdminProgressAchievementsState();
+  State<AdminProgressAchievements> createState() =>
+      _AdminProgressAchievementsState();
 }
 
 class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
@@ -23,9 +24,10 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            onPressed: () => showProgressAchievementEditorDialog(context: context),
+            onPressed: () =>
+                showProgressAchievementEditorDialog(context: context),
             child: Text(
-              'Add New Historical Site',
+              'Add New Achievements',
               style: GoogleFonts.ultra(
                 textStyle: const TextStyle(
                   color: Color.fromARGB(255, 76, 32, 8),
@@ -47,7 +49,8 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                   itemBuilder: (BuildContext context, int index) {
                     final achievement = app_state.progressAchievements[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       color: const Color.fromARGB(255, 238, 214, 196),
                       child: ExpansionTile(
                         title: Text(
@@ -77,11 +80,13 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                 const SizedBox(height: 8),
                                 ...achievement.requiredSites
                                     .map((site) => Padding(
-                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          padding: const EdgeInsets.only(
+                                              bottom: 4.0),
                                           child: Text(
                                             '• $site',
                                             style: const TextStyle(
-                                              color: Color.fromARGB(255, 76, 32, 8),
+                                              color: Color.fromARGB(
+                                                  255, 76, 32, 8),
                                             ),
                                           ),
                                         ))
@@ -93,52 +98,56 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                     ElevatedButton.icon(
                                       icon: const Icon(Icons.edit),
                                       label: const Text('Edit'),
-                                      onPressed: () => showProgressAchievementEditorDialog(
-                                          context: context, existingAchievement: achievement),
+                                      onPressed: () =>
+                                          showProgressAchievementEditorDialog(
+                                              context: context,
+                                              existingAchievement: achievement),
                                     ),
                                     ElevatedButton.icon(
-                                icon: const Icon(Icons.delete),
-                                label: const Text('Delete Site'),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 238, 214, 196),
-                                        title: Text(
-                                          'Confirm Delete',
-                                          style: GoogleFonts.ultra(
-                                            textStyle: const TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 76, 32, 8),
-                                            ),
-                                          ),
-                                        ),
-                                        content: Text(
-                                            'Are you sure you want to delete ${achievement.title}?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              FirebaseFirestore.instance
-                                                  .collection('progress_achievements')
-                                                  .doc(achievement.title)
-                                                  .delete();
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text('Delete'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                                      icon: const Icon(Icons.delete),
+                                      label: const Text('Delete Achievement'),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              backgroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 238, 214, 196),
+                                              title: Text(
+                                                'Confirm Delete',
+                                                style: GoogleFonts.ultra(
+                                                  textStyle: const TextStyle(
+                                                    color: Color.fromARGB(
+                                                        255, 76, 32, 8),
+                                                  ),
+                                                ),
+                                              ),
+                                              content: Text(
+                                                  'Are you sure you want to delete ${achievement.title}?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(context),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    FirebaseFirestore.instance
+                                                        .collection(
+                                                            'progress_achievements')
+                                                        .doc(achievement.title)
+                                                        .delete();
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('Delete'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                               ],
@@ -165,13 +174,14 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
     final descriptionController = TextEditingController(
       text: existingAchievement?.description ?? '',
     );
-    List<String> selectedSites = List.from(existingAchievement?.requiredSites ?? []);
+    List<String> selectedSites =
+        List.from(existingAchievement?.requiredSites ?? []);
 
     String? titleError;
     String? descriptionError;
     String? sitesError;
     String? oldName = "";
-    if (isEdit){
+    if (isEdit) {
       oldName = existingAchievement!.title;
     }
 
@@ -186,16 +196,14 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
               child: Builder(
                 builder: (context) {
                   return AlertDialog(
-                    backgroundColor:
-                        const Color.fromARGB(255, 238, 214, 196),
+                    backgroundColor: const Color.fromARGB(255, 238, 214, 196),
                     title: Text(
                       isEdit
                           ? 'Edit Progress Achievement'
                           : 'Add New Progress Achievement',
                       style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 76, 32, 8),
-                        ),
+                        textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.tertiary),
                       ),
                     ),
                     content: SingleChildScrollView(
@@ -204,13 +212,17 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                         children: [
                           if (titleError != null)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
+                              padding:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
                               child: Text(titleError!,
-                                  style: const TextStyle(
-                                      color: Colors.red, fontSize: 12)),
+                                  style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                      fontSize: 12)),
                             ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding:
+                                const EdgeInsets.only(bottom: 8.0, top: 8.0),
                             child: TextField(
                               controller: titleController,
                               style: Theme.of(context).textTheme.bodyMedium,
@@ -220,13 +232,17 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                           ),
                           if (descriptionError != null)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
+                              padding:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
                               child: Text(descriptionError!,
-                                  style: const TextStyle(
-                                      color: Colors.red, fontSize: 12)),
+                                  style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                      fontSize: 12)),
                             ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding:
+                                const EdgeInsets.only(bottom: 8.0, top: 8.0),
                             child: TextField(
                               controller: descriptionController,
                               maxLines: 3,
@@ -238,52 +254,73 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                           ),
                           if (sitesError != null)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
+                              padding:
+                                  const EdgeInsets.only(bottom: 8.0, top: 8.0),
                               child: Text(sitesError!,
-                                  style: const TextStyle(
-                                      color: Colors.red, fontSize: 12)),
+                                  style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                      fontSize: 12)),
                             ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding:
+                                const EdgeInsets.only(bottom: 8.0, top: 8.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Required Sites',
-                                  style: Theme.of(context).textTheme.labelMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium!
+                                      .copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 Container(
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: const Color.fromARGB(255, 220, 180, 140),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
                                     ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: DropdownButton<String>(
-                                    isExpanded: true,
-                                    hint: const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 12.0),
-                                      child: Text('Select sites...'),
+                                  constraints:
+                                      const BoxConstraints(maxHeight: 200),
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children:
+                                          Provider.of<ApplicationState>(context)
+                                              .historicalSites
+                                              .map((site) {
+                                        return CheckboxListTile(
+                                          title: Text(
+                                            site.name,
+                                            style: GoogleFonts.ultra(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .tertiary,
+                                                fontSize: 14),
+                                          ),
+                                          value:
+                                              selectedSites.contains(site.name),
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                selectedSites.add(site.name);
+                                                sitesError = null;
+                                              } else {
+                                                selectedSites.remove(site.name);
+                                              }
+                                            });
+                                          },
+                                        );
+                                      }).toList(),
                                     ),
-                                    underline: const SizedBox(),
-                                    items: Provider.of<ApplicationState>(context).historicalSites.map((site) {
-                                      return DropdownMenuItem<String>(
-                                        value: site.name,
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                          child: Text(site.name),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? value) {
-                                      if (value != null && !selectedSites.contains(value)) {
-                                        setState(() {
-                                          selectedSites.add(value);
-                                          sitesError = null;
-                                        });
-                                      }
-                                    },
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -293,11 +330,12 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                     runSpacing: 8,
                                     children: selectedSites.map((site) {
                                       return Chip(
-                                        label: Text(site,
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 255, 243, 228),
-                                          fontSize: 12),
+                                        label: Text(
+                                          site,
+                                          style: const TextStyle(
+                                              color: Color.fromARGB(
+                                                  255, 255, 243, 228),
+                                              fontSize: 12),
                                         ),
                                         onDeleted: () {
                                           setState(() {
@@ -305,7 +343,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                                           });
                                         },
                                         backgroundColor: const Color.fromARGB(
-                                          255, 107, 79, 79),
+                                            255, 107, 79, 79),
                                       );
                                     }).toList(),
                                   ),
@@ -317,58 +355,68 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                     ),
                     actionsAlignment: MainAxisAlignment.spaceBetween,
                     actions: [
-                      ElevatedButton(
+                      TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () async {
-                          if (titleController.text.isEmpty) {
-                            setState(() {
-                              titleError = "Title is required";
-                            });
-                            return;
-                          }
-                          if (descriptionController.text.isEmpty) {
-                            setState(() {
-                              descriptionError = "Description is required";
-                            });
-                            return;
-                          }
-                          if (selectedSites.isEmpty) {
-                            setState(() {
-                              sitesError = "At least one site is required";
-                            });
-                            return;
-                          }
+                        style: ElevatedButton.styleFrom(
+                          disabledBackgroundColor: Colors.grey,
+                        ),
+                        onPressed: titleController.text.isNotEmpty &&
+                                descriptionController.text.isNotEmpty &&
+                                selectedSites.isNotEmpty
+                            ? () async {
+                                if (titleController.text.isEmpty) {
+                                  setState(() {
+                                    titleError = "Title is required";
+                                  });
+                                  return;
+                                }
+                                if (descriptionController.text.isEmpty) {
+                                  setState(() {
+                                    descriptionError =
+                                        "Description is required";
+                                  });
+                                  return;
+                                }
+                                if (selectedSites.isEmpty) {
+                                  setState(() {
+                                    sitesError =
+                                        "At least one site is required";
+                                  });
+                                  return;
+                                }
 
-                          try {
-                            // If editing and title changed, delete the old document first
-                            if (isEdit && titleController.text != oldName) {
-                              await FirebaseFirestore.instance
-                                  .collection('progress_achievements')
-                                  .doc(oldName)
-                                  .delete();
-                            }
+                                try {
+                                  // If editing and title changed, delete the old document first
+                                  if (isEdit &&
+                                      titleController.text != oldName) {
+                                    await FirebaseFirestore.instance
+                                        .collection('progress_achievements')
+                                        .doc(oldName)
+                                        .delete();
+                                  }
 
-                            // Create or update the progress achievement
-                            await FirebaseFirestore.instance
-                                .collection('progress_achievements')
-                                .doc(titleController.text)
-                                .set({
-                              'title': titleController.text,
-                              'description': descriptionController.text,
-                              'requiredSites': selectedSites,
-                            });
+                                  // Create or update the progress achievement
+                                  await FirebaseFirestore.instance
+                                      .collection('progress_achievements')
+                                      .doc(titleController.text)
+                                      .set({
+                                    'title': titleController.text,
+                                    'description': descriptionController.text,
+                                    'requiredSites': selectedSites,
+                                  });
 
-                            Navigator.pop(context);
-                          } catch (e) {
-                            setState(() {
-                              sitesError = "Error saving achievement: $e";
-                            });
-                          }
-                        },
-                        child:  const Text("Submit"),
+                                  Navigator.pop(context);
+                                } catch (e) {
+                                  setState(() {
+                                    sitesError = "Error saving achievement: $e";
+                                  });
+                                }
+                              }
+                            : null,
+                        child: const Text("Submit"),
                       ),
                     ],
                   );

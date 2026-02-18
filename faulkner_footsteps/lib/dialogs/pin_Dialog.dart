@@ -16,13 +16,74 @@ class PinDialog extends StatelessWidget {
     required this.currentPosition,
   });
 
+  Widget _buildRoundedButton({
+    required BuildContext context,
+    required String text,
+    required VoidCallback onPressed,
+    IconData? icon,
+    double width = 140,
+  }) {
+    return Container(
+      width: width,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.onPrimary,
+          width: 2.0,
+        ),
+        color: Theme.of(context).colorScheme.onSecondary,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  text,
+                  style: GoogleFonts.rakkas(
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<ApplicationState>(context, listen: false);
-    // Search and find the historical site by name
-    HistSite? selectedSite = appState.historicalSites.firstWhere(
+
+    // Find the site information
+    HistSite selectedSite = appState.historicalSites.firstWhere(
       (site) => site.name == siteName,
-      // if not found, it will say the following
       orElse: () => HistSite(
         name: siteName,
         description: "No description available",
@@ -36,76 +97,128 @@ class PinDialog extends StatelessWidget {
       ),
     );
 
-    return AlertDialog(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+    return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.onPrimary,
-          width: 2.0,
-        ),
+        borderRadius: BorderRadius.circular(20.0),
       ),
-      title: Text(
-        selectedSite.name,
-        style: GoogleFonts.ultra(
-          textStyle: TextStyle(
-            color: Theme.of(context).colorScheme.secondary,
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
+      elevation: 8,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onPrimary,
+            width: 3.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        textAlign: TextAlign.center,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            selectedSite.description,
-            style: GoogleFonts.rakkas(
-              textStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontSize: 16,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Site image
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(17.0)),
+              child: Container(
+                height: 180,
+                width: double.infinity,
+                color: Theme.of(context).colorScheme.primary,
+                child: selectedSite.images.isNotEmpty &&
+                        selectedSite.images.first != null
+                    ? Image.memory(
+                        selectedSite.images.first!,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        'assets/images/faulkner_thumbnail.png',
+                        fit: BoxFit.cover,
+                      ),
               ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Navigate User to the HistSitePage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HistSitePage(
-                    histSite: selectedSite,
-                    currentPosition: currentPosition,
+
+            // Site name
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Text(
+                selectedSite.name,
+                style: GoogleFonts.ultra(
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontSize: 22.0,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.onPrimary,
-                width: 1.5,
+                textAlign: TextAlign.center,
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: Text(
-              "More Info",
-              style: GoogleFonts.rakkas(
-                textStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontSize: 16,
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                "View information about this historical site",
+                style: GoogleFonts.rakkas(
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontSize: 16,
+                  ),
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-        ],
+
+            // Buttons
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Visit Site Button
+                  _buildRoundedButton(
+                    context: context,
+                    text: "More Info",
+                    icon: Icons.info,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Navigate User to the HistSitePage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HistSitePage(
+                            histSite: selectedSite,
+                            currentPosition: currentPosition,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Close button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildRoundedButton(
+                context: context,
+                text: "Close",
+                icon: Icons.close,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                width: 120,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

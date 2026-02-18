@@ -1,5 +1,4 @@
 import 'package:faulkner_footsteps/app_router.dart';
-import 'package:faulkner_footsteps/objects/progress_achievement.dart';
 import 'package:faulkner_footsteps/pages/admin_page.dart';
 import 'package:faulkner_footsteps/pages/login_page.dart';
 import 'package:faulkner_footsteps/widgets/achievement_item.dart';
@@ -47,8 +46,6 @@ class _ProfilePageState extends State<ProfilePage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     appState = Provider.of<ApplicationState>(context, listen: false);
-
-    _initProgressAchievements();
   }
 
   Future<void> _changePassword() async {
@@ -100,13 +97,6 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
-  late List<ProgressAchievement> progressAchievements;
-
-  void _initProgressAchievements() {
-    // Use achievements from app state (loaded from Firebase)
-    progressAchievements = appState.progressAchievements;
-  }
-
   // // Save the current achievement count
   // await _saveAchievementNotificationStatus();
 
@@ -147,17 +137,19 @@ class _ProfilePageState extends State<ProfilePage>
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Center the cards
-          children: [
-            // Email card
-            Container(
-              width: cardWidth,
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
+      body: Consumer<ApplicationState>(
+        builder: (context, appState, _) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center, // Center the cards
+              children: [
+                // Email card
+                Container(
+                  width: cardWidth,
+                  child: Card(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 margin: EdgeInsets.zero,
@@ -254,7 +246,7 @@ class _ProfilePageState extends State<ProfilePage>
             ],
 
             // Achievements card
-            if (progressAchievements.isNotEmpty) ...[
+            if (appState.progressAchievements.isNotEmpty) ...[
               Container(
                   width: cardWidth,
                   child: Card(
@@ -277,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage>
                                               .colorScheme
                                               .onPrimary))),
                         ),
-                        ...progressAchievements.map((achievement) {
+                        ...appState.progressAchievements.map((achievement) {
                           double progress = achievement
                               .calculateProgress(appState.visitedPlaces);
                           bool isCompleted =
@@ -678,6 +670,8 @@ class _ProfilePageState extends State<ProfilePage>
                 ]),
           ],
         ),
+          );
+        },
       ),
     );
   }
