@@ -60,10 +60,12 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Text(
                           'This site has no images.',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.ultra(
                             textStyle: TextStyle(
                               color: Color.fromARGB(255, 76, 32, 8)
