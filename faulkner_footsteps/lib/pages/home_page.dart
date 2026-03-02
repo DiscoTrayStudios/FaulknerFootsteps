@@ -263,6 +263,9 @@ class _HomePageState extends State<HomePage> {
                               onSearchSubmitted: () {
                                 setState(() {});
                               },
+                              itemNames: appState.historicalSites
+                                  .map((site) => site.name)
+                                  .toList(),
                             );
                           });
                     },

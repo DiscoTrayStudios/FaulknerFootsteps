@@ -4,12 +4,16 @@ import 'package:provider/provider.dart';
 
 class SearchWidget extends StatelessWidget {
   final SearchController searchController;
-  final Function() onSearchSubmitted;
+  final Function()
+      onSearchSubmitted; // in case there needs to be some additional logic when search is submitted. This allows for that.
+
+  final List<String> itemNames; // the list of items to search through
 
   const SearchWidget(
       {super.key,
       required this.searchController,
-      required this.onSearchSubmitted});
+      required this.onSearchSubmitted,
+      required this.itemNames});
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -88,22 +92,22 @@ class SearchWidget extends StatelessWidget {
         },
         suggestionsBuilder: (context, controller) {
           final query = controller.text.toLowerCase();
-          final allSites = context.read<ApplicationState>().historicalSites;
-          final matches = allSites
-              .where((site) => site.name.toLowerCase().contains(query))
+          final allItems = itemNames;
+          final matches = allItems
+              .where((item) => item.toLowerCase().contains(query))
               .toList();
 
-          return matches.map((site) {
+          return matches.map((item) {
             return ListTile(
               title: Text(
-                site.name,
+                item,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
                     ),
               ),
               onTap: () {
-                searchController.text = site.name;
-                controller.closeView(site.name);
+                searchController.text = item;
+                controller.closeView(item);
                 onSearchSubmitted();
                 Navigator.pop(context);
               },
