@@ -1518,18 +1518,22 @@ class _AdminListPageState extends State<AdminListPage> {
           elevation: 12.0,
           shadowColor: const Color.fromARGB(135, 255, 255, 255),
           title: Text(
-            _selectedIndex == 0
-                ? "Admin Dashboard"
-                : "Achievements",
+            _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
             style: GoogleFonts.ultra(
               textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
           ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  print("pressed!");
+                },
+                icon: const Icon(Icons.search))
+          ],
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent(context)
-            :
-                 AdminProgressAchievements(),
+            : AdminProgressAchievements(),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
