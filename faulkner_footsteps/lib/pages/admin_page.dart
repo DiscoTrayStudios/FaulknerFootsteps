@@ -5,7 +5,6 @@ import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/objects/theme_data.dart';
-import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/pages/admin_progress_achievements.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:faulkner_footsteps/widgets/search_widget.dart';
@@ -15,7 +14,6 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -74,7 +72,7 @@ class _AdminListPageState extends State<AdminListPage> {
     final int maxBytes = 1024 * 1024; // 1 MB
     try {
       final pickedImages = await ImagePicker().pickMultiImage();
-      if (pickedImages == null || pickedImages.isEmpty) return;
+      if (pickedImages.isEmpty) return;
 
       List<File> finalImages = [];
 
@@ -963,7 +961,7 @@ class _AdminListPageState extends State<AdminListPage> {
           builder: (context, setState) {
             if (isEdit && !hasLoadedImages) {
               print(
-                  " loading existing images for edit dialog. Existing urls: ${existingSite!.imageUrls.length} Paired images: ${pairedImages.length}");
+                  " loading existing images for edit dialog. Existing urls: ${existingSite.imageUrls.length} Paired images: ${pairedImages.length}");
               // Load existing images
               WidgetsBinding.instance.addPostFrameCallback((_) async {
                 for (int i = 0; i < existingSite.imageUrls.length; i++) {
@@ -1435,8 +1433,8 @@ class _AdminListPageState extends State<AdminListPage> {
                                 }
 
                                 // images tracked with tempImageChanges
-                                final String pairKey =
-                                    existingSite?.name ?? "new_site";
+                                // final String pairKey =
+                                //     existingSite?.name ?? "new_site";
 
                                 // images tracked with tempImageChanges
                                 final imageList = getImageList();
