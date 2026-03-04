@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
@@ -5,6 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+class _NoScrollBehavior extends ScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => const {};
+}
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -168,7 +175,9 @@ class LoginPage extends StatelessWidget {
 
   Widget buildSignInScreen() {
     // Standard SignInScreen with custom theme
-    return RegisterScreen(
+    return ScrollConfiguration(
+      behavior: _NoScrollBehavior(),
+      child: RegisterScreen(
       showAuthActionSwitch: true,
       providers: [EmailAuthProvider()],
       actions: [
@@ -311,6 +320,7 @@ class LoginPage extends StatelessWidget {
           ),
         );
       },
+    ),
     );
   }
 }

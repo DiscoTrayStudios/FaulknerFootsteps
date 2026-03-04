@@ -265,8 +265,8 @@ class _AdminListPageState extends State<AdminListPage> {
                 return Text(
                     "You do not have any Images uploaded to this site.");
               },
-              addButtonText: "Add Images",
-              deleteButtonText: "Delete Images",
+              addButtonText: "Add",
+              deleteButtonText: "Delete",
               onAddItem: () async {
                 await pickImages();
                 if (images != null) {
@@ -1291,6 +1291,11 @@ class _AdminListPageState extends State<AdminListPage> {
                                           fontSize: 12,
                                         ),
                                       ),
+                                      onDeleted: () {
+                                          setState(() {
+                                            chosenFilters.remove(filter);
+                                          });
+                                        },
                                       backgroundColor: const Color.fromARGB(
                                           255, 107, 79, 79),
                                     );
