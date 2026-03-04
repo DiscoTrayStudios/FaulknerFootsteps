@@ -11,19 +11,21 @@ class LoginPage extends StatelessWidget {
 
   // Static variable to track admin status
   static bool isAdmin = false;
-  
+
   // Flag to prevent StreamBuilder navigation when actions handle it
-  static bool _handledByAction = false;
+  // static bool _handledByAction = false;
 
   // This checks the 'admins' collection in firebase for authorized accounts
   // The result is stored in the user's app state for later use
   Future<void> checkAndStoreAdminStatus(User user) async {
+    print("Starting admin check for ${user.uid}");
     try {
       final adminDoc = await FirebaseFirestore.instance
           .collection('admins')
           .doc(user.uid)
           .get();
 
+      print("Admin doc fetched: exists=${adminDoc.exists}");
       // Store the admin status in a static variable
       isAdmin = adminDoc.exists;
     } catch (e) {
@@ -33,6 +35,7 @@ class LoginPage extends StatelessWidget {
       // Set to false by default when permission error occurs
       isAdmin = false;
     }
+    print("Finished admin check");
   }
 
   @override
@@ -115,58 +118,20 @@ class LoginPage extends StatelessWidget {
           body: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: Color.fromARGB(255, 107, 79, 79),
-                  ),
-                );
-              }
-
               final user = snapshot.data;
 
-              // If no user or anonymous, show login screen
               if (user == null || user.isAnonymous) {
-                return buildSignInScreen();
+                return buildSignInScreen(context);
               }
 
-              // User is authenticated, check admin status and navigate
-              // Only navigate if not already handled by action
-              print('StreamBuilder detected user: ${user.email}, isAnonymous: ${user.isAnonymous}');
-              
-              if (_handledByAction) {
-                print('Navigation already handled by action, skipping StreamBuilder navigation');
-                _handledByAction = false; // Reset for next time
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: Color.fromARGB(255, 107, 79, 79),
-                  ),
-                );
-              }
-              
-              checkAndStoreAdminStatus(user).then((_) {
-                print('Admin check complete, navigating from StreamBuilder...');
-                if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                    (route) => false,
-                  );
-                }
-              });
-
-              // Show loading while admin check completes
-              return const Center(
-                child: CircularProgressIndicator(
-                  color: Color.fromARGB(255, 107, 79, 79),
-                ),
-              );
+              // User is signed in — go straight to HomePage
+              return HomePage();
             },
           ),
         ));
   }
 
-  Widget buildSignInScreen() {
+  Widget buildSignInScreen(BuildContext parentContext) {
     // Standard SignInScreen with custom theme
     return RegisterScreen(
       showAuthActionSwitch: true,
@@ -175,14 +140,18 @@ class LoginPage extends StatelessWidget {
         // This handles BOTH sign in AND sign up
         AuthStateChangeAction<SignedIn>((context, state) async {
           print('SignedIn action triggered for user: ${state.user?.email}');
+          print("State user BEFORE admin check: ${state.user}");
+          print("Is anonymous BEFORE admin check: ${state.user?.isAnonymous}");
+
           if (state.user != null && !state.user!.isAnonymous) {
-            _handledByAction = true;
             await checkAndStoreAdminStatus(state.user!);
-            
-            if (context.mounted) {
+
+            print("Is context mounted? ${context.mounted}");
+            print("Parent context mounted? ${parentContext.mounted}");
+            if (parentContext.mounted) {
               print('Navigating from SignedIn action');
               Navigator.pushAndRemoveUntil(
-                context,
+                parentContext,
                 MaterialPageRoute(builder: (context) => HomePage()),
                 (route) => false,
               );
@@ -191,15 +160,18 @@ class LoginPage extends StatelessWidget {
         }),
         // Also handle UserCreated specifically
         AuthStateChangeAction<UserCreated>((context, state) async {
-          print('UserCreated action triggered for user: ${state.credential.user?.email}');
+          print(
+              'UserCreated action triggered for user: ${state.credential.user?.email}');
           if (state.credential.user != null) {
-            _handledByAction = true;
             await checkAndStoreAdminStatus(state.credential.user!);
-            
-            if (context.mounted) {
+
+            print("Is context mounted? ${context.mounted}");
+            print("Parent context mounted? ${parentContext.mounted}");
+
+            if (parentContext.mounted) {
               print('Navigating from UserCreated action');
               Navigator.pushAndRemoveUntil(
-                context,
+                parentContext,
                 MaterialPageRoute(builder: (context) => HomePage()),
                 (route) => false,
               );
@@ -208,15 +180,18 @@ class LoginPage extends StatelessWidget {
         }),
         // Handle account linking (anonymous to email)
         AuthStateChangeAction<CredentialLinked>((context, state) async {
-          print('CredentialLinked action triggered for user: ${state.user?.email}');
+          print(
+              'CredentialLinked action triggered for user: ${state.user?.email}');
           if (state.user != null && !state.user!.isAnonymous) {
-            _handledByAction = true;
             await checkAndStoreAdminStatus(state.user!);
-            
-            if (context.mounted) {
+
+            print("Is context mounted? ${context.mounted}");
+            print("Parent context mounted? ${parentContext.mounted}");
+
+            if (parentContext.mounted) {
               print('Navigating from CredentialLinked action');
               Navigator.pushAndRemoveUntil(
-                context,
+                parentContext,
                 MaterialPageRoute(builder: (context) => HomePage()),
                 (route) => false,
               );
