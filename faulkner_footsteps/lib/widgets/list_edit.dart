@@ -52,18 +52,21 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
         ),
       ),
       content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.55,
             width: MediaQuery.of(context).size.width * 0.75,
             child: workingList.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Text(
                           'This site has no images.',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.ultra(
                             textStyle: TextStyle(
                               color: Color.fromARGB(255, 76, 32, 8)
@@ -149,46 +152,59 @@ class _ReorderableItemListDialogState<T> extends State<ListEdit<T>> {
                   ),
           ),
           Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 218, 186, 130),
-                ),
-                onPressed: () {
-                  setState(() {
-                    for (T item in selectedItems) {
-                      print(item);
-                      print(selectedItems);
-                      markedForRemoval.add(item);
-                    }
-                    workingList
-                        .removeWhere((item) => markedForRemoval.contains(item));
-                    widget.items.clear();
-                    widget.items.addAll(workingList);
-                    markedForRemoval.clear();
-                    selectedItems.clear();
-                  });
-                },
-                child: Text(widget.deleteButtonText),
-              ),
-              //const SizedBox(width: 8),
-              if (widget.onAddItem != null)
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 218, 186, 130),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        for (T item in selectedItems) {
+                          print(item);
+                          print(selectedItems);
+                          markedForRemoval.add(item);
+                        }
+                        workingList.removeWhere(
+                            (item) => markedForRemoval.contains(item));
+                        widget.items.clear();
+                        widget.items.addAll(workingList);
+                        markedForRemoval.clear();
+                        selectedItems.clear();
+                      });
+                    },
+                    child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(widget.deleteButtonText)),
                   ),
-                  onPressed: () async {
-                    await widget.onAddItem!();
-                    setState(() {
-                      workingList = List.from(widget.items);
-                    });
-                  },
-                  child: Text(widget.addButtonText),
                 ),
-            ],
-          ),
+                //const SizedBox(width: 8),
+                if (widget.onAddItem != null) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 218, 186, 130),
+                      ),
+                      onPressed: () async {
+                        await widget.onAddItem!();
+                        setState(() {
+                          workingList = List.from(widget.items);
+                        });
+                      },
+                      child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: Text(
+                            widget.addButtonText,
+                            maxLines: 1,
+                          )),
+                    ),
+                  ),
+                ],
+              ]),
           const SizedBox(height: 8),
         ],
       ),
