@@ -195,7 +195,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
     String? sitesError;
     String? oldName = "";
     if (isEdit) {
-      oldName = existingAchievement!.title;
+      oldName = existingAchievement.title;
     }
 
     return showDialog(
