@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
+import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/image_with_url.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
@@ -171,35 +172,6 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   ///For selecting the date with the blurbs
-  Future<void> selectDate(
-      BuildContext context, TextEditingController dateController) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        // need a custom theme here because datepicker is stupid
-        return Theme(
-            data: ThemeData(
-                colorScheme: ColorScheme(
-                    brightness: Brightness.light,
-                    primary: Color.fromARGB(255, 76, 32, 8),
-                    onPrimary: Colors.white,
-                    secondary: Color.fromARGB(255, 76, 32, 8),
-                    onSecondary: Colors.red,
-                    error: Colors.red,
-                    onError: Colors.red,
-                    surface: Color.fromARGB(255, 238, 214, 196),
-                    onSurface: Color.fromARGB(255, 76, 32, 8))),
-            child: child!);
-      },
-    );
-    if (picked != null) {
-      dateController.text = "${picked.month}/${picked.day}/${picked.year}";
-    }
-  }
-
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
     List<Uint8List?> siteImages = site.images;
     List<String> siteImageURLs = site.imageUrls;
@@ -348,153 +320,6 @@ class _AdminListPageState extends State<AdminListPage> {
     );
 
     setState(() {});
-  }
-
-  Future<InfoText?> showBlurbDialog({
-    required BuildContext context,
-    InfoText? existing,
-  }) async {
-    final titleController = TextEditingController(text: existing?.title ?? "");
-    final valueController = TextEditingController(text: existing?.value ?? "");
-    final dateController = TextEditingController(text: existing?.date ?? "");
-
-    String? titleError;
-    String? contentError;
-
-    bool checkCanSubmit() {
-      return titleController.text.isNotEmpty && valueController.text.isNotEmpty;
-    }
-
-    bool canSubmit = checkCanSubmit();
-
-    return showDialog<InfoText>(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                existing == null ? 'Add Blurb' : 'Edit Blurb',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
-                  ),
-                ),
-              ),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.9,
-                    minWidth: MediaQuery.of(context).size.width * 0.9),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: titleController,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: InputDecoration(
-                              labelText: 'Title', errorText: titleError),
-                          onChanged: (value) {
-                            if (titleController.text.isNotEmpty) {
-                              titleError = null;
-                            } else {
-                              titleError = "Title is required";
-                            }
-                            setState(() {
-                              canSubmit = checkCanSubmit();
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: valueController,
-                          maxLines: 3,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: InputDecoration(
-                              labelText: 'Content', errorText: contentError),
-                          onChanged: (value) {
-                            if (value.isNotEmpty) {
-                              contentError = null;
-                            } else {
-                              contentError = "Content is required";
-                            }
-                            setState(() {
-                              canSubmit = checkCanSubmit();
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: dateController,
-                          readOnly: true,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          onTap: () => selectDate(context, dateController),
-                          decoration: const InputDecoration(labelText: 'Date'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: canSubmit
-                        ? Theme.of(context)
-                                .elevatedButtonTheme
-                                .style
-                                ?.backgroundColor
-                                ?.resolve({WidgetState.pressed}) ??
-                            Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                  ),
-                  onPressed: canSubmit
-                      ? () {
-                          if (titleController.text.isEmpty ||
-                              valueController.text.isEmpty) {
-                            return;
-                          }
-
-                          final result = InfoText(
-                            title: titleController.text,
-                            value: valueController.text,
-                            date: dateController.text,
-                          );
-                          Navigator.pop(
-                              context, result); // return result on submit
-                        }
-                      : () {
-                          // display errors:
-                          if (titleController.text.isEmpty) {
-                            titleError = "Title is required";
-                          }
-                          if (valueController.text.isEmpty) {
-                            contentError = "Content is required";
-                          }
-                          setState(() {});
-                          return;
-                        },
-                  child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 
   Future<void> showAddFilterDialog() {
@@ -1215,11 +1040,15 @@ class _AdminListPageState extends State<AdminListPage> {
                                           icon: const Icon(Icons.edit),
                                           onPressed: () async {
                                             final updated =
-                                                await showBlurbDialog(
+                                                await showDialog<InfoText>(
                                               context: context,
-                                              existing: blurb,
+                                              builder: (context) => BlurbDialog(
+                                                infoText: blurb,
+                                              ),
                                             );
                                             if (updated != null) {
+                                              print(
+                                                  "Updating blurb at index $idx with title ${updated.title} and value ${updated.value}");
                                               blurbs[idx] = updated;
                                             }
 
@@ -1242,8 +1071,9 @@ class _AdminListPageState extends State<AdminListPage> {
 
                               ElevatedButton(
                                 onPressed: () async {
-                                  final newBlurb = await showBlurbDialog(
+                                  final newBlurb = await showDialog<InfoText>(
                                     context: context,
+                                    builder: (context) => BlurbDialog(),
                                   );
                                   if (newBlurb != null) {
                                     blurbs.add(newBlurb);
