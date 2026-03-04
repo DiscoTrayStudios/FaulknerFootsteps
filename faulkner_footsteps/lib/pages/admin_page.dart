@@ -8,6 +8,7 @@ import 'package:faulkner_footsteps/objects/theme_data.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/pages/admin_progress_achievements.dart';
 import 'package:faulkner_footsteps/widgets/list_edit.dart';
+import 'package:faulkner_footsteps/widgets/search_widget.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,9 +48,15 @@ class _AdminListPageState extends State<AdminListPage> {
   Map<String, List<ImageWithUrl>> tempImageChanges = {};
   Map<String, List<String>> tempDeletedUrls = {};
 
+  late SearchController _sitesSearchController;
+  late SearchController _achievementsSearchController;
+
+  @override
   @override
   void initState() {
     super.initState();
+    _sitesSearchController = SearchController();
+    _achievementsSearchController = SearchController();
   }
 
   void didChangeDependencies() {
@@ -557,6 +564,7 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Widget _buildAdminContent(BuildContext context) {
+    List<HistSite> displaySites = getSearchSites();
     return Column(
       children: [
         Padding(
@@ -591,9 +599,9 @@ class _AdminListPageState extends State<AdminListPage> {
           child: Consumer<ApplicationState>(
             builder: (context, appState, chile) {
               return ListView.builder(
-                itemCount: appState.historicalSites.length,
+                itemCount: displaySites.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final site = appState.historicalSites[index];
+                  final site = displaySites[index];
                   return Card(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1507,6 +1515,17 @@ class _AdminListPageState extends State<AdminListPage> {
     });
   }
 
+  List<HistSite> getSearchSites() {
+    if (_sitesSearchController.text.isEmpty) {
+      return context.read<ApplicationState>().historicalSites;
+    }
+    final query = _sitesSearchController.text.toLowerCase();
+    final allSites = context.read<ApplicationState>().historicalSites;
+    return allSites
+        .where((site) => site.name.toLowerCase().contains(query))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -1518,18 +1537,45 @@ class _AdminListPageState extends State<AdminListPage> {
           elevation: 12.0,
           shadowColor: const Color.fromARGB(135, 255, 255, 255),
           title: Text(
-            _selectedIndex == 0
-                ? "Admin Dashboard"
-                : "Achievements",
+            _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
             style: GoogleFonts.ultra(
               textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
             ),
           ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return SearchWidget(
+                            searchController: _selectedIndex == 0
+                                ? _sitesSearchController
+                                : _achievementsSearchController,
+                            onSearchSubmitted: () {
+                              setState(() {});
+                            },
+                            itemNames: _selectedIndex == 0
+                                ? context
+                                    .read<ApplicationState>()
+                                    .historicalSites
+                                    .map((site) => site.name)
+                                    .toList()
+                                : context
+                                    .read<ApplicationState>()
+                                    .progressAchievements
+                                    .map((achievement) => achievement.title)
+                                    .toList());
+                      });
+                },
+                icon: const Icon(Icons.search))
+          ],
         ),
         body: _selectedIndex == 0
             ? _buildAdminContent(context)
-            :
-                 AdminProgressAchievements(),
+            : AdminProgressAchievements(
+                searchController: _achievementsSearchController,
+              ),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: const Color.fromARGB(255, 218, 180, 130),
           selectedItemColor: const Color.fromARGB(255, 124, 54, 16),

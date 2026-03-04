@@ -7,7 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 
 class AdminProgressAchievements extends StatefulWidget {
-  AdminProgressAchievements({super.key});
+  final SearchController searchController;
+  AdminProgressAchievements({super.key, required this.searchController});
 
   @override
   State<AdminProgressAchievements> createState() =>
@@ -15,7 +16,19 @@ class AdminProgressAchievements extends StatefulWidget {
 }
 
 class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
+  List<ProgressAchievement> getSearchAchievements() {
+    if (widget.searchController.text.isEmpty) {
+      return context.read<ApplicationState>().progressAchievements;
+    }
+    final query = widget.searchController.text.toLowerCase();
+    final allSites = context.read<ApplicationState>().progressAchievements;
+    return allSites
+        .where((site) => site.title.toLowerCase().contains(query))
+        .toList();
+  }
+
   Widget _buildAdminContent(BuildContext context, ApplicationState app_state) {
+    List<ProgressAchievement> displayAchievements = getSearchAchievements();
     return Column(
       children: [
         Padding(
@@ -37,7 +50,7 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
           ),
         ),
         Expanded(
-          child: app_state.progressAchievements.isEmpty
+          child: displayAchievements.isEmpty
               ? Center(
                   child: Text(
                     'No progress achievements yet',
@@ -45,9 +58,9 @@ class _AdminProgressAchievementsState extends State<AdminProgressAchievements> {
                   ),
                 )
               : ListView.builder(
-                  itemCount: app_state.progressAchievements.length,
+                  itemCount: displayAchievements.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final achievement = app_state.progressAchievements[index];
+                    final achievement = displayAchievements[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
