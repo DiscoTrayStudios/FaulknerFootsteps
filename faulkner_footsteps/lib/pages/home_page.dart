@@ -1,6 +1,5 @@
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:faulkner_footsteps/objects/list_item.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/list_page.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
