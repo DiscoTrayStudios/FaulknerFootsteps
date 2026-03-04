@@ -104,198 +104,199 @@ class LoginPage extends StatelessWidget {
       ),
     );
 
-    return Theme(
-        data: customTheme,
-        child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: customTheme.colorScheme.surface,
-            leading: BackButton(
-              color: customTheme.colorScheme.primary,
-              onPressed: () {
-                Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                    (route) => false);
-              },
-            ),
-          ),
-          resizeToAvoidBottomInset:
-              false, // Prevent resizing when keyboard appears
-          backgroundColor: customTheme.colorScheme.surface,
-          body: StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
-            builder: (context, snapshot) {
-              final user = snapshot.data;
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: customTheme.colorScheme.surface,
+        leading: BackButton(
+          color: customTheme.colorScheme.primary,
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false);
+          },
+        ),
+      ),
+      resizeToAvoidBottomInset: false, // Prevent resizing when keyboard appears
+      backgroundColor: customTheme.colorScheme.surface,
+      body: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          final user = snapshot.data;
 
-              if (user == null || user.isAnonymous) {
-                return buildSignInScreen(context);
-              }
+          if (user == null || user.isAnonymous) {
+            return buildSignInScreen(context, customTheme);
+          }
 
-              // User is signed in — go straight to HomePage
-              return HomePage();
-            },
-          ),
-        ));
+          // User is signed in — go straight to HomePage
+          return SizedBox.shrink();
+        },
+      ),
+    );
   }
 
-  Widget buildSignInScreen(BuildContext parentContext) {
+  Widget buildSignInScreen(BuildContext parentContext, ThemeData customTheme) {
     // Standard SignInScreen with custom theme
-    return ScrollConfiguration(
-      behavior: _NoScrollBehavior(),
-      child: RegisterScreen(
-      showAuthActionSwitch: true,
-      providers: [EmailAuthProvider()],
-      actions: [
-        // This handles BOTH sign in AND sign up
-        AuthStateChangeAction<SignedIn>((context, state) async {
-          print('SignedIn action triggered for user: ${state.user?.email}');
-          print("State user BEFORE admin check: ${state.user}");
-          print("Is anonymous BEFORE admin check: ${state.user?.isAnonymous}");
+    return Theme(
+      data: customTheme,
+      child: ScrollConfiguration(
+        behavior: _NoScrollBehavior(),
+        child: RegisterScreen(
+          showAuthActionSwitch: true,
+          providers: [EmailAuthProvider()],
+          actions: [
+            // This handles BOTH sign in AND sign up
+            AuthStateChangeAction<SignedIn>((context, state) async {
+              print('SignedIn action triggered for user: ${state.user?.email}');
+              print("State user BEFORE admin check: ${state.user}");
+              print(
+                  "Is anonymous BEFORE admin check: ${state.user?.isAnonymous}");
 
-          if (state.user != null && !state.user!.isAnonymous) {
-            await checkAndStoreAdminStatus(state.user!);
+              if (state.user != null && !state.user!.isAnonymous) {
+                await checkAndStoreAdminStatus(state.user!);
 
-            print("Is context mounted? ${context.mounted}");
-            print("Parent context mounted? ${parentContext.mounted}");
-            if (parentContext.mounted) {
-              print('Navigating from SignedIn action');
-              Navigator.pushAndRemoveUntil(
-                parentContext,
-                MaterialPageRoute(builder: (context) => HomePage()),
-                (route) => false,
-              );
-            }
-          }
-        }),
-        // Also handle UserCreated specifically
-        AuthStateChangeAction<UserCreated>((context, state) async {
-          print(
-              'UserCreated action triggered for user: ${state.credential.user?.email}');
-          if (state.credential.user != null) {
-            await checkAndStoreAdminStatus(state.credential.user!);
+                print("Is context mounted? ${context.mounted}");
+                print("Parent context mounted? ${parentContext.mounted}");
+                if (parentContext.mounted) {
+                  print('Navigating from SignedIn action');
+                  Navigator.pushAndRemoveUntil(
+                    parentContext,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  );
+                }
+              }
+            }),
+            // Also handle UserCreated specifically
+            AuthStateChangeAction<UserCreated>((context, state) async {
+              print(
+                  'UserCreated action triggered for user: ${state.credential.user?.email}');
+              if (state.credential.user != null) {
+                await checkAndStoreAdminStatus(state.credential.user!);
 
-            print("Is context mounted? ${context.mounted}");
-            print("Parent context mounted? ${parentContext.mounted}");
+                print("Is context mounted? ${context.mounted}");
+                print("Parent context mounted? ${parentContext.mounted}");
 
-            if (parentContext.mounted) {
-              print('Navigating from UserCreated action');
-              Navigator.pushAndRemoveUntil(
-                parentContext,
-                MaterialPageRoute(builder: (context) => HomePage()),
-                (route) => false,
-              );
-            }
-          }
-        }),
-        // Handle account linking (anonymous to email)
-        AuthStateChangeAction<CredentialLinked>((context, state) async {
-          print(
-              'CredentialLinked action triggered for user: ${state.user?.email}');
-          if (state.user != null && !state.user!.isAnonymous) {
-            await checkAndStoreAdminStatus(state.user!);
+                if (parentContext.mounted) {
+                  print('Navigating from UserCreated action');
+                  Navigator.pushAndRemoveUntil(
+                    parentContext,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  );
+                }
+              }
+            }),
+            // Handle account linking (anonymous to email)
+            AuthStateChangeAction<CredentialLinked>((context, state) async {
+              print(
+                  'CredentialLinked action triggered for user: ${state.user?.email}');
+              if (state.user != null && !state.user!.isAnonymous) {
+                await checkAndStoreAdminStatus(state.user!);
 
-            print("Is context mounted? ${context.mounted}");
-            print("Parent context mounted? ${parentContext.mounted}");
+                print("Is context mounted? ${context.mounted}");
+                print("Parent context mounted? ${parentContext.mounted}");
 
-            if (parentContext.mounted) {
-              print('Navigating from CredentialLinked action');
-              Navigator.pushAndRemoveUntil(
-                parentContext,
-                MaterialPageRoute(builder: (context) => HomePage()),
-                (route) => false,
-              );
-            }
-          }
-        }),
-      ],
-      // Adjust the headerBuilder to have less vertical padding
-      headerBuilder: (context, constraints, shrinkOffset) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // App title
-              Text(
-                'Faulkner Footsteps',
-                style: GoogleFonts.ultra(
+                if (parentContext.mounted) {
+                  print('Navigating from CredentialLinked action');
+                  Navigator.pushAndRemoveUntil(
+                    parentContext,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                    (route) => false,
+                  );
+                }
+              }
+            }),
+          ],
+          // Adjust the headerBuilder to have less vertical padding
+          headerBuilder: (context, constraints, shrinkOffset) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 16, bottom: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // App title
+                  Text(
+                    'Faulkner Footsteps',
+                    style: GoogleFonts.ultra(
+                      textStyle: const TextStyle(
+                        color: Color.fromARGB(255, 72, 52, 52),
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Optional subtitle
+                  Text(
+                    'Explore Historical Sites',
+                    style: GoogleFonts.rakkas(
+                      textStyle: const TextStyle(
+                        color: Color.fromARGB(255, 107, 79, 79),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          // Make subtitle more compact
+          subtitleBuilder: (context, action) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+              child: Text(
+                action == AuthAction.signIn
+                    ? 'Welcome back! Please sign in to continue.'
+                    : 'Welcome! Please create an account to get started.',
+                style: GoogleFonts.rakkas(
                   textStyle: const TextStyle(
                     color: Color.fromARGB(255, 72, 52, 52),
-                    fontSize: 24,
+                    fontSize: 13,
                   ),
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
-              // Optional subtitle
-              Text(
-                'Explore Historical Sites',
+            );
+          },
+          // Make footer more compact
+          footerBuilder: (context, action) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+              child: Text(
+                'Discover the rich history of Faulkner County',
                 style: GoogleFonts.rakkas(
                   textStyle: const TextStyle(
                     color: Color.fromARGB(255, 107, 79, 79),
-                    fontSize: 16,
+                    fontSize: 12,
                   ),
                 ),
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
-        );
-      },
-      // Make subtitle more compact
-      subtitleBuilder: (context, action) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-          child: Text(
-            action == AuthAction.signIn
-                ? 'Welcome back! Please sign in to continue.'
-                : 'Welcome! Please create an account to get started.',
-            style: GoogleFonts.rakkas(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 72, 52, 52),
-                fontSize: 13,
-              ),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
-      // Make footer more compact
-      footerBuilder: (context, action) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
-          child: Text(
-            'Discover the rich history of Faulkner County',
-            style: GoogleFonts.rakkas(
-              textStyle: const TextStyle(
-                color: Color.fromARGB(255, 107, 79, 79),
-                fontSize: 12,
-              ),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
-      // Side builder for tablet/desktop
-      sideBuilder: (context, constraints) {
-        return Container(
-          color: const Color.fromARGB(255, 238, 214, 196),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Faulkner Footsteps',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 72, 52, 52),
-                    fontSize: 28,
+            );
+          },
+          // Side builder for tablet/desktop
+          sideBuilder: (context, constraints) {
+            return Container(
+              color: const Color.fromARGB(255, 238, 214, 196),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Faulkner Footsteps',
+                    style: GoogleFonts.ultra(
+                      textStyle: const TextStyle(
+                        color: Color.fromARGB(255, 72, 52, 52),
+                        fontSize: 28,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
-    ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
