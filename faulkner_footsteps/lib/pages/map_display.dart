@@ -127,7 +127,7 @@ class _MapDisplay2State extends State<MapDisplay2> {
     Map<String, double> siteDistances = getDistances(siteLocations);
     sorted = Map.fromEntries(siteDistances.entries.toList()
       ..sort((e1, e2) => e1.value.compareTo(e2.value)));
-    late var sortedlist = sorted.values.toList();
+    sorted.values.toList();
 
     // First, check if there are any sites close enough
     if (sorted.isEmpty || sorted.values.first >= 30000.0) {
@@ -352,14 +352,15 @@ class _MapDisplay2State extends State<MapDisplay2> {
             markers: markers,
           ),
           RichAttributionWidget(
-          attributions: [
-            // Suggested attribution for the OpenStreetMap public tile server
-            TextSourceAttribution(
-              'OpenStreetMap contributors',
-              onTap: () => launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
-            ),
-          ],
-        ),
+            attributions: [
+              // Suggested attribution for the OpenStreetMap public tile server
+              TextSourceAttribution(
+                'OpenStreetMap contributors',
+                onTap: () =>
+                    launchUrl(Uri.parse('https://openstreetmap.org/copyright')),
+              ),
+            ],
+          ),
         ],
       ),
     );
