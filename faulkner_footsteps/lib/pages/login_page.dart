@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatelessWidget {
@@ -181,9 +180,9 @@ class LoginPage extends StatelessWidget {
         // Handle account linking (anonymous to email)
         AuthStateChangeAction<CredentialLinked>((context, state) async {
           print(
-              'CredentialLinked action triggered for user: ${state.user?.email}');
-          if (state.user != null && !state.user!.isAnonymous) {
-            await checkAndStoreAdminStatus(state.user!);
+              'CredentialLinked action triggered for user: ${state.user.email}');
+          if (!state.user.isAnonymous) {
+            await checkAndStoreAdminStatus(state.user);
 
             print("Is context mounted? ${context.mounted}");
             print("Parent context mounted? ${parentContext.mounted}");
