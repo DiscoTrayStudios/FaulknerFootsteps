@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
+import 'package:faulkner_footsteps/objects/image_with_url.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/objects/theme_data.dart';
@@ -25,13 +26,6 @@ class AdminListPage extends StatefulWidget {
 
   @override
   State<AdminListPage> createState() => _AdminListPageState();
-}
-
-class ImageWithUrl {
-  Uint8List? imageData;
-  String url;
-
-  ImageWithUrl({this.imageData, required this.url});
 }
 
 class _AdminListPageState extends State<AdminListPage> {
