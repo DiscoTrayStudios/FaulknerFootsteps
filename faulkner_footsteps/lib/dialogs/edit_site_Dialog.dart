@@ -1,11 +1,23 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/image_with_url.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
+import 'package:faulkner_footsteps/widgets/list_edit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+
+/// So, I believe that this class can operate as a main data container for anything images based. tempimagechanges, newlyaddedfiles, and tempdeletedurls can probably
+/// all be created and stored in here. The only things needed from the parent widget will be a way to get the initial images and a function to update the site.
+///
 
 class EditSiteDialog extends StatefulWidget {
   final HistSite? existingSite;
@@ -28,11 +40,20 @@ class EditSiteDialog extends StatefulWidget {
     String lngText,
   ) saveEditedSite;
 
+  final List<SiteFilter> acceptableFilters;
+
+  final Function() getImageList;
+
+  final Function() setImageList;
+
   EditSiteDialog(
       {super.key,
       required this.loadImages,
       required this.saveNewSite,
       required this.saveEditedSite,
+      required this.acceptableFilters,
+      required this.getImageList,
+      required this.setImageList,
       this.existingSite});
 
   @override
@@ -57,6 +78,9 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
   late List<SiteFilter> chosenFilters;
   bool hasLoadedImages = false;
   List<ImageWithUrl> pairedImages = [];
+
+  Map<String, List<ImageWithUrl>> tempImageChanges = {};
+  Map<String, List<String>> tempDeletedUrls = {};
 
   // Exists for a unifide key for storing in the pairedImages map.
   late String pairKey;
@@ -117,31 +141,79 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     super.initState();
   }
 
-  List<dynamic> getImageList() {
-    final editedImages = tempImageChanges[pairKey];
+  // List<dynamic> getImageList() {
+  //   final editedImages = tempImageChanges[pairKey];
 
-    if (isEdit) {
-      // If user has edited images, use those
-      if (editedImages != null && editedImages.isNotEmpty) {
-        return editedImages;
-      }
+  //   if (isEdit) {
+  //     // If user has edited images, use those
+  //     if (editedImages != null && editedImages.isNotEmpty) {
+  //       return editedImages;
+  //     }
 
-      // Otherwise fall back to existing images
-      print("using existing images");
-      return widget.existingSite!.imageUrls;
-    }
+  //     // Otherwise fall back to existing images
+  //     print("using existing images");
+  //     return widget.existingSite!.imageUrls;
+  //   }
 
-    // New site: only use temp images
-    return editedImages ?? [];
-  }
+  //   // New site: only use temp images
+  //   return editedImages ?? [];
+  // }
 
   bool checkCanSubmit() {
-    final imageList = getImageList();
+    final imageList = widget.getImageList();
 
     return nameController.text.isNotEmpty &&
         descriptionController.text.isNotEmpty &&
         blurbs.isNotEmpty &&
         imageList.isNotEmpty;
+  }
+
+  Future<void> pickImages() async {
+    final int maxBytes = 1024 * 1024; // 1 MB
+    try {
+      final pickedImages = await ImagePicker().pickMultiImage();
+      if (pickedImages.isEmpty) return;
+
+      List<File> finalImages = [];
+
+      for (XFile image in pickedImages) {
+        final file = File(image.path);
+        final fileSize = await file.length();
+
+        if (fileSize > maxBytes) {
+          final compressed = await compressAndGetFile(file);
+          if (compressed != null) {
+            finalImages.add(compressed);
+          } else {
+            print("Compression failed for ${image.name}");
+          }
+        } else {
+          finalImages.add(file);
+        }
+      }
+
+      this.images = finalImages;
+      setState(() {});
+    } on PlatformException catch (e) {
+      print("Failed to pick images: $e");
+    }
+  }
+
+  Future<File?> compressAndGetFile(File file,
+      {int quality = 75, int maxWidth = 1280}) async {
+    final tempDir = await getTemporaryDirectory();
+    final targetPath =
+        '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    XFile? result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: quality,
+      minWidth: maxWidth,
+      minHeight: (maxWidth * 0.75).toInt(),
+      format: CompressFormat.jpeg,
+    );
+    return result != null ? File(result.path) : null;
   }
 
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
@@ -181,6 +253,65 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
       }
       Navigator.pop(context);
     }
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return Builder(builder: (context) {
+          return ListEdit<ImageWithUrl>(
+            title: "Edit Images",
+            items: pairedImages,
+            itemBuilder: (imageWithUrl) {
+              if (imageWithUrl.imageData != null &&
+                  imageWithUrl.imageData!.isNotEmpty) {
+                return Image.memory(imageWithUrl.imageData!,
+                    fit: BoxFit.contain);
+              }
+              return Text("You do not have any Images uploaded to this site.");
+            },
+            addButtonText: "Add Images",
+            deleteButtonText: "Delete Images",
+            onAddItem: () async {
+              await pickImages();
+              if (images != null) {
+                for (File imageFile in images!) {
+                  Uint8List newFile = await imageFile.readAsBytes();
+                  ImageWithUrl newImageWithUrl = ImageWithUrl(
+                    imageData: newFile,
+                    url: "",
+                  );
+                  pairedImages.add(newImageWithUrl);
+                  // Track the mapping between ImageWithUrl and File
+                  newImageMap[newImageWithUrl] = imageFile;
+                }
+                images = null;
+              }
+            },
+            onSubmit: () async {
+              tempImageChanges[site.name] = List.from(pairedImages);
+
+              // Only add files to newlyAddedFiles if their ImageWithUrl is still in pairedImages
+              newlyAddedFiles.clear();
+              for (var entry in newImageMap.entries) {
+                if (pairedImages.contains(entry.key)) {
+                  newlyAddedFiles.add(entry.value);
+                }
+              }
+
+              Set<String> remainingUrls = pairedImages
+                  .where((img) => img.url.isNotEmpty)
+                  .map((img) => img.url)
+                  .toSet();
+
+              List<String> urlsToDelete = originalUrls
+                  .where((url) => !remainingUrls.contains(url))
+                  .toList();
+              tempDeletedUrls[site.name] = urlsToDelete;
+            },
+          );
+        });
+      },
+    );
   }
 
   @override
@@ -491,7 +622,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                               },
                               child: const Text("Edit Filters"));
                         },
-                        menuChildren: acceptableFilters
+                        menuChildren: widget.acceptableFilters
                             .map((filter) => CheckboxMenuButton(
                                 style: ButtonStyle(
                                   textStyle: WidgetStatePropertyAll(TextStyle(
@@ -600,7 +731,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                       //     existingSite?.name ?? "new_site";
 
                       // images tracked with tempImageChanges
-                      final imageList = getImageList();
+                      final imageList = widget.getImageList();
 
                       if (imageList.isEmpty) {
                         print("${imageList.length} images");
@@ -648,7 +779,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                       }
 
                       // images tracked with tempImageChanges
-                      final imageList = getImageList();
+                      final imageList = widget.getImageList();
 
                       if (imageList.isEmpty) {
                         print("${imageList.length} images");
