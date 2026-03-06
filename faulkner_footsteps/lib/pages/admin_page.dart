@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/add_filter_Dialog.dart';
 import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
+import 'package:faulkner_footsteps/dialogs/edit_filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/image_with_url.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
@@ -278,62 +279,22 @@ class _AdminListPageState extends State<AdminListPage> {
     setState(() {}); // Refresh the parent dialog
   }
 
-  Future<void> _showEditFiltersDialog() async {
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Theme(
-          data: adminPageTheme,
-          child: Builder(
-            builder: (context) {
-              return ListEdit<SiteFilter>(
-                  title: "Edit Filters",
-                  items: app_state.siteFilters,
-                  itemBuilder: (filter) => Text(filter.name,
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  onAddItem: () async {
-                    await showDialog(
-                      context: context,
-                      builder: (context) => AddFilterDialog(
-                        onSubmit: (filterName) {
-                          for (SiteFilter filter in app_state.siteFilters) {
-                            if (filter.name == filterName) {
-                              print("Filter is already added!");
-                              return;
-                            }
-                          }
-                          app_state.addFilter(filterName);
-                        },
-                      ),
-                    );
-                  },
-                  onSubmit: () async {
-                    final snapshot = await FirebaseFirestore.instance
-                        .collection("filters")
-                        .get();
-                    Set<String> firestoreFilterNames = {};
-                    for (var doc in snapshot.docs) {
-                      firestoreFilterNames.add(doc.get("name"));
-                    }
-                    for (String filterName in firestoreFilterNames) {
-                      bool stillExists = app_state.siteFilters
-                          .any((f) => f.name == filterName);
+  Future<void> updateFilters() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection("filters").get();
+    Set<String> firestoreFilterNames = {};
+    for (var doc in snapshot.docs) {
+      firestoreFilterNames.add(doc.get("name"));
+    }
+    for (String filterName in firestoreFilterNames) {
+      bool stillExists = app_state.siteFilters.any((f) => f.name == filterName);
 
-                      if (!stillExists) {
-                        await app_state.removeFilter(filterName);
-                        print("Removed filter: $filterName");
-                      }
-                    }
-                    await app_state.saveFilterOrder();
-                  });
-            },
-          ),
-        );
-      },
-    );
-
-    setState(() {});
+      if (!stillExists) {
+        await app_state.removeFilter(filterName);
+        print("Removed filter: $filterName");
+      }
+    }
+    await app_state.saveFilterOrder();
   }
 
   Widget _buildAdminContent(BuildContext context) {
@@ -361,7 +322,17 @@ class _AdminListPageState extends State<AdminListPage> {
             style: ElevatedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
-            onPressed: _showEditFiltersDialog,
+            onPressed: () async {
+              showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (BuildContext context) {
+                    return EditFilterDialog(
+                        onAddFilter: app_state.addFilter,
+                        onSubmit: updateFilters,
+                        filters: app_state.siteFilters);
+                  });
+            },
             child: Text(
               "Edit Filters",
               style: GoogleFonts.ultra(
