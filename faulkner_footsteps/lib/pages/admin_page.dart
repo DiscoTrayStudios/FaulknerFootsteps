@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
+import 'package:faulkner_footsteps/dialogs/add_filter_Dialog.dart';
 import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/image_with_url.dart';
@@ -292,7 +293,20 @@ class _AdminListPageState extends State<AdminListPage> {
                   itemBuilder: (filter) => Text(filter.name,
                       style: Theme.of(context).textTheme.bodyMedium),
                   onAddItem: () async {
-                    await showAddFilterDialog();
+                    await showDialog(
+                      context: context,
+                      builder: (context) => AddFilterDialog(
+                        onSubmit: (filterName) {
+                          for (SiteFilter filter in app_state.siteFilters) {
+                            if (filter.name == filterName) {
+                              print("Filter is already added!");
+                              return;
+                            }
+                          }
+                          app_state.addFilter(filterName);
+                        },
+                      ),
+                    );
                   },
                   onSubmit: () async {
                     final snapshot = await FirebaseFirestore.instance
@@ -320,64 +334,6 @@ class _AdminListPageState extends State<AdminListPage> {
     );
 
     setState(() {});
-  }
-
-  Future<void> showAddFilterDialog() {
-    final nameController = TextEditingController();
-
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return Theme(
-              data: adminPageTheme,
-              child: Builder(
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text(
-                      "Add New Filter",
-                      style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 76, 32, 8),
-                        ),
-                      ),
-                    ),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                            controller: nameController,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration:
-                                const InputDecoration(labelText: "Filter Name"))
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Cancel")),
-                      ElevatedButton(
-                        onPressed: () async {
-                          //do stuff
-                          for (SiteFilter filter in app_state.siteFilters) {
-                            if (filter.name == nameController.text) {
-                              print("Filter is already added!");
-                              return;
-                            }
-                          }
-                          app_state.addFilter(nameController.text);
-                          Navigator.pop(context);
-                          setState(() {});
-                        },
-                        child: const Text("Save Filter"),
-                      )
-                    ],
-                  );
-                },
-              ),
-            );
-          });
-        });
   }
 
   Widget _buildAdminContent(BuildContext context) {
