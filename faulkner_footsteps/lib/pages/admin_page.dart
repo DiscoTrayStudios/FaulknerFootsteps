@@ -564,7 +564,6 @@ class _AdminListPageState extends State<AdminListPage> {
   }
 
   Widget _buildAdminContent(BuildContext context) {
-    List<HistSite> displaySites = getSearchSites();
     return Column(
       children: [
         Padding(
@@ -598,6 +597,8 @@ class _AdminListPageState extends State<AdminListPage> {
         Expanded(
           child: Consumer<ApplicationState>(
             builder: (context, appState, chile) {
+              List<HistSite> displaySites = getSearchSites();
+
               return ListView.builder(
                 itemCount: displaySites.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -1292,10 +1293,10 @@ class _AdminListPageState extends State<AdminListPage> {
                                         ),
                                       ),
                                       onDeleted: () {
-                                          setState(() {
-                                            chosenFilters.remove(filter);
-                                          });
-                                        },
+                                        setState(() {
+                                          chosenFilters.remove(filter);
+                                        });
+                                      },
                                       backgroundColor: const Color.fromARGB(
                                           255, 107, 79, 79),
                                     );
