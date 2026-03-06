@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
-import 'package:faulkner_footsteps/dialogs/add_filter_Dialog.dart';
 import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
 import 'package:faulkner_footsteps/dialogs/edit_filter_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
