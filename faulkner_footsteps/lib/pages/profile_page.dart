@@ -97,20 +97,6 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
-  // // Save the current achievement count
-  // await _saveAchievementNotificationStatus();
-
-  // // Navigate to achievements page with the app state's historical sites
-  // final appState = Provider.of<ApplicationState>(context, listen: false);
-  // Navigator.push(
-  //   context,
-  //   MaterialPageRoute(
-  //     builder: (context) => AchievementsPage(
-  //       displaySites: appState.historicalSites,
-  //     ),
-  //   ),
-  // );
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -314,14 +300,7 @@ class _ProfilePageState extends State<ProfilePage>
                                   ?.copyWith(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onPrimary)
-                              // style: GoogleFonts.ultra(
-                              //   textStyle: TextStyle(
-                              //     color: Theme.of(context).colorScheme.onPrimary,
-                              //     fontSize: 16,
-                              //   ),
-                              // ),
-                              ),
+                                          .onPrimary)),
                           const SizedBox(height: 16),
                           Consumer<ApplicationState>(
                             builder: (context, appState, _) {
