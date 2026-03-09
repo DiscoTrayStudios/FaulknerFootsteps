@@ -5,9 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 class AdminSiteCard extends StatelessWidget {
   final HistSite site;
   final VoidCallback onSiteDeleted;
+  final VoidCallback onEditSite;
 
   const AdminSiteCard(
-      {super.key, required this.site, required this.onSiteDeleted});
+      {super.key,
+      required this.site,
+      required this.onSiteDeleted,
+      required this.onEditSite});
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -87,9 +91,7 @@ class AdminSiteCard extends StatelessWidget {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.edit),
                   label: const Text('Edit Site'),
-                  onPressed: () {
-                    // Implement edit functionality here
-                  },
+                  onPressed: onEditSite,
                 ),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.delete),
@@ -118,7 +120,7 @@ class AdminSiteCard extends StatelessWidget {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                onSiteDeleted();
+                                onSiteDeleted;
                                 Navigator.pop(context);
                               },
                               child: const Text('Delete'),
