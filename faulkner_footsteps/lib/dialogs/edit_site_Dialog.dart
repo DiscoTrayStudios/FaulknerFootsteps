@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:faulkner_footsteps/dialogs/blurb_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/image_with_url.dart';
@@ -218,8 +216,6 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
   }
 
   Future<void> _showEditSiteImagesDialog(HistSite site) async {
-    List<Uint8List?> siteImages = site.images;
-    List<String> siteImageURLs = site.imageUrls;
     List<String> originalUrls = List.from(site.imageUrls);
     List<ImageWithUrl> pairedImages = [];
 
