@@ -8,11 +8,12 @@ class AddFilterDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: const Color.fromARGB(255, 238, 214, 196),
       title: Text(
         "Add New Filter",
         style: GoogleFonts.ultra(
-          textStyle: TextStyle(
-            color: Theme.of(context).colorScheme.tertiary,
+          textStyle: const TextStyle(
+            color: Color.fromARGB(255, 76, 32, 8),
           ),
         ),
       ),
