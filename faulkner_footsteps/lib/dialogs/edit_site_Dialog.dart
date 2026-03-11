@@ -569,6 +569,11 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                             fontSize: 12,
                           ),
                         ),
+                        onDeleted: () {
+                          setState(() {
+                            chosenFilters.remove(filter);
+                          });
+                        },
                         backgroundColor: const Color.fromARGB(255, 107, 79, 79),
                       );
                     }).toList(),
