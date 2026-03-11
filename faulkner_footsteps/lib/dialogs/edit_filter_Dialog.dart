@@ -35,6 +35,6 @@ class EditFilterDialog extends StatelessWidget {
             ),
           );
         },
-        onSubmit: onSubmit());
+        onSubmit: () => onSubmit());
   }
 }
