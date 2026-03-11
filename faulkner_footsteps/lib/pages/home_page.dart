@@ -1,6 +1,5 @@
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
-import 'package:faulkner_footsteps/objects/list_item.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/pages/list_page.dart';
 import 'package:faulkner_footsteps/pages/map_display.dart';
@@ -128,114 +127,6 @@ class _HomePageState extends State<HomePage> {
 
     return filtered;
   }
-
-  // // void openSearchDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: const Text("Search"),
-  //         titleTextStyle: Theme.of(context)
-  //             .textTheme
-  //             .headlineMedium
-  //             ?.copyWith(color: Theme.of(context).colorScheme.secondary),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(20.0),
-  //           side: BorderSide(
-  //             color: Theme.of(context).colorScheme.secondary,
-  //             width: 2.0,
-  //           ),
-  //         ),
-  //         elevation: 8,
-  //         backgroundColor: Theme.of(context).colorScheme.primary,
-  //         alignment: Alignment.topCenter,
-  //         content: SearchAnchor(
-  //           searchController: _searchController,
-  //           isFullScreen: false,
-  //           viewBackgroundColor: Theme.of(context).colorScheme.primary,
-  //           viewSide: BorderSide(
-  //             color: Theme.of(context).colorScheme.secondary,
-  //             width: 2.0,
-  //           ),
-  //           dividerColor: Theme.of(context).colorScheme.secondary,
-  //           headerTextStyle: Theme.of(context)
-  //               .textTheme
-  //               .bodySmall
-  //               ?.copyWith(color: Theme.of(context).colorScheme.secondary),
-  //           viewConstraints: const BoxConstraints(),
-  //           builder: (context, controller) {
-  //             return SearchBar(
-  //               controller: _searchController,
-  //               onTap: controller.openView,
-  //               onChanged: controller.closeView,
-  //               onSubmitted: (query) {
-  //                 setState(() {}); // triggers rebuild of filtered list
-  //                 Navigator.pop(context);
-  //               },
-  //               leading: const Icon(Icons.search),
-  //               trailing: [
-  //                 _searchController.text.isEmpty
-  //                     ? IconButton(
-  //                         icon: const Icon(Icons.arrow_right_alt),
-  //                         onPressed: () {
-  //                           setState(() {});
-  //                           Navigator.pop(context);
-  //                         },
-  //                       )
-  //                     : IconButton(
-  //                         icon: const Icon(Icons.close),
-  //                         onPressed: () {
-  //                           _searchController.clear();
-  //                           setState(() {});
-  //                           Navigator.pop(context);
-  //                         },
-  //                       ),
-  //               ],
-  //               side: WidgetStatePropertyAll(
-  //                 BorderSide(
-  //                   color: Theme.of(context).colorScheme.secondary,
-  //                   width: 2.0,
-  //                 ),
-  //               ),
-  //               textStyle: WidgetStatePropertyAll(
-  //                 Theme.of(context).textTheme.bodySmall?.copyWith(
-  //                       color: Theme.of(context).colorScheme.secondary,
-  //                     ),
-  //               ),
-  //               backgroundColor: WidgetStatePropertyAll(
-  //                 Theme.of(context).colorScheme.primary,
-  //               ),
-  //             );
-  //           },
-  //           suggestionsBuilder: (context, controller) {
-  //             final query = controller.text.toLowerCase();
-  //             final allSites = context.read<ApplicationState>().historicalSites;
-  //             final matches = allSites
-  //                 .where((site) => site.name.toLowerCase().contains(query))
-  //                 .toList();
-
-  //             return matches.map((site) {
-  //               return ListTile(
-  //                 title: Text(
-  //                   site.name,
-  //                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-  //                         color: Theme.of(context).colorScheme.secondary,
-  //                       ),
-  //                 ),
-  //                 onTap: () {
-  //                   _searchController.text = site.name;
-  //                   setState(() {});
-  //                   controller.closeView(site.name);
-  //                   Navigator.pop(context);
-  //                 },
-  //               );
-  //             });
-  //           },
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {

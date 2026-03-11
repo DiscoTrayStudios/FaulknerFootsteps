@@ -1,6 +1,4 @@
-import 'package:faulkner_footsteps/app_state.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class SearchWidget extends StatelessWidget {
   final SearchController searchController;

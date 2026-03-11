@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:faulkner_footsteps/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class _NoScrollBehavior extends ScrollBehavior {

@@ -68,54 +68,6 @@ class _HistSitePage extends State<HistSitePage> {
     });
   }
 
-  // Future<void> showRatingDialog() async {
-  //   final double? userRating = await showDialog<double>(
-  //     context: context,
-  //     builder: (BuildContext context) => RatingDialog(
-  //       app_state: app_state,
-  //       site_name: widget.histSite.name,
-  //     ),
-  //   );
-  //   if (userRating != null) {
-  //     setState(() {
-  //       personalRating = userRating;
-  //     });
-  //     widget.histSite.updateRating(userRating);
-  //   }
-  // }
-
-  // Widget buildRatingStars(double rating) {
-  //   int fullStars = rating.floor(); // Full stars
-  //   bool halfStar = (rating - fullStars) >= 0.5; // Check if it's a half star
-  //   return Row(children: [
-  //     Row(
-  //       children: List.generate(5, (index) {
-  //         if (index < fullStars) {
-  //           return const Icon(Icons.star, color: Colors.amber, size: 24);
-  //         } else if (index == fullStars && halfStar) {
-  //           return const Icon(Icons.star_half, color: Colors.amber, size: 24);
-  //         } else {
-  //           return const Icon(Icons.star_border, color: Colors.amber, size: 24);
-  //         }
-  //       }),
-  //     ),
-  //     Text(" (${widget.histSite.avgRating.toStringAsFixed(1)})",
-  //         style: GoogleFonts.rakkas(
-  //             textStyle: const TextStyle(
-  //                 color: Color.fromARGB(255, 72, 52, 52), fontSize: 16)))
-  //   ]);
-  // }
-
-  // final urls = [
-  //   'https://live.staticflickr.com/2872/9142834823_503dee0d1c_b.jpg',
-  //   'https://live.staticflickr.com/3861/14459662112_505397428a_z.jpg',
-  //   'https://live.staticflickr.com/5479/14464952611_f462b97d7e_z.jpg',
-  //   'https://live.staticflickr.com/5158/14461036375_1892f0c69b.jpg',
-  // ];
-  /*
-  How to add a link to a google drive file
-  https://stackoverflow.com/questions/59849232/display-images-from-google-drive-using-networkimage
-  */
   @override
   Widget build(BuildContext context) {
     final String siteDistance = (_distance.as(
@@ -361,45 +313,7 @@ class _HistSitePage extends State<HistSitePage> {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            //   child: Row(
-            //     crossAxisAlignment: CrossAxisAlignment.center,
-            //     children: [
-            //       ElevatedButton.icon(
-            //         onPressed: showRatingDialog,
-            //         icon: const Icon(Icons.star,
-            //             color: Color.fromARGB(255, 255, 243, 228), size: 24),
-            //         label: const Text("Rate This Site"),
-            //         style: ElevatedButton.styleFrom(
-            //           foregroundColor: const Color.fromARGB(255, 250, 235, 215),
-            //           backgroundColor: const Color.fromARGB(255, 72, 52, 52),
-            //           elevation: 6,
-            //           shadowColor: Colors.black45,
-            //           padding: const EdgeInsets.symmetric(
-            //               vertical: 12.0, horizontal: 20.0),
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(30.0),
-            //           ),
-            //         ),
-            //       ),
-            //       const SizedBox(width: 16.0),
-            //       buildRatingStars(widget.histSite.avgRating),
-            //       const SizedBox(width: 16.0)
-            //       /*
-            //       Text(
-            //         "${widget.histSite.avgRating.toStringAsFixed(1)} / 5",
-            //         style: GoogleFonts.rakkas(
-            //           textStyle: const TextStyle(
-            //               color: Color.fromARGB(255, 72, 52, 52), fontSize: 16),
-            //         ),
-            //       ),
-            //       */
-            //     ],
-            //   ),
-            // ),
             const SizedBox(height: 16.0),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child:
@@ -450,31 +364,7 @@ class _HistSitePage extends State<HistSitePage> {
                   size: 60,
                 )
                 // Personal Rating
-
-                // Text(
-                //   personalRating != 0.0
-                //       ? "You Rated: ${personalRating?.toStringAsFixed(0)} / 5"
-                //       : "You Rated: N/A",
-                //   style: GoogleFonts.rakkas(
-                //     textStyle: const TextStyle(
-                //         color: Color.fromARGB(255, 72, 52, 52), fontSize: 16),
-                //   ),
-                // ),
                 ,
-                //This Updates Immediately, but one step behind
-                // Text(
-                //     " (${app_state.historicalSites.firstWhere((site) {
-                //           if (site.name == widget.histSite.name) {
-                //             print(site.name);
-                //             return true;
-                //           }
-                //           return false;
-                //         }).avgRating.toStringAsFixed(1)})",
-                //     style: GoogleFonts.rakkas(
-                //         textStyle: const TextStyle(
-                //             color: Color.fromARGB(255, 72, 52, 52),
-                //             fontSize: 16))),
-
                 // This Updates After Each Reload
                 Text(" (${widget.histSite.avgRating.toStringAsFixed(1)})",
                     style: GoogleFonts.rakkas(
@@ -494,7 +384,6 @@ class _HistSitePage extends State<HistSitePage> {
                             color: Theme.of(context).colorScheme.error)),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(

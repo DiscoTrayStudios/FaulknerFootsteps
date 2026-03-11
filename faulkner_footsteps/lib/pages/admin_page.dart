@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:faulkner_footsteps/app_state.dart';
+import 'package:faulkner_footsteps/dialogs/edit_filter_Dialog.dart';
+import 'package:faulkner_footsteps/dialogs/edit_site_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
+import 'package:faulkner_footsteps/objects/image_with_url.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
 import 'package:faulkner_footsteps/objects/theme_data.dart';
-import 'package:faulkner_footsteps/pages/map_display.dart';
 import 'package:faulkner_footsteps/pages/admin_progress_achievements.dart';
-import 'package:faulkner_footsteps/widgets/list_edit.dart';
+import 'package:faulkner_footsteps/widgets/admin_site_card.dart';
 import 'package:faulkner_footsteps/widgets/search_widget.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -29,13 +29,6 @@ class AdminListPage extends StatefulWidget {
   State<AdminListPage> createState() => _AdminListPageState();
 }
 
-class ImageWithUrl {
-  Uint8List? imageData;
-  String url;
-
-  ImageWithUrl({this.imageData, required this.url});
-}
-
 class _AdminListPageState extends State<AdminListPage> {
   late ApplicationState app_state;
   int _selectedIndex = 0;
@@ -44,9 +37,6 @@ class _AdminListPageState extends State<AdminListPage> {
   final storageRef = FirebaseStorage.instance.ref();
   var uuid = Uuid();
   List<SiteFilter> acceptableFilters = [];
-  List<File> newlyAddedFiles = [];
-  Map<String, List<ImageWithUrl>> tempImageChanges = {};
-  Map<String, List<String>> tempDeletedUrls = {};
 
   late SearchController _sitesSearchController;
   late SearchController _achievementsSearchController;
@@ -74,7 +64,7 @@ class _AdminListPageState extends State<AdminListPage> {
     final int maxBytes = 1024 * 1024; // 1 MB
     try {
       final pickedImages = await ImagePicker().pickMultiImage();
-      if (pickedImages == null || pickedImages.isEmpty) return;
+      if (pickedImages.isEmpty) return;
 
       List<File> finalImages = [];
 
@@ -178,389 +168,46 @@ class _AdminListPageState extends State<AdminListPage> {
     });
   }
 
-  ///For selecting the date with the blurbs
-  Future<void> selectDate(
-      BuildContext context, TextEditingController dateController) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        // need a custom theme here because datepicker is stupid
-        return Theme(
-            data: ThemeData(
-                colorScheme: ColorScheme(
-                    brightness: Brightness.light,
-                    primary: Color.fromARGB(255, 76, 32, 8),
-                    onPrimary: Colors.white,
-                    secondary: Color.fromARGB(255, 76, 32, 8),
-                    onSecondary: Colors.red,
-                    error: Colors.red,
-                    onError: Colors.red,
-                    surface: Color.fromARGB(255, 238, 214, 196),
-                    onSurface: Color.fromARGB(255, 76, 32, 8))),
-            child: child!);
-      },
-    );
-    if (picked != null) {
-      dateController.text = "${picked.month}/${picked.day}/${picked.year}";
-    }
-  }
-
-  Future<void> _showEditSiteImagesDialog(HistSite site) async {
+  Future<List<ImageWithUrl>> getSiteImages(HistSite site) async {
     List<Uint8List?> siteImages = site.images;
     List<String> siteImageURLs = site.imageUrls;
-    List<String> originalUrls = List.from(site.imageUrls);
     List<ImageWithUrl> pairedImages = [];
 
-    // Track newly added files with their corresponding ImageWithUrl
-    Map<ImageWithUrl, File> newImageMap = {};
-
-    if (tempImageChanges.containsKey(site.name)) {
-      pairedImages = List.from(tempImageChanges[site.name]!);
-    } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-      for (int i = 0; i < siteImageURLs.length; i++) {
-        Uint8List? imageData;
-        if (i < siteImages.length &&
-            siteImages[i] != null &&
-            siteImages[i]!.isNotEmpty) {
-          imageData = siteImages[i];
-        } else {
-          imageData = await app_state.getImage(siteImageURLs[i]);
-        }
-        if (imageData != null && siteImageURLs[i].isNotEmpty) {
-          pairedImages.add(ImageWithUrl(
-            imageData: imageData,
-            url: siteImageURLs[i],
-          ));
-        }
+    for (int i = 0; i < siteImageURLs.length; i++) {
+      Uint8List? imageData;
+      if (i < siteImages.length &&
+          siteImages[i] != null &&
+          siteImages[i]!.isNotEmpty) {
+        imageData = siteImages[i];
+      } else {
+        imageData = await app_state.getImage(siteImageURLs[i]);
       }
-      Navigator.pop(context);
+      if (imageData != null && siteImageURLs[i].isNotEmpty) {
+        pairedImages.add(ImageWithUrl(
+          imageData: imageData,
+          url: siteImageURLs[i],
+        ));
+      }
     }
-
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Theme(
-          data: adminPageTheme,
-          child: Builder(builder: (context) {
-            return ListEdit<ImageWithUrl>(
-              title: "Edit Images",
-              items: pairedImages,
-              itemBuilder: (imageWithUrl) {
-                if (imageWithUrl.imageData != null &&
-                    imageWithUrl.imageData!.isNotEmpty) {
-                  return Image.memory(imageWithUrl.imageData!,
-                      fit: BoxFit.contain);
-                }
-                return Text(
-                    "You do not have any Images uploaded to this site.");
-              },
-              addButtonText: "Add",
-              deleteButtonText: "Delete",
-              onAddItem: () async {
-                await pickImages();
-                if (images != null) {
-                  for (File imageFile in images!) {
-                    Uint8List newFile = await imageFile.readAsBytes();
-                    ImageWithUrl newImageWithUrl = ImageWithUrl(
-                      imageData: newFile,
-                      url: "",
-                    );
-                    pairedImages.add(newImageWithUrl);
-                    // Track the mapping between ImageWithUrl and File
-                    newImageMap[newImageWithUrl] = imageFile;
-                  }
-                  images = null;
-                }
-              },
-              onSubmit: () async {
-                tempImageChanges[site.name] = List.from(pairedImages);
-
-                // Only add files to newlyAddedFiles if their ImageWithUrl is still in pairedImages
-                newlyAddedFiles.clear();
-                for (var entry in newImageMap.entries) {
-                  if (pairedImages.contains(entry.key)) {
-                    newlyAddedFiles.add(entry.value);
-                  }
-                }
-
-                Set<String> remainingUrls = pairedImages
-                    .where((img) => img.url.isNotEmpty)
-                    .map((img) => img.url)
-                    .toSet();
-
-                List<String> urlsToDelete = originalUrls
-                    .where((url) => !remainingUrls.contains(url))
-                    .toList();
-                tempDeletedUrls[site.name] = urlsToDelete;
-              },
-            );
-          }),
-        );
-      },
-    );
-
-    setState(() {}); // Refresh the parent dialog
+    return pairedImages;
   }
 
-  Future<void> _showEditFiltersDialog() async {
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return Theme(
-          data: adminPageTheme,
-          child: Builder(
-            builder: (context) {
-              return ListEdit<SiteFilter>(
-                  title: "Edit Filters",
-                  items: app_state.siteFilters,
-                  itemBuilder: (filter) => Text(filter.name,
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  onAddItem: () async {
-                    await showAddFilterDialog();
-                  },
-                  onSubmit: () async {
-                    final snapshot = await FirebaseFirestore.instance
-                        .collection("filters")
-                        .get();
-                    Set<String> firestoreFilterNames = {};
-                    for (var doc in snapshot.docs) {
-                      firestoreFilterNames.add(doc.get("name"));
-                    }
-                    for (String filterName in firestoreFilterNames) {
-                      bool stillExists = app_state.siteFilters
-                          .any((f) => f.name == filterName);
-
-                      if (!stillExists) {
-                        await app_state.removeFilter(filterName);
-                        print("Removed filter: $filterName");
-                      }
-                    }
-                    await app_state.saveFilterOrder();
-                  });
-            },
-          ),
-        );
-      },
-    );
-
-    setState(() {});
-  }
-
-  Future<InfoText?> showBlurbDialog({
-    required BuildContext context,
-    InfoText? existing,
-  }) async {
-    final titleController = TextEditingController(text: existing?.title ?? "");
-    final valueController = TextEditingController(text: existing?.value ?? "");
-    final dateController = TextEditingController(text: existing?.date ?? "");
-
-    String? titleError;
-    String? contentError;
-
-    bool checkCanSubmit() {
-      return titleController.text.isNotEmpty && valueController.text.isNotEmpty;
+  Future<void> updateFilters() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection("filters").get();
+    Set<String> firestoreFilterNames = {};
+    for (var doc in snapshot.docs) {
+      firestoreFilterNames.add(doc.get("name"));
     }
+    for (String filterName in firestoreFilterNames) {
+      bool stillExists = app_state.siteFilters.any((f) => f.name == filterName);
 
-    bool canSubmit = checkCanSubmit();
-
-    return showDialog<InfoText>(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-              title: Text(
-                existing == null ? 'Add Blurb' : 'Edit Blurb',
-                style: GoogleFonts.ultra(
-                  textStyle: const TextStyle(
-                    color: Color.fromARGB(255, 76, 32, 8),
-                  ),
-                ),
-              ),
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.9,
-                    minWidth: MediaQuery.of(context).size.width * 0.9),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: titleController,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: InputDecoration(
-                              labelText: 'Title', errorText: titleError),
-                          onChanged: (value) {
-                            if (titleController.text.isNotEmpty) {
-                              titleError = null;
-                            } else {
-                              titleError = "Title is required";
-                            }
-                            setState(() {
-                              canSubmit = checkCanSubmit();
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: valueController,
-                          maxLines: 3,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          decoration: InputDecoration(
-                              labelText: 'Content', errorText: contentError),
-                          onChanged: (value) {
-                            if (value.isNotEmpty) {
-                              contentError = null;
-                            } else {
-                              contentError = "Content is required";
-                            }
-                            setState(() {
-                              canSubmit = checkCanSubmit();
-                            });
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                        child: TextField(
-                          controller: dateController,
-                          readOnly: true,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          onTap: () => selectDate(context, dateController),
-                          decoration: const InputDecoration(labelText: 'Date'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: canSubmit
-                        ? Theme.of(context)
-                                .elevatedButtonTheme
-                                .style
-                                ?.backgroundColor
-                                ?.resolve({WidgetState.pressed}) ??
-                            Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                  ),
-                  onPressed: canSubmit
-                      ? () {
-                          if (titleController.text.isEmpty ||
-                              valueController.text.isEmpty) {
-                            return;
-                          }
-
-                          final result = InfoText(
-                            title: titleController.text,
-                            value: valueController.text,
-                            date: dateController.text,
-                          );
-                          Navigator.pop(
-                              context, result); // return result on submit
-                        }
-                      : () {
-                          // display errors:
-                          if (titleController.text.isEmpty) {
-                            titleError = "Title is required";
-                          }
-                          if (valueController.text.isEmpty) {
-                            contentError = "Content is required";
-                          }
-                          setState(() {});
-                          return;
-                        },
-                  child: Text(existing == null ? 'Add Blurb' : 'Save Changes'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> showAddFilterDialog() {
-    final nameController = TextEditingController();
-
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            return Theme(
-              data: adminPageTheme,
-              child: Builder(
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text(
-                      "Add New Filter",
-                      style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                          color: Color.fromARGB(255, 76, 32, 8),
-                        ),
-                      ),
-                    ),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                            controller: nameController,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            decoration:
-                                const InputDecoration(labelText: "Filter Name"))
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Cancel")),
-                      ElevatedButton(
-                        onPressed: () async {
-                          //do stuff
-                          for (SiteFilter filter in app_state.siteFilters) {
-                            if (filter.name == nameController.text) {
-                              print("Filter is already added!");
-                              return;
-                            }
-                          }
-                          app_state.addFilter(nameController.text);
-                          Navigator.pop(context);
-                          setState(() {});
-                        },
-                        child: const Text("Save Filter"),
-                      )
-                    ],
-                  );
-                },
-              ),
-            );
-          });
-        });
+      if (!stillExists) {
+        await app_state.removeFilter(filterName);
+        print("Removed filter: $filterName");
+      }
+    }
+    await app_state.saveFilterOrder();
   }
 
   Widget _buildAdminContent(BuildContext context) {
@@ -572,7 +219,18 @@ class _AdminListPageState extends State<AdminListPage> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             ),
-            onPressed: () => showSiteEditorDialog(context: context),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return EditSiteDialog(
+                      acceptableFilters: acceptableFilters,
+                      saveEditedSite: saveEditedSite,
+                      saveNewSite: saveNewSite,
+                      getImageList: () async => [],
+                    );
+                  });
+            },
             child: Text(
               'Add New Historical Site',
               style: GoogleFonts.ultra(
@@ -587,7 +245,17 @@ class _AdminListPageState extends State<AdminListPage> {
             style: ElevatedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16)),
-            onPressed: _showEditFiltersDialog,
+            onPressed: () async {
+              showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (BuildContext context) {
+                    return EditFilterDialog(
+                        onAddFilter: app_state.addFilter,
+                        onSubmit: updateFilters,
+                        filters: app_state.siteFilters);
+                  });
+            },
             child: Text(
               "Edit Filters",
               style: GoogleFonts.ultra(
@@ -600,152 +268,34 @@ class _AdminListPageState extends State<AdminListPage> {
               List<HistSite> displaySites = getSearchSites();
 
               return ListView.builder(
-                itemCount: displaySites.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final site = displaySites[index];
-                  return Card(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: const Color.fromARGB(255, 238, 214, 196),
-                    child: ExpansionTile(
-                      title: Text(
-                        site.name,
-                        style: GoogleFonts.ultra(
-                          textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 76, 32, 8),
-                          ),
-                        ),
-                      ),
-                      subtitle: Text(
-                        site.description,
-                      ),
-                      children: [
-                        ConstrainedBox(
-                          constraints:
-                              BoxConstraints(maxHeight: 300, minHeight: 10),
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 4.0),
-                            child: Scrollbar(
-                              child: SingleChildScrollView(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Location: ${site.lat}, ${site.lng}',
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(255, 76, 32, 8),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Rating: ${site.avgRating.toStringAsFixed(1)} (${site.ratingAmount} ratings)',
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(255, 76, 32, 8),
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Blurbs:',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...site.blurbs
-                                          .map((blurb) => ListTile(
-                                                title: Text(
-                                                  blurb.title,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium,
-                                                ),
-                                                subtitle: Text(blurb.value),
-                                                trailing: blurb.date.isNotEmpty
-                                                    ? Text(
-                                                        'Date: ${blurb.date}')
-                                                    : null,
-                                              ))
-                                          .toList(),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0, top: 8.0),
-                          child: OverflowBar(
-                            alignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.edit),
-                                label: const Text('Edit Site'),
-                                onPressed: () => showSiteEditorDialog(
-                                    context: context, existingSite: site),
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.delete),
-                                label: const Text('Delete Site'),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 238, 214, 196),
-                                        title: Text(
-                                          'Confirm Delete',
-                                          style: GoogleFonts.ultra(
-                                            textStyle: const TextStyle(
-                                              color: Color.fromARGB(
-                                                  255, 76, 32, 8),
-                                            ),
-                                          ),
-                                        ),
-                                        content: Text(
-                                            'Are you sure you want to delete ${site.name}?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              FirebaseFirestore.instance
-                                                  .collection('sites')
-                                                  .doc(site.name)
-                                                  .delete();
-                                              setState(() {
-                                                app_state.historicalSites
-                                                    .removeWhere((s) =>
-                                                        s.name == site.name);
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text('Delete'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
+                  itemCount: displaySites.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final site = displaySites[index];
+                    return AdminSiteCard(
+                        site: site,
+                        onSiteDeleted: () {
+                          FirebaseFirestore.instance
+                              .collection('sites')
+                              .doc(site.name)
+                              .delete();
+                          setState(() {
+                            app_state.historicalSites
+                                .removeWhere((s) => s.name == site.name);
+                          });
+                        },
+                        onEditSite: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return EditSiteDialog(
+                                    acceptableFilters: acceptableFilters,
+                                    saveEditedSite: saveEditedSite,
+                                    saveNewSite: saveNewSite,
+                                    getImageList: () => getSiteImages(site),
+                                    existingSite: site);
+                              });
+                        });
+                  });
             },
           ),
         ),
@@ -761,6 +311,9 @@ class _AdminListPageState extends State<AdminListPage> {
     List<SiteFilter> filters,
     String latText,
     String lngText,
+    Map<String, List<ImageWithUrl>> tempImageChanges,
+    List<File> newlyAddedFiles,
+    Map<String, List<String>> tempDeletedUrls,
   ) async {
     final originalName = originalSite.name;
     final oldDocRef =
@@ -854,6 +407,9 @@ class _AdminListPageState extends State<AdminListPage> {
     List<SiteFilter> filters,
     String latText,
     String lngText,
+    Map<String, List<ImageWithUrl>> tempImageChanges,
+    List<File> newlyAddedFiles,
+    Map<String, List<String>> tempDeletedUrls,
   ) async {
     // Ensure folder name is Firebase-safe
     final folderName = name.replaceAll(' ', '');
@@ -893,634 +449,6 @@ class _AdminListPageState extends State<AdminListPage> {
     tempDeletedUrls.remove("new_site");
   }
 
-  Future<void> showSiteEditorDialog({
-    required BuildContext context,
-    HistSite? existingSite,
-  }) async {
-    final isEdit = existingSite != null;
-
-    final ScrollController _scrollController = ScrollController();
-
-    // Text Controllers
-    final nameController =
-        TextEditingController(text: existingSite?.name ?? "");
-    final descriptionController =
-        TextEditingController(text: existingSite?.description ?? "");
-    final latController =
-        TextEditingController(text: existingSite?.lat.toString() ?? "0.0");
-    final lngController =
-        TextEditingController(text: existingSite?.lng.toString() ?? "0.0");
-
-    // Data
-    List<InfoText> blurbs = existingSite?.blurbs.toList() ?? [];
-    List<SiteFilter> chosenFilters = existingSite?.filters.toList() ?? [];
-
-    bool hasLoadedImages = false;
-    List<ImageWithUrl> pairedImages = [];
-
-    // Exists for a unifide key for storing in the pairedImages map.
-    final String pairKey = existingSite?.name ?? "new_site";
-
-    // detects when the user can submit the form
-
-    print("paired images length: ${pairedImages.length}");
-
-    // Error strings to help user
-    String? nameError;
-    String? descriptionError;
-    String? blurbError;
-    String? imageError;
-
-    // Focus Nodes for lat / lang fields
-    final latFocus = FocusNode();
-    final lngFocus = FocusNode();
-
-    return showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        latFocus.addListener(() {
-          if (!latFocus.hasFocus) {
-            if (latController.text.isEmpty) {
-              latController.text = "0.0";
-              latController.selection = TextSelection.fromPosition(
-                TextPosition(offset: latController.text.length),
-              );
-            }
-          }
-        });
-        lngFocus.addListener(() {
-          if (!lngFocus.hasFocus) {
-            if (lngController.text.isEmpty) {
-              lngController.text = "0.0";
-              lngController.selection = TextSelection.fromPosition(
-                TextPosition(offset: lngController.text.length),
-              );
-            }
-          }
-        });
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            if (isEdit && !hasLoadedImages) {
-              print(
-                  " loading existing images for edit dialog. Existing urls: ${existingSite!.imageUrls.length} Paired images: ${pairedImages.length}");
-              // Load existing images
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                for (int i = 0; i < existingSite.imageUrls.length; i++) {
-                  Uint8List? data =
-                      await app_state.getImage(existingSite.imageUrls[i]);
-                  if (data != null) {
-                    pairedImages.add(ImageWithUrl(
-                        imageData: data, url: existingSite.imageUrls[i]));
-                  }
-                }
-              });
-              hasLoadedImages = true;
-            }
-            return Theme(
-              data: adminPageTheme,
-              child: Builder(
-                builder: (context) {
-                  List<dynamic> getImageList() {
-                    final editedImages = tempImageChanges[pairKey];
-
-                    if (isEdit) {
-                      // If user has edited images, use those
-                      if (editedImages != null && editedImages.isNotEmpty) {
-                        return editedImages;
-                      }
-
-                      // Otherwise fall back to existing images
-                      print("using existing images");
-                      return existingSite.imageUrls;
-                    }
-
-                    // New site: only use temp images
-                    return editedImages ?? [];
-                  }
-
-                  bool checkCanSubmit() {
-                    final imageList = getImageList();
-
-                    return nameController.text.isNotEmpty &&
-                        descriptionController.text.isNotEmpty &&
-                        blurbs.isNotEmpty &&
-                        imageList.isNotEmpty;
-                  }
-
-                  bool canSubmit = checkCanSubmit();
-
-                  return AlertDialog(
-                    backgroundColor: const Color.fromARGB(255, 238, 214, 196),
-                    title: Text(
-                      isEdit
-                          ? "Edit Historical Site"
-                          : "Add New Historical Site",
-                      style: GoogleFonts.ultra(
-                        textStyle: const TextStyle(
-                            color: Color.fromARGB(255, 76, 32, 8)),
-                      ),
-                    ),
-                    content: Scrollbar(
-                      controller: _scrollController,
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 16, left: 8),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Padding(padding: const EdgeInsets.only(top: 8.0)),
-                              // Name
-                              TextField(
-                                  controller: nameController,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                  decoration: InputDecoration(
-                                    labelText: "Site Name",
-                                    errorText: nameError,
-                                  ),
-                                  onChanged: (value) {
-                                    if (value.isNotEmpty) {
-                                      nameError = null;
-                                    } else {
-                                      nameError = "Site name is required";
-                                    }
-                                    setState(() {
-                                      canSubmit = checkCanSubmit();
-                                    });
-                                  }),
-
-                              const SizedBox(height: 20),
-
-                              // Description
-                              TextField(
-                                controller: descriptionController,
-                                maxLines: 3,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                                decoration: InputDecoration(
-                                  labelText: "Description",
-                                  errorText: descriptionError,
-                                ),
-                                onChanged: (value) {
-                                  if (value.isNotEmpty) {
-                                    descriptionError = null;
-                                  } else {
-                                    descriptionError =
-                                        "Description is required";
-                                  }
-                                  setState(() {
-                                    canSubmit = checkCanSubmit();
-                                  });
-                                },
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // Lat / Long
-                              ElevatedButton.icon(
-                                  icon: const Icon(Icons.my_location),
-                                  label: const Text("Get Location"),
-                                  onPressed: () async {
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (_) => const Center(
-                                          child: CircularProgressIndicator()),
-                                    );
-                                    bool serviceEnabled = await Geolocator
-                                        .isLocationServiceEnabled();
-                                    if (!serviceEnabled) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Location services are disabled.')),
-                                      );
-                                      return;
-                                    }
-                                    LocationPermission permission =
-                                        await Geolocator.checkPermission();
-                                    if (permission ==
-                                        LocationPermission.denied) {
-                                      permission =
-                                          await Geolocator.requestPermission();
-                                      if (permission ==
-                                          LocationPermission.denied) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Location permission denied.')),
-                                        );
-                                        return;
-                                      }
-                                    }
-                                    if (permission ==
-                                        LocationPermission.deniedForever) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Location permissions are permanently denied. Open settings to enable.')),
-                                      );
-                                      return;
-                                    }
-                                    try {
-                                      final pos =
-                                          await Geolocator.getCurrentPosition(
-                                              desiredAccuracy:
-                                                  LocationAccuracy.best);
-                                      latController.text =
-                                          pos.latitude.toStringAsFixed(6);
-                                      lngController.text =
-                                          pos.longitude.toStringAsFixed(6);
-                                      setState(() {});
-                                      Navigator.of(context, rootNavigator: true)
-                                          .pop();
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Failed to get position: $e')),
-                                      );
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color.fromARGB(
-                                        255, 218, 186, 130),
-                                  )),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      focusNode: latFocus,
-                                      controller: latController,
-                                      keyboardType:
-                                          TextInputType.numberWithOptions(
-                                              decimal: true),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Lat',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 20),
-                                  Expanded(
-                                    child: TextField(
-                                      focusNode: lngFocus,
-                                      controller: lngController,
-                                      keyboardType:
-                                          TextInputType.numberWithOptions(
-                                              decimal: true),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Lng',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // Blurb stuff
-                              if (blurbError != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Text(blurbError!,
-                                      style: const TextStyle(
-                                          color: Colors.red, fontSize: 12)),
-                                ),
-
-                              ...blurbs.asMap().entries.map((entry) {
-                                int idx = entry.key;
-                                InfoText blurb = entry.value;
-                                return Column(
-                                  children: [
-                                    ListTile(
-                                      title: Text(blurb.title,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium),
-                                      subtitle: Text(
-                                        blurb.value,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
-                                    ),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () async {
-                                            final updated =
-                                                await showBlurbDialog(
-                                              context: context,
-                                              existing: blurb,
-                                            );
-                                            if (updated != null) {
-                                              blurbs[idx] = updated;
-                                            }
-
-                                            setState(() {});
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete),
-                                          onPressed: () {
-                                            setState(() {
-                                              blurbs.removeAt(idx);
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    )
-                                  ],
-                                );
-                              }).toList(),
-
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final newBlurb = await showBlurbDialog(
-                                    context: context,
-                                  );
-                                  if (newBlurb != null) {
-                                    blurbs.add(newBlurb);
-                                  }
-                                  if (blurbs.isNotEmpty) {
-                                    setState(() {
-                                      blurbError = null;
-                                    });
-                                  } else {
-                                    blurbError =
-                                        "At least one blurb is required";
-                                  }
-                                  setState(() {
-                                    canSubmit = checkCanSubmit();
-                                  });
-                                },
-                                child: const Text("Add Blurb"),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              // Filter stuff
-
-                              if (chosenFilters.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                const Text('Selected Filters:'),
-                                Wrap(
-                                  spacing: 8.0,
-                                  runSpacing: 4.0,
-                                  children: chosenFilters.map((filter) {
-                                    return Chip(
-                                      label: Text(
-                                        filter.name,
-                                        style: const TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 255, 243, 228),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      onDeleted: () {
-                                        setState(() {
-                                          chosenFilters.remove(filter);
-                                        });
-                                      },
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 107, 79, 79),
-                                    );
-                                  }).toList(),
-                                ),
-                              ],
-                              MenuAnchor(
-                                  style: MenuStyle(
-                                      side: WidgetStatePropertyAll(BorderSide(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .tertiary,
-                                          width: 2.0)),
-                                      shape: WidgetStatePropertyAll(
-                                          RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      20.0)))),
-                                  builder: (BuildContext context,
-                                      MenuController controller,
-                                      Widget? child) {
-                                    return ElevatedButton(
-                                        onPressed: () {
-                                          if (controller.isOpen) {
-                                            controller.close();
-                                          } else {
-                                            controller.open();
-                                          }
-                                        },
-                                        child: const Text("Edit Filters"));
-                                  },
-                                  menuChildren: acceptableFilters
-                                      .map((filter) => CheckboxMenuButton(
-                                          style: ButtonStyle(
-                                            textStyle: WidgetStatePropertyAll(
-                                                TextStyle(
-                                                    color: Color.fromARGB(
-                                                        255, 72, 52, 52),
-                                                    fontSize: 16.0,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                          ),
-                                          closeOnActivate: false,
-                                          value: chosenFilters.contains(filter),
-                                          onChanged: (bool? value) {
-                                            setState(() {
-                                              if (!chosenFilters
-                                                  .contains(filter)) {
-                                                chosenFilters.add(filter);
-                                                print(chosenFilters);
-                                              } else {
-                                                chosenFilters.remove(filter);
-                                                print(chosenFilters);
-                                              }
-                                            });
-                                          },
-                                          child: Text(
-                                            (filter.name),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium,
-                                          )))
-                                      .toList()),
-
-                              const SizedBox(height: 10),
-
-                              // Image stuff
-                              ElevatedButton(
-                                onPressed: () async {
-                                  hasLoadedImages =
-                                      false; // Force reload of paired images in case of changes. This is lazy, but it works and avoids some complexity around trying to keep the pairedImages list in sync with tempImageChanges
-                                  await _showEditSiteImagesDialog(
-                                    existingSite ??
-                                        HistSite(
-                                          name: pairKey,
-                                          description:
-                                              descriptionController.text,
-                                          blurbs: blurbs,
-                                          imageUrls: [],
-                                          avgRating: 0,
-                                          ratingAmount: 0,
-                                          filters: chosenFilters,
-                                          lat: 0,
-                                          lng: 0,
-                                        ),
-                                  );
-                                  setState(() {
-                                    canSubmit = checkCanSubmit();
-                                  });
-                                },
-                                child:
-                                    Text(isEdit ? "Edit Images" : "Add Images"),
-                              ),
-
-                              if (imageError != null)
-                                Text(imageError!,
-                                    style: const TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    actionsAlignment: MainAxisAlignment.spaceBetween,
-                    actions: [
-                      // Cancel
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          // Cleanup temp image changes
-                        },
-                        child: const Text("Cancel"),
-                      ),
-                      // Save
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: canSubmit
-                              ? Theme.of(context)
-                                  .elevatedButtonTheme
-                                  .style
-                                  ?.backgroundColor
-                                  ?.resolve({WidgetState.pressed})
-                              : Colors.grey,
-                        ),
-                        onPressed: canSubmit
-                            ? () async {
-                                // Handle Error checks
-                                // Error checks should be redundant due to button disabling,
-                                // but just in case
-                                bool hasErrors = false;
-
-                                if (nameController.text.isEmpty) {
-                                  nameError = "Site name is required";
-                                  hasErrors = true;
-                                }
-                                if (descriptionController.text.isEmpty) {
-                                  descriptionError = "Description is required";
-                                  hasErrors = true;
-                                }
-                                if (blurbs.isEmpty) {
-                                  blurbError = "At least one blurb is required";
-                                  hasErrors = true;
-                                }
-
-                                // images tracked with tempImageChanges
-                                final String pairKey =
-                                    existingSite?.name ?? "new_site";
-
-                                // images tracked with tempImageChanges
-                                final imageList = getImageList();
-
-                                if (imageList.isEmpty) {
-                                  print("${imageList.length} images");
-                                  imageError = "At least one image is required";
-                                }
-
-                                if (hasErrors) {
-                                  setState(() {});
-                                  return;
-                                }
-
-                                // Save the site
-                                if (isEdit) {
-                                  await saveEditedSite(
-                                    existingSite,
-                                    nameController.text,
-                                    descriptionController.text,
-                                    blurbs,
-                                    chosenFilters,
-                                    latController.text,
-                                    lngController.text,
-                                  );
-                                } else {
-                                  await saveNewSite(
-                                    nameController.text,
-                                    descriptionController.text,
-                                    blurbs,
-                                    chosenFilters,
-                                    latController.text,
-                                    lngController.text,
-                                  );
-                                }
-
-                                Navigator.pop(context);
-                              }
-                            : () {
-                                if (nameController.text.isEmpty) {
-                                  nameError = "Site name is required";
-                                }
-                                if (descriptionController.text.isEmpty) {
-                                  descriptionError = "Description is required";
-                                }
-                                if (blurbs.isEmpty) {
-                                  blurbError = "At least one blurb is required";
-                                }
-
-                                // images tracked with tempImageChanges
-                                final imageList = getImageList();
-
-                                if (imageList.isEmpty) {
-                                  print("${imageList.length} images");
-                                  imageError = "At least one image is required";
-                                }
-
-                                setState(() {});
-                                return;
-                              },
-                        child: Text(isEdit ? "Save Changes" : "Add Site"),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) {
-      pairedImages.clear();
-      newlyAddedFiles.clear();
-      tempImageChanges.remove(isEdit ? existingSite.name : pairKey);
-      tempDeletedUrls.remove(isEdit ? existingSite.name : pairKey);
-    });
-  }
-
   List<HistSite> getSearchSites() {
     if (_sitesSearchController.text.isEmpty) {
       return context.read<ApplicationState>().historicalSites;
@@ -1534,72 +462,69 @@ class _AdminListPageState extends State<AdminListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: adminPageTheme,
-      child: Scaffold(
-        backgroundColor: adminPageTheme.colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: adminPageTheme.colorScheme.secondary,
-          elevation: 12.0,
-          shadowColor: const Color.fromARGB(135, 255, 255, 255),
-          title: Text(
-            _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
-            style: GoogleFonts.ultra(
-              textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
-            ),
+    return Scaffold(
+      backgroundColor: adminPageTheme.colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: adminPageTheme.colorScheme.secondary,
+        elevation: 12.0,
+        shadowColor: const Color.fromARGB(135, 255, 255, 255),
+        title: Text(
+          _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
+          style: GoogleFonts.ultra(
+            textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
           ),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return SearchWidget(
-                            searchController: _selectedIndex == 0
-                                ? _sitesSearchController
-                                : _achievementsSearchController,
-                            onSearchSubmitted: () {
-                              setState(() {});
-                            },
-                            itemNames: _selectedIndex == 0
-                                ? context
-                                    .read<ApplicationState>()
-                                    .historicalSites
-                                    .map((site) => site.name)
-                                    .toList()
-                                : context
-                                    .read<ApplicationState>()
-                                    .progressAchievements
-                                    .map((achievement) => achievement.title)
-                                    .toList());
-                      });
-                },
-                icon: const Icon(Icons.search))
-          ],
         ),
-        body: _selectedIndex == 0
-            ? _buildAdminContent(context)
-            : AdminProgressAchievements(
-                searchController: _achievementsSearchController,
-              ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: const Color.fromARGB(255, 218, 180, 130),
-          selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-          unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.admin_panel_settings),
-              label: 'Admin',
+        actions: [
+          IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return SearchWidget(
+                          searchController: _selectedIndex == 0
+                              ? _sitesSearchController
+                              : _achievementsSearchController,
+                          onSearchSubmitted: () {
+                            setState(() {});
+                          },
+                          itemNames: _selectedIndex == 0
+                              ? context
+                                  .read<ApplicationState>()
+                                  .historicalSites
+                                  .map((site) => site.name)
+                                  .toList()
+                              : context
+                                  .read<ApplicationState>()
+                                  .progressAchievements
+                                  .map((achievement) => achievement.title)
+                                  .toList());
+                    });
+              },
+              icon: const Icon(Icons.search))
+        ],
+      ),
+      body: _selectedIndex == 0
+          ? _buildAdminContent(context)
+          : AdminProgressAchievements(
+              searchController: _achievementsSearchController,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.star),
-              label: 'Achievements',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(255, 218, 180, 130),
+        selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+        unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: 'Admin',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Achievements',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/dialogs/rating_Dialog.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
@@ -77,40 +76,6 @@ class _MyHomePageState extends State<MyHomePage> {
   ApplicationState app_state = ApplicationState();
   List<HistSite> historical_sites = [];
   int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-      FirebaseFirestore.instance
-          .collection('rooms')
-          .doc('mainroom')
-          .collection('players');
-      HistSite newSite = HistSite(
-        name: "The Big Church",
-        description: "This is a large church",
-        blurbs: [
-          InfoText(
-              title: "Historical Significance",
-              value:
-                  "The big church is a large church with a long history of doing stuff and things beyond the current eternity of existence.",
-              date: "10/2/34"),
-          InfoText(
-              title: "Secondary Elist",
-              value:
-                  "This does not have a date but we still exist beyond the current state of human understanding and everything is something to another ellos")
-        ],
-        imageUrls: [],
-        filters: [],
-        //added ratings here
-        avgRating: 0.0,
-        ratingAmount: 0,
-        lat: 0,
-        lng: 0,
-      );
-      app_state.addSite(newSite);
-      print(historical_sites);
-    });
-  }
 
   //launches Rating Dialog
   Future<void> showRatingDialog(

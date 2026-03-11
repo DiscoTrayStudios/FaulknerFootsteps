@@ -1,15 +1,8 @@
-import 'dart:async';
-
-import 'package:faulkner_footsteps/app_state.dart';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/site_filter.dart';
-import 'package:faulkner_footsteps/pages/map_display.dart';
-import 'package:faulkner_footsteps/widgets/profile_button.dart';
 import 'package:flutter/material.dart';
 import 'package:faulkner_footsteps/objects/list_item.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
 
 class ListPage2 extends StatelessWidget {
   const ListPage2(
