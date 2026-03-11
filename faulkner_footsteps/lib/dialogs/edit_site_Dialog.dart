@@ -73,6 +73,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
   // Data
   late List<InfoText> blurbs;
   late List<SiteFilter> chosenFilters;
+  late List<SiteFilter> tempChosenFilters;
   bool hasLoadedImages = false;
   List<ImageWithUrl> pairedImages = [];
 
@@ -113,6 +114,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     // Data initialization
     blurbs = widget.existingSite?.blurbs ?? [];
     chosenFilters = widget.existingSite?.filters ?? [];
+    tempChosenFilters = List.from(chosenFilters);
 
     // Add listeners for lat/lng focus changes to validate input
     latFocus.addListener(() {
@@ -554,13 +556,13 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
 
                 // Filter stuff
 
-                if (chosenFilters.isNotEmpty) ...[
+                if (tempChosenFilters.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   const Text('Selected Filters:'),
                   Wrap(
                     spacing: 8.0,
                     runSpacing: 4.0,
-                    children: chosenFilters.map((filter) {
+                    children: tempChosenFilters.map((filter) {
                       return Chip(
                         label: Text(
                           filter.name,
@@ -569,6 +571,11 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                             fontSize: 12,
                           ),
                         ),
+                        onDeleted: () {
+                          setState(() {
+                            tempChosenFilters.remove(filter);
+                          });
+                        },
                         backgroundColor: const Color.fromARGB(255, 107, 79, 79),
                       );
                     }).toList(),
@@ -602,15 +609,15 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                                   fontWeight: FontWeight.bold)),
                             ),
                             closeOnActivate: false,
-                            value: chosenFilters.contains(filter),
+                            value: tempChosenFilters.contains(filter),
                             onChanged: (bool? value) {
                               setState(() {
-                                if (!chosenFilters.contains(filter)) {
-                                  chosenFilters.add(filter);
-                                  print(chosenFilters);
+                                if (!tempChosenFilters.contains(filter)) {
+                                  tempChosenFilters.add(filter);
+                                  print(tempChosenFilters);
                                 } else {
-                                  chosenFilters.remove(filter);
-                                  print(chosenFilters);
+                                  tempChosenFilters.remove(filter);
+                                  print(tempChosenFilters);
                                 }
                               });
                             },
@@ -636,7 +643,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                             imageUrls: [],
                             avgRating: 0,
                             ratingAmount: 0,
-                            filters: chosenFilters,
+                            filters: tempChosenFilters,
                             lat: 0,
                             lng: 0,
                           ),
@@ -720,7 +727,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                       nameController.text,
                       descriptionController.text,
                       blurbs,
-                      chosenFilters,
+                      tempChosenFilters,
                       latController.text,
                       lngController.text,
                       tempImageChanges,
@@ -732,7 +739,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
                       nameController.text,
                       descriptionController.text,
                       blurbs,
-                      chosenFilters,
+                      tempChosenFilters,
                       latController.text,
                       lngController.text,
                       tempImageChanges,
