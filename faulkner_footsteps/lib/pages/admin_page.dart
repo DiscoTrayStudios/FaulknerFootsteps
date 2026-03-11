@@ -462,72 +462,69 @@ class _AdminListPageState extends State<AdminListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: adminPageTheme,
-      child: Scaffold(
-        backgroundColor: adminPageTheme.colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: adminPageTheme.colorScheme.secondary,
-          elevation: 12.0,
-          shadowColor: const Color.fromARGB(135, 255, 255, 255),
-          title: Text(
-            _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
-            style: GoogleFonts.ultra(
-              textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
-            ),
+    return Scaffold(
+      backgroundColor: adminPageTheme.colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: adminPageTheme.colorScheme.secondary,
+        elevation: 12.0,
+        shadowColor: const Color.fromARGB(135, 255, 255, 255),
+        title: Text(
+          _selectedIndex == 0 ? "Admin Dashboard" : "Achievements",
+          style: GoogleFonts.ultra(
+            textStyle: TextStyle(color: adminPageTheme.colorScheme.onPrimary),
           ),
-          actions: [
-            IconButton(
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return SearchWidget(
-                            searchController: _selectedIndex == 0
-                                ? _sitesSearchController
-                                : _achievementsSearchController,
-                            onSearchSubmitted: () {
-                              setState(() {});
-                            },
-                            itemNames: _selectedIndex == 0
-                                ? context
-                                    .read<ApplicationState>()
-                                    .historicalSites
-                                    .map((site) => site.name)
-                                    .toList()
-                                : context
-                                    .read<ApplicationState>()
-                                    .progressAchievements
-                                    .map((achievement) => achievement.title)
-                                    .toList());
-                      });
-                },
-                icon: const Icon(Icons.search))
-          ],
         ),
-        body: _selectedIndex == 0
-            ? _buildAdminContent(context)
-            : AdminProgressAchievements(
-                searchController: _achievementsSearchController,
-              ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: const Color.fromARGB(255, 218, 180, 130),
-          selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-          unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.admin_panel_settings),
-              label: 'Admin',
+        actions: [
+          IconButton(
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return SearchWidget(
+                          searchController: _selectedIndex == 0
+                              ? _sitesSearchController
+                              : _achievementsSearchController,
+                          onSearchSubmitted: () {
+                            setState(() {});
+                          },
+                          itemNames: _selectedIndex == 0
+                              ? context
+                                  .read<ApplicationState>()
+                                  .historicalSites
+                                  .map((site) => site.name)
+                                  .toList()
+                              : context
+                                  .read<ApplicationState>()
+                                  .progressAchievements
+                                  .map((achievement) => achievement.title)
+                                  .toList());
+                    });
+              },
+              icon: const Icon(Icons.search))
+        ],
+      ),
+      body: _selectedIndex == 0
+          ? _buildAdminContent(context)
+          : AdminProgressAchievements(
+              searchController: _achievementsSearchController,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.star),
-              label: 'Achievements',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(255, 218, 180, 130),
+        selectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+        unselectedItemColor: const Color.fromARGB(255, 124, 54, 16),
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: 'Admin',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.star),
+            label: 'Achievements',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
