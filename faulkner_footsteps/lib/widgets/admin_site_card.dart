@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AdminSiteCard extends StatelessWidget {
   final HistSite site;
-  final VoidCallback onSiteDeleted;
+  final Function() onSiteDeleted;
   final VoidCallback onEditSite;
 
   const AdminSiteCard(
@@ -120,7 +120,7 @@ class AdminSiteCard extends StatelessWidget {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                onSiteDeleted;
+                                onSiteDeleted();
                                 Navigator.pop(context);
                               },
                               child: const Text('Delete'),
