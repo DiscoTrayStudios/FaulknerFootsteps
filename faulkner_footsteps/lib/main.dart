@@ -12,12 +12,17 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+import 'package:flutter/services.dart';
 // IMPORT RELATED TO MAP
 // import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 // import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+   await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp, 
+  ]);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
