@@ -189,8 +189,8 @@ class ApplicationState extends ChangeNotifier {
     final imageRef = storageRef.child("$s");
     Uint8List? data;
     try {
-      const oneMegabyte = 1024 * 1024 * 1000000;
-      data = await imageRef.getData(oneMegabyte).timeout(Duration(minutes: 2));
+      const oneMegabyte = 1024 * 1024 * 5;
+      data = await imageRef.getData(oneMegabyte).timeout(Duration(seconds: 20));
       // Data for "images/island.jpg" is returned, use this as needed.
     } catch (e) {
       // Handle any errors.
