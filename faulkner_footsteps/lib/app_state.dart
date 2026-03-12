@@ -25,11 +25,10 @@ class ApplicationState extends ChangeNotifier {
   bool _loggedIn = false;
   bool get loggedIn => _loggedIn;
 
-  StreamSubscription<QuerySnapshot>? _siteSubscription;
+  // StreamSubscription<QuerySnapshot>? _siteSubscription;
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
   StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
-
 
   Set<String> _visitedPlaces = {};
   Set<String> get visitedPlaces => _visitedPlaces;
@@ -44,7 +43,6 @@ class ApplicationState extends ChangeNotifier {
 
   List<ProgressAchievement> _progressAchievements = [];
   List<ProgressAchievement> get progressAchievements => _progressAchievements;
-
 
   Future<void> init() async {
     await Firebase.initializeApp(
@@ -103,56 +101,53 @@ class ApplicationState extends ChangeNotifier {
             notifyListeners();
           }
         });
+        final snapshot =
+            await FirebaseFirestore.instance.collection('sites').get();
+        _historicalSites = [];
 
-        _siteSubscription = FirebaseFirestore.instance
-            .collection('sites')
-            .snapshots()
-            .listen((snapshot) async {
-          _historicalSites = [];
-          for (final document in snapshot.docs) {
-            var blurbCont = document.data()["blurbs"];
-            List<String> blurbStrings = blurbCont.split("{ListDiv}");
-            List<InfoText> newBlurbs = [];
-            for (var blurb in blurbStrings) {
-              List<String> values = blurb.split("{IFDIV}");
-              newBlurbs.add(InfoText(
-                  title: values[0], value: values[1], date: values[2]));
-            }
-
-            List<SiteFilter> filters = [];
-            for (String filter
-                in List<String>.from(document.data()["filters"])) {
-              filters.add(_siteFilters.firstWhere(
-                  (element) => element.name == filter,
-                  orElse: () => SiteFilter(name: "Other")));
-            }
-
-            HistSite site = HistSite(
-              name: document.data()["name"] as String,
-              description: document.data()["description"] as String,
-              blurbs: newBlurbs,
-              imageUrls: List<String>.from(document.data()["images"]),
-              lat: document.data()["lat"] as double,
-              lng: document.data()["lng"] as double,
-              filters: filters,
-              avgRating: document.data()["avgRating"] != null
-                  ? (document.data()["avgRating"] as num).toDouble()
-                  : 0.0,
-              ratingAmount: document.data()["ratingCount"] != null
-                  ? document.data()["ratingCount"] as int
-                  : 0,
-            );
-            _historicalSites.add(site);
-            loadImageToHistSite(document, site);
+        _historicalSites = [];
+        for (final document in snapshot.docs) {
+          var blurbCont = document.data()["blurbs"];
+          List<String> blurbStrings = blurbCont.split("{ListDiv}");
+          List<InfoText> newBlurbs = [];
+          for (var blurb in blurbStrings) {
+            List<String> values = blurb.split("{IFDIV}");
+            newBlurbs.add(
+                InfoText(title: values[0], value: values[1], date: values[2]));
           }
-          notifyListeners();
-        });
+
+          List<SiteFilter> filters = [];
+          for (String filter in List<String>.from(document.data()["filters"])) {
+            filters.add(_siteFilters.firstWhere(
+                (element) => element.name == filter,
+                orElse: () => SiteFilter(name: "Other")));
+          }
+
+          HistSite site = HistSite(
+            name: document.data()["name"] as String,
+            description: document.data()["description"] as String,
+            blurbs: newBlurbs,
+            imageUrls: List<String>.from(document.data()["images"]),
+            lat: document.data()["lat"] as double,
+            lng: document.data()["lng"] as double,
+            filters: filters,
+            avgRating: document.data()["avgRating"] != null
+                ? (document.data()["avgRating"] as num).toDouble()
+                : 0.0,
+            ratingAmount: document.data()["ratingCount"] != null
+                ? document.data()["ratingCount"] as int
+                : 0,
+          );
+          _historicalSites.add(site);
+          loadImageToHistSite(document, site);
+        }
+        notifyListeners();
+        ;
       } else {
         _loggedIn = false;
         _historicalSites = [];
         _visitedPlaces = {};
         _progressAchievements = [];
-        _siteSubscription?.cancel();
         _achievementsSubscription?.cancel();
         _userAchievementsSubscription?.cancel();
         _progressAchievementsSubscription?.cancel();
@@ -412,7 +407,8 @@ class ApplicationState extends ChangeNotifier {
       for (final document in snapshot.docs) {
         final title = document.get('title') as String;
         final description = document.get('description') as String;
-        final requiredSites = List<String>.from(document.get('requiredSites') as List);
+        final requiredSites =
+            List<String>.from(document.get('requiredSites') as List);
 
         _progressAchievements.add(ProgressAchievement(
           title: title,
@@ -526,5 +522,4 @@ class ApplicationState extends ChangeNotifier {
     }
     return sites;
   }
-
 }
