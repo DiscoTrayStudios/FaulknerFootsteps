@@ -68,6 +68,10 @@ class _StartPageState extends State<StartPage>
   void _handleContinue() async {
     player.stop(); // Stop the audio
 
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      print("AUTH READY at: ${DateTime.now()}  user: ${user?.uid}");
+    });
+
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       print("already signed in");

@@ -106,8 +106,11 @@ class ApplicationState extends ChangeNotifier {
             .collection('sites')
             .snapshots()
             .listen((snapshot) async {
+          print("🔥 FIRESTORE SNAPSHOT RECEIVED at: ${DateTime.now()}");
+          print("🔥 DOCUMENT COUNT: ${snapshot.docs.length}");
           _historicalSites = [];
           for (final document in snapshot.docs) {
+            print("📸 BEGIN FETCHING IMAGE URLS at: ${DateTime.now()}");
             var blurbCont = document.data()["blurbs"];
             List<String> blurbStrings = blurbCont.split("{ListDiv}");
             List<InfoText> newBlurbs = [];
