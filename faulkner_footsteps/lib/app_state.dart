@@ -30,7 +30,6 @@ class ApplicationState extends ChangeNotifier {
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
   StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
 
-
   Set<String> _visitedPlaces = {};
   Set<String> get visitedPlaces => _visitedPlaces;
 
@@ -44,7 +43,6 @@ class ApplicationState extends ChangeNotifier {
 
   List<ProgressAchievement> _progressAchievements = [];
   List<ProgressAchievement> get progressAchievements => _progressAchievements;
-
 
   Future<void> init() async {
     await Firebase.initializeApp(
@@ -204,6 +202,10 @@ class ApplicationState extends ChangeNotifier {
     List<Uint8List?> rList = [];
     for (String s in lst) {
       Uint8List? item = await getImage(s);
+      // Force a new instance so Selector detects the change
+      if (item != null) {
+        item = Uint8List.fromList(item);
+      }
       rList.add(item);
     }
     return rList;
@@ -412,7 +414,8 @@ class ApplicationState extends ChangeNotifier {
       for (final document in snapshot.docs) {
         final title = document.get('title') as String;
         final description = document.get('description') as String;
-        final requiredSites = List<String>.from(document.get('requiredSites') as List);
+        final requiredSites =
+            List<String>.from(document.get('requiredSites') as List);
 
         _progressAchievements.add(ProgressAchievement(
           title: title,
@@ -526,5 +529,4 @@ class ApplicationState extends ChangeNotifier {
     }
     return sites;
   }
-
 }
