@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ListItem extends StatelessWidget {
   ListItem({
@@ -61,40 +62,32 @@ class ListItem extends StatelessWidget {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Selector<ApplicationState, List<Uint8List?>>(
-                    selector: (_, state) {
-                      final updatedSite = state.historicalSites
-                          .firstWhere((s) => s.name == siteInfo.name);
-
-                      return updatedSite.images; // select the list identity
-                    },
-                    builder: (_, images, __) {
-                      Uint8List? image;
-
-                      if (images.isNotEmpty) {
-                        image = images[0];
-                      }
-
-                      if (image != null) {
-                        print(
-                            "🟡 IMAGE REQUEST STARTED for ${siteInfo.name} at ${DateTime.now()}");
-                        return Image.memory(
-                          image,
+                  child: siteInfo.imageUrls.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: siteInfo.imageUrls[0],
                           height: 400,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                        );
-                      }
-                      print(
-                          "🟢 IMAGE LOADED for ${siteInfo.name} at ${DateTime.now()}");
-                      return Image.asset(
-                        'assets/images/faulkner_thumbnail.png',
-                        height: 400,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      );
-                    },
-                  )), // Row with rectangular site name and distance, and arrow icon
+                          errorWidget: (context, url, error) => Image.asset(
+                                'assets/images/faulkner_thumbnail.png',
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                          placeholder: (context, url) => Container(
+                                height: 400,
+                                width: double.infinity,
+                                color: Theme.of(context).colorScheme.primary,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ))
+                      : Image.asset(
+                          'assets/images/faulkner_thumbnail.png',
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )), // Row with rectangular site name and distance, and arrow icon
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -127,12 +127,14 @@ class ApplicationState extends ChangeNotifier {
                   (element) => element.name == filter,
                   orElse: () => SiteFilter(name: "Other")));
             }
+            List<String> urls = await convertPathsToUrls(
+                List<String>.from(document.data()["images"]));
 
             HistSite site = HistSite(
               name: document.data()["name"] as String,
               description: document.data()["description"] as String,
               blurbs: newBlurbs,
-              imageUrls: List<String>.from(document.data()["images"]),
+              imageUrls: urls,
               lat: document.data()["lat"] as double,
               lng: document.data()["lng"] as double,
               filters: filters,
@@ -160,6 +162,17 @@ class ApplicationState extends ChangeNotifier {
       }
       notifyListeners();
     });
+  }
+
+  Future<List<String>> convertPathsToUrls(List<String> paths) async {
+    final storage = FirebaseStorage.instance;
+
+    final futures = paths.map((path) async {
+      final ref = storage.ref(path);
+      return await ref.getDownloadURL();
+    });
+
+    return await Future.wait(futures);
   }
 
   // Check if user is an admin and update the static flag
