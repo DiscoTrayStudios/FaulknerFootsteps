@@ -332,7 +332,7 @@ class _HistSitePage extends State<HistSitePage> {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
 
-                      if (user == null || user.isAnonymous) {
+                      if (user == null) {
                         updateErrorMessage(
                             "You must be logged in to rate sites!");
 

@@ -625,8 +625,8 @@ class _ProfilePageState extends State<ProfilePage>
 
                                         if (shouldLogout == true) {
                                           await FirebaseAuth.instance.signOut();
-                                          await FirebaseAuth.instance
-                                              .signInAnonymously();
+                                          // await FirebaseAuth.instance
+                                          //     .signInAnonymously();
                                           // i don't think this is necessary
                                           //User? credential = FirebaseAuth.instance.currentUser;
                                           //credential = user.user;

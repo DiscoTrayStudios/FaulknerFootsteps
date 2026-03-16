@@ -15,8 +15,8 @@ class ProfileButton extends StatelessWidget {
       onPressed: () {
         print("attempting to get user");
         final user = FirebaseAuth.instance.currentUser;
-        if (user == null || user.isAnonymous) {
-          print("user is anonymous");
+        if (user == null) {
+          print("user is logged out");
           AppRouter.navigateTo(context, AppRouter.loginPage);
         } else {
           print("user is logged in");

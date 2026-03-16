@@ -77,7 +77,7 @@ class ListItem extends StatelessWidget {
 
                       if (image != null) {
                         print(
-                            "🟡 IMAGE REQUEST STARTED for ${siteInfo.name} at ${DateTime.now()}");
+                            "🟡 IMAGE REQUEST RECIEVED for ${siteInfo.name} at ${DateTime.now()}");
                         return Image.memory(
                           image,
                           height: 400,
@@ -86,7 +86,7 @@ class ListItem extends StatelessWidget {
                         );
                       }
                       print(
-                          "🟢 IMAGE LOADED for ${siteInfo.name} at ${DateTime.now()}");
+                          "🔴 IMAGE NOT FOUND for ${siteInfo.name} at ${DateTime.now()}");
                       return Image.asset(
                         'assets/images/faulkner_thumbnail.png',
                         height: 400,

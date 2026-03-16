@@ -78,12 +78,14 @@ class _StartPageState extends State<StartPage>
     } else {
       print("signing in anonymously");
       try {
-        UserCredential credential =
-            await FirebaseAuth.instance.signInAnonymously();
-        user = credential.user;
-        print("signed in as ${user?.uid}");
+        // stay null
+
+        // UserCredential credential =
+        //     await FirebaseAuth.instance.signInAnonymously();
+        // user = credential.user;
+        // print("signed in as ${user?.uid}");
       } catch (e) {
-        print("Anonymous sign-in failed: $e");
+        // print("Anonymous sign-in failed: $e");
         return; // Don't navigate if sign-in fails
       }
     }
