@@ -25,7 +25,6 @@ class ApplicationState extends ChangeNotifier {
   bool _loggedIn = false;
   bool get loggedIn => _loggedIn;
 
-  StreamSubscription<QuerySnapshot>? _siteSubscription;
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
   StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
@@ -45,6 +44,7 @@ class ApplicationState extends ChangeNotifier {
   List<ProgressAchievement> get progressAchievements => _progressAchievements;
 
   Future<void> init() async {
+    print(" 🔵 Initializing ApplicationState at ${DateTime.now()}");
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
 
@@ -97,6 +97,7 @@ class ApplicationState extends ChangeNotifier {
 
     // Listen to auth state changes to update the app state accordingly
     FirebaseAuth.instance.userChanges().listen((user) async {
+      print("🔵 Auth state changed at ${DateTime.now()}  user: ${user?.uid}");
       if (user != null) {
         _loggedIn = true;
 
@@ -146,7 +147,6 @@ class ApplicationState extends ChangeNotifier {
         _loggedIn = false;
         _visitedPlaces = {};
         _progressAchievements = [];
-        _siteSubscription?.cancel();
         _achievementsSubscription?.cancel();
         _userAchievementsSubscription?.cancel();
         _progressAchievementsSubscription?.cancel();
