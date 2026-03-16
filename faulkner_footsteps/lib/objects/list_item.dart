@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ListItem extends StatelessWidget {
   ListItem({
@@ -61,6 +62,9 @@ class ListItem extends StatelessWidget {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: siteInfo.imageUrls.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: siteInfo.imageUrls[0],
                   child: Selector<ApplicationState, List<Uint8List?>>(
                     selector: (_, state) {
                       final updatedSite = state.historicalSites
@@ -83,6 +87,26 @@ class ListItem extends StatelessWidget {
                           height: 400,
                           width: double.infinity,
                           fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => Image.asset(
+                                'assets/images/faulkner_thumbnail.png',
+                                height: 400,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                          placeholder: (context, url) => Container(
+                                height: 400,
+                                width: double.infinity,
+                                color: Theme.of(context).colorScheme.primary,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ))
+                      : Image.asset(
+                          'assets/images/faulkner_thumbnail.png',
+                          height: 400,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        )), // Row with rectangular site name and distance, and arrow icon
                         );
                       }
                       print(

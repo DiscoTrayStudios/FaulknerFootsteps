@@ -155,6 +155,17 @@ class ApplicationState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<String>> convertPathsToUrls(List<String> paths) async {
+    final storage = FirebaseStorage.instance;
+
+    final futures = paths.map((path) async {
+      final ref = storage.ref(path);
+      return await ref.getDownloadURL();
+    });
+
+    return await Future.wait(futures);
+  }
+
   // Check if user is an admin and update the static flag
   Future<void> checkAdminStatus(User user) async {
     try {
