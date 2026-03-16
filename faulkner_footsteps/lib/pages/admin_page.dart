@@ -388,10 +388,12 @@ class _AdminListPageState extends State<AdminListPage> {
     // If the name changed, delete old doc and create new one
     if (originalName != newName) {
       await oldDocRef.delete();
+      app_state.removeLocalSite(originalName);
       app_state.addSite(updatedSite);
+      app_state.updateLocalSite(updatedSite);
     } else {
-      // Update existing doc
       app_state.addSite(updatedSite);
+      app_state.updateLocalSite(updatedSite);
     }
 
     // Cleanup
@@ -440,8 +442,8 @@ class _AdminListPageState extends State<AdminListPage> {
       lng: double.tryParse(lngText) ?? 0.0,
     );
 
-    // Save to Firestore
-    app_state.addSite(newSite);
+    app_state.addSite(newSite); // Firestore write
+    app_state.updateLocalSite(newSite); // Local state update
 
     // Cleanup temporary image tracking
     newlyAddedFiles.clear();

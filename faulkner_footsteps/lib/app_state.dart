@@ -340,6 +340,21 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
+  void updateLocalSite(HistSite updated) {
+    final index = _historicalSites.indexWhere((s) => s.name == updated.name);
+    if (index != -1) {
+      _historicalSites[index] = updated;
+    } else {
+      _historicalSites.add(updated);
+    }
+    notifyListeners();
+  }
+
+  void removeLocalSite(String name) {
+    _historicalSites.removeWhere((s) => s.name == name);
+    notifyListeners();
+  }
+
   // Achievement Management Methods
   Future<void> loadAchievements() async {
     if (!_loggedIn) return;
