@@ -25,7 +25,7 @@ class ApplicationState extends ChangeNotifier {
   bool _loggedIn = false;
   bool get loggedIn => _loggedIn;
 
-  StreamSubscription<QuerySnapshot>? siteSnapshot;
+  StreamSubscription<QuerySnapshot>? _siteSubscription;
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
   StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
@@ -52,15 +52,56 @@ class ApplicationState extends ChangeNotifier {
       EmailAuthProvider(),
     ]);
 
+    // Load filters
+    await loadFilters();
+
+    // populate historical sites on app start
+    final snapshot = await FirebaseFirestore.instance.collection('sites').get();
+
+    _historicalSites = [];
+    for (final document in snapshot.docs) {
+      var blurbCont = document.data()["blurbs"];
+      List<String> blurbStrings = blurbCont.split("{ListDiv}");
+      List<InfoText> newBlurbs = [];
+      for (var blurb in blurbStrings) {
+        List<String> values = blurb.split("{IFDIV}");
+        newBlurbs
+            .add(InfoText(title: values[0], value: values[1], date: values[2]));
+      }
+
+      List<SiteFilter> filters = [];
+      for (String filter in List<String>.from(document.data()["filters"])) {
+        filters.add(_siteFilters.firstWhere((element) => element.name == filter,
+            orElse: () => SiteFilter(name: "Other")));
+      }
+
+      HistSite site = HistSite(
+        name: document.data()["name"] as String,
+        description: document.data()["description"] as String,
+        blurbs: newBlurbs,
+        imageUrls: List<String>.from(document.data()["images"]),
+        lat: document.data()["lat"] as double,
+        lng: document.data()["lng"] as double,
+        filters: filters,
+        avgRating: document.data()["avgRating"] != null
+            ? (document.data()["avgRating"] as num).toDouble()
+            : 0.0,
+        ratingAmount: document.data()["ratingCount"] != null
+            ? document.data()["ratingCount"] as int
+            : 0,
+      );
+      _historicalSites.add(site);
+      loadImageToHistSite(document, site);
+    }
+    notifyListeners();
+
+    // Listen to auth state changes to update the app state accordingly
     FirebaseAuth.instance.userChanges().listen((user) async {
       if (user != null) {
         _loggedIn = true;
 
         // Check if user is admin and update status
         await checkAdminStatus(user);
-
-        // Load filters
-        await loadFilters();
 
         // Set up real-time listener for progress achievements
         _progressAchievementsSubscription = FirebaseFirestore.instance
@@ -103,52 +144,15 @@ class ApplicationState extends ChangeNotifier {
         });
       } else {
         _loggedIn = false;
-        _historicalSites = [];
         _visitedPlaces = {};
         _progressAchievements = [];
-        _historicalSites = [];
-      }
-      final snapshot =
-          await FirebaseFirestore.instance.collection('sites').get();
-      _historicalSites = [];
-      for (final document in snapshot.docs) {
-        var blurbCont = document.data()["blurbs"];
-        List<String> blurbStrings = blurbCont.split("{ListDiv}");
-        List<InfoText> newBlurbs = [];
-        for (var blurb in blurbStrings) {
-          List<String> values = blurb.split("{IFDIV}");
-          newBlurbs.add(
-              InfoText(title: values[0], value: values[1], date: values[2]));
-        }
-
-        List<SiteFilter> filters = [];
-        for (String filter in List<String>.from(document.data()["filters"])) {
-          filters.add(_siteFilters.firstWhere(
-              (element) => element.name == filter,
-              orElse: () => SiteFilter(name: "Other")));
-        }
-
-        HistSite site = HistSite(
-          name: document.data()["name"] as String,
-          description: document.data()["description"] as String,
-          blurbs: newBlurbs,
-          imageUrls: List<String>.from(document.data()["images"]),
-          lat: document.data()["lat"] as double,
-          lng: document.data()["lng"] as double,
-          filters: filters,
-          avgRating: document.data()["avgRating"] != null
-              ? (document.data()["avgRating"] as num).toDouble()
-              : 0.0,
-          ratingAmount: document.data()["ratingCount"] != null
-              ? document.data()["ratingCount"] as int
-              : 0,
-        );
-        _historicalSites.add(site);
-        loadImageToHistSite(document, site);
-
-        notifyListeners();
+        _siteSubscription?.cancel();
+        _achievementsSubscription?.cancel();
+        _userAchievementsSubscription?.cancel();
+        _progressAchievementsSubscription?.cancel();
       }
     });
+    notifyListeners();
   }
 
   // Check if user is an admin and update the static flag
@@ -353,11 +357,6 @@ class ApplicationState extends ChangeNotifier {
   }
 
   Future<void> loadFilters() async {
-    if (!_loggedIn) return;
-
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
-
     try {
       _siteFilters.clear();
 
