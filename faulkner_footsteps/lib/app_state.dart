@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
@@ -340,12 +341,20 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
-  void updateLocalSite(HistSite updated) {
+  void updateLocalSite(HistSite updated, [List<Uint8List?>? files]) {
     final index = _historicalSites.indexWhere((s) => s.name == updated.name);
     if (index != -1) {
       _historicalSites[index] = updated;
     } else {
       _historicalSites.add(updated);
+    }
+
+    if (files != null) {
+      for (final file in files) {
+        if (file != null) {
+          _historicalSites[index].images.add(file);
+        }
+      }
     }
     notifyListeners();
   }

@@ -390,10 +390,12 @@ class _AdminListPageState extends State<AdminListPage> {
       await oldDocRef.delete();
       app_state.removeLocalSite(originalName);
       app_state.addSite(updatedSite);
-      app_state.updateLocalSite(updatedSite);
+      app_state.updateLocalSite(
+          updatedSite, pairedImages.map((img) => img.imageData).toList());
     } else {
       app_state.addSite(updatedSite);
-      app_state.updateLocalSite(updatedSite);
+      app_state.updateLocalSite(
+          updatedSite, pairedImages.map((img) => img.imageData).toList());
     }
 
     // Cleanup
@@ -442,8 +444,10 @@ class _AdminListPageState extends State<AdminListPage> {
       lng: double.tryParse(lngText) ?? 0.0,
     );
 
+    List<Uint8List?> imageDataList =
+        newlyAddedFiles.map((img) => img.readAsBytesSync()).toList() ?? [];
     app_state.addSite(newSite); // Firestore write
-    app_state.updateLocalSite(newSite); // Local state update
+    app_state.updateLocalSite(newSite, imageDataList); // Local state update
 
     // Cleanup temporary image tracking
     newlyAddedFiles.clear();
