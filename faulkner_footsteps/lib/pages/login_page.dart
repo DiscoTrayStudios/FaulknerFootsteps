@@ -127,7 +127,17 @@ class LoginPage extends StatelessWidget {
             return buildSignInScreen(context, customTheme);
           }
 
-          // User is signed in — go straight to HomePage
+          // User is signed in — navigate to HomePage
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+                (route) => false,
+              );
+            }
+          });
+
           return SizedBox.shrink();
         },
       ),

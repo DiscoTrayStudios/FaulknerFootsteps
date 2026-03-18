@@ -119,28 +119,39 @@ class _MapDisplay2State extends State<MapDisplay2> {
 
   void locationDialog(context) {
     final appState = Provider.of<ApplicationState>(context, listen: false);
-    var sorted;
+    const double quarterInMeters = 402.336;
 
     late Map<String, LatLng> siteLocations;
-
     siteLocations = appState.getLocations();
     Map<String, double> siteDistances = getDistances(siteLocations);
-    sorted = Map.fromEntries(siteDistances.entries.toList()
-      ..sort((e1, e2) => e1.value.compareTo(e2.value)));
-    sorted.values.toList();
 
-    // First, check if there are any sites close enough
-    if (sorted.isEmpty || sorted.values.first >= 30000.0) {
+    // Filter sites within one mile
+    final nearBySites = siteDistances.entries
+        .where((entry) => entry.value <= quarterInMeters)
+        .toList();
+
+    // Check if there are any sites within one mile
+    if (nearBySites.isEmpty) {
       return;
     }
 
-    String closestSiteName = sorted.keys.first;
+    // Sort by distance
+    nearBySites.sort((a, b) => a.value.compareTo(b.value));
 
-    // Check if the user has already visited this site
-    if (appState.hasVisited(closestSiteName)) {
+    // Filter out already visited sites
+    final newSites = nearBySites
+        .where((entry) => !appState.hasVisited(entry.key))
+        .toList();
+
+    // If no new sites, return
+    if (newSites.isEmpty) {
       return;
     }
+
+    // Get the first new site
+    final closestSiteName = newSites.first.key;
     appState.saveAchievement(closestSiteName);
+
     // Find the site information
     HistSite? selectedSite = appState.historicalSites.firstWhere(
       (site) => site.name == closestSiteName,
@@ -280,6 +291,10 @@ class _MapDisplay2State extends State<MapDisplay2> {
                     icon: Icons.close,
                     onPressed: () {
                       Navigator.of(context).pop();
+                      // Show next site if available
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        locationDialog(context);
+                      });
                     },
                     width: 120,
                   ),
