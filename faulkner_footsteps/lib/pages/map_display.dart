@@ -119,7 +119,7 @@ class _MapDisplay2State extends State<MapDisplay2> {
 
   void locationDialog(context) {
     final appState = Provider.of<ApplicationState>(context, listen: false);
-    const double oneMileInMeters = 1609.34;
+    const double quarterInMeters = 402.336;
 
     late Map<String, LatLng> siteLocations;
     siteLocations = appState.getLocations();
@@ -127,7 +127,7 @@ class _MapDisplay2State extends State<MapDisplay2> {
 
     // Filter sites within one mile
     final nearBySites = siteDistances.entries
-        .where((entry) => entry.value <= oneMileInMeters)
+        .where((entry) => entry.value <= quarterInMeters)
         .toList();
 
     // Check if there are any sites within one mile
