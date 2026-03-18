@@ -138,6 +138,8 @@ class _HomePageState extends State<HomePage> {
     //setDisplayItems(); //this is here so that it loads initially. Otherwise nothing loads.
     return Consumer<ApplicationState>(
       builder: (context, appState, child) {
+        print(
+            "🔵 HomePage rebuilding at ${DateTime.now()} with ${appState.historicalSites.length} sites");
         return Scaffold(
           //backgroundColor: Theme.of(context).primaryColor,
           appBar: AppBar(

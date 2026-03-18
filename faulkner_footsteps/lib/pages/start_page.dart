@@ -68,18 +68,24 @@ class _StartPageState extends State<StartPage>
   void _handleContinue() async {
     player.stop(); // Stop the audio
 
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      print("AUTH READY at: ${DateTime.now()}  user: ${user?.uid}");
+    });
+
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       print("already signed in");
     } else {
       print("signing in anonymously");
       try {
-        UserCredential credential =
-            await FirebaseAuth.instance.signInAnonymously();
-        user = credential.user;
-        print("signed in as ${user?.uid}");
+        // stay null
+
+        // UserCredential credential =
+        //     await FirebaseAuth.instance.signInAnonymously();
+        // user = credential.user;
+        // print("signed in as ${user?.uid}");
       } catch (e) {
-        print("Anonymous sign-in failed: $e");
+        // print("Anonymous sign-in failed: $e");
         return; // Don't navigate if sign-in fails
       }
     }

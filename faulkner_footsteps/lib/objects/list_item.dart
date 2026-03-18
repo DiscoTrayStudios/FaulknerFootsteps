@@ -61,104 +61,40 @@ class ListItem extends StatelessWidget {
               ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: (siteInfo.imageUrls.isNotEmpty)
-                      ? FutureBuilder<Uint8List?>(
-                          future: appState.getImage(siteInfo.imageUrls.first),
-                          builder: (context, snapshot) {
-                            if (siteInfo.images.length > 0 &&
-                                siteInfo.images[0] != null) {
-                              print("List item if statement executed");
-                              return Image.memory(
-                                siteInfo.images.first!,
-                                height: 400,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              );
-                            } else if (snapshot.connectionState ==
-                                    ConnectionState.done &&
-                                snapshot.data != null) {
-                              print("List item else if statement reached");
-                              return Image.memory(
-                                snapshot.data!,
-                                height: 400,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              );
-                            } else if (snapshot.connectionState ==
-                                    ConnectionState.active &&
-                                siteInfo.images.length > 0 &&
-                                siteInfo.images[0] != null) {
-                              print("Stream is still open, image displayed");
-                              return Image.memory(
-                                siteInfo.images.first!,
-                                height: 400,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              );
-                            } else if (snapshot.connectionState ==
-                                ConnectionState.active) {
-                              print("Connection state is active");
-                              return Image.memory(
-                                siteInfo.images.first!,
-                                height: 400,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              );
-                            } else if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              print("Loading cirlce showing");
-                              return Center(
-                                  child: Container(
-                                      child: CircularProgressIndicator(),
-                                      width: double.infinity,
-                                      height: 400,
-                                      color: //Color.fromARGB(255, 107, 79, 79)
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .secondary));
-                            } else {
-                              print("List item else statement reached");
-                              return Image.asset(
-                                'assets/images/faulkner_thumbnail.png',
-                                height: 400,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              );
-                            }
-                          },
-                        )
-                      : Image.asset(
-                          'assets/images/faulkner_thumbnail.png',
+                  child: Selector<ApplicationState, List<Uint8List?>>(
+                    selector: (_, state) {
+                      final updatedSite = state.historicalSites
+                          .firstWhere((s) => s.name == siteInfo.name);
+
+                      return updatedSite.images; // select the list identity
+                    },
+                    builder: (_, images, __) {
+                      Uint8List? image;
+
+                      if (images.isNotEmpty) {
+                        image = images[0];
+                      }
+
+                      if (image != null) {
+                        print(
+                            "🟡 IMAGE REQUEST RECIEVED for ${siteInfo.name} at ${DateTime.now()}");
+                        return Image.memory(
+                          image,
                           height: 400,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                        )
-
-                  // siteInfo.images.length > 0 && siteInfo.images[0] != null
-                  //     ? Image.memory(
-                  //         // 'assets/images/faulkner_thumbnail.png',
-                  //         // 'assets/images/faulkner_thumbnail.png', <- this is for the original thumbnail the classroom group was using
-                  //         siteInfo.images.first!,
-                  //         height:
-                  //             400, // Adjust height as needed. 400 seems to work best with the images. This was originally at 150
-                  //         width: double.infinity,
-                  //         fit: BoxFit.cover,
-                  //         gaplessPlayback: true,
-
-                  //         errorBuilder: (context, error, stackTrace) {
-                  //           return Image.asset(
-                  //               'assets/images/faulkner_thumbnail.png');
-                  //         },
-                  //       )
-                  //     : Image.asset(
-                  //         'assets/images/faulkner_thumbnail.png',
-                  //         height:
-                  //             400, // Adjust height as needed. 400 seems to work best with the images. This was originally at 150
-                  //         width: double.infinity,
-                  //         fit: BoxFit.cover,
-                  //       ),
-                  ),
-              // Row with text and icon inline
+                        );
+                      }
+                      print(
+                          "🔴 IMAGE NOT FOUND for ${siteInfo.name} at ${DateTime.now()}");
+                      return Image.asset(
+                        'assets/images/faulkner_thumbnail.png',
+                        height: 400,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )), // Row with rectangular site name and distance, and arrow icon
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

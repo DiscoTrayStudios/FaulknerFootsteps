@@ -278,35 +278,42 @@ class _HistSitePage extends State<HistSitePage> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: FutureBuilder<Uint8List?>(
-                          future: app_state
-                              .getImage(widget.histSite.imageUrls[index]),
-                          builder: (context, snapshot) {
-                            if (widget.histSite.images.length > 0 &&
-                                widget.histSite.images[index] != null) {
-                              return Image.memory(
-                                widget.histSite.images[index]!,
-                                fit: BoxFit.cover,
-                              );
-                            } else if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(
-                                  child: CircularProgressIndicator(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimary, // necessary or else it is white
-                              ));
-                            } else if (snapshot.hasError || !snapshot.hasData) {
-                              return Image.asset(
+                        child: widget.histSite.images[index] != null
+                            ? Image.memory(widget.histSite.images[index]!,
+                                fit: BoxFit.cover)
+                            : Image.asset(
                                 'assets/images/faulkner_thumbnail.png',
-                                fit: BoxFit.cover,
-                              );
-                            } else {
-                              return Image.memory(snapshot.data!,
-                                  fit: BoxFit.cover);
-                            }
-                          },
-                        ),
+                                fit: BoxFit.cover),
+
+                        // FutureBuilder<Uint8List?>(
+                        //   future: app_state
+                        //       .getImage(widget.histSite.imageUrls[index]),
+                        //   builder: (context, snapshot) {
+                        //     if (widget.histSite.images.length > 0 &&
+                        //         widget.histSite.images[index] != null) {
+                        //       return Image.memory(
+                        //         widget.histSite.images[index]!,
+                        //         fit: BoxFit.cover,
+                        //       );
+                        //     } else if (snapshot.connectionState ==
+                        //         ConnectionState.waiting) {
+                        //       return Center(
+                        //           child: CircularProgressIndicator(
+                        //         color: Theme.of(context)
+                        //             .colorScheme
+                        //             .onPrimary, // necessary or else it is white
+                        //       ));
+                        //     } else if (snapshot.hasError || !snapshot.hasData) {
+                        //       return Image.asset(
+                        //         'assets/images/faulkner_thumbnail.png',
+                        //         fit: BoxFit.cover,
+                        //       );
+                        //     } else {
+                        //       return Image.memory(snapshot.data!,
+                        //           fit: BoxFit.cover);
+                        //     }
+                        //   },
+                        // ),
                       ),
                     );
                   },
@@ -325,7 +332,7 @@ class _HistSitePage extends State<HistSitePage> {
                     try {
                       final user = FirebaseAuth.instance.currentUser;
 
-                      if (user == null || user.isAnonymous) {
+                      if (user == null) {
                         updateErrorMessage(
                             "You must be logged in to rate sites!");
 

@@ -123,7 +123,7 @@ class LoginPage extends StatelessWidget {
         builder: (context, snapshot) {
           final user = snapshot.data;
 
-          if (user == null || user.isAnonymous) {
+          if (user == null) {
             return buildSignInScreen(context, customTheme);
           }
 
@@ -148,10 +148,10 @@ class LoginPage extends StatelessWidget {
             AuthStateChangeAction<SignedIn>((context, state) async {
               print('SignedIn action triggered for user: ${state.user?.email}');
               print("State user BEFORE admin check: ${state.user}");
-              print(
-                  "Is anonymous BEFORE admin check: ${state.user?.isAnonymous}");
+              // print(
+              //     "Is anonymous BEFORE admin check: ${state.user?.isAnonymous}");
 
-              if (state.user != null && !state.user!.isAnonymous) {
+              if (state.user != null) {
                 await checkAndStoreAdminStatus(state.user!);
 
                 print("Is context mounted? ${context.mounted}");
@@ -190,7 +190,7 @@ class LoginPage extends StatelessWidget {
             AuthStateChangeAction<CredentialLinked>((context, state) async {
               print(
                   'CredentialLinked action triggered for user: ${state.user?.email}');
-              if (state.user != null && !state.user!.isAnonymous) {
+              if (state.user != null) {
                 await checkAndStoreAdminStatus(state.user!);
 
                 print("Is context mounted? ${context.mounted}");

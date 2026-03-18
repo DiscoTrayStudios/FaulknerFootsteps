@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:faulkner_footsteps/objects/hist_site.dart';
 import 'package:faulkner_footsteps/objects/info_text.dart';
@@ -25,11 +26,9 @@ class ApplicationState extends ChangeNotifier {
   bool _loggedIn = false;
   bool get loggedIn => _loggedIn;
 
-  StreamSubscription<QuerySnapshot>? _siteSubscription;
   StreamSubscription<DocumentSnapshot>? _achievementsSubscription;
   StreamSubscription<QuerySnapshot>? _userAchievementsSubscription;
   StreamSubscription<QuerySnapshot>? _progressAchievementsSubscription;
-
 
   Set<String> _visitedPlaces = {};
   Set<String> get visitedPlaces => _visitedPlaces;
@@ -45,8 +44,8 @@ class ApplicationState extends ChangeNotifier {
   List<ProgressAchievement> _progressAchievements = [];
   List<ProgressAchievement> get progressAchievements => _progressAchievements;
 
-
   Future<void> init() async {
+    print(" 🔵 Initializing ApplicationState at ${DateTime.now()}");
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
 
@@ -54,15 +53,57 @@ class ApplicationState extends ChangeNotifier {
       EmailAuthProvider(),
     ]);
 
+    // Load filters
+    await loadFilters();
+
+    // populate historical sites on app start
+    final snapshot = await FirebaseFirestore.instance.collection('sites').get();
+
+    _historicalSites = [];
+    for (final document in snapshot.docs) {
+      var blurbCont = document.data()["blurbs"];
+      List<String> blurbStrings = blurbCont.split("{ListDiv}");
+      List<InfoText> newBlurbs = [];
+      for (var blurb in blurbStrings) {
+        List<String> values = blurb.split("{IFDIV}");
+        newBlurbs
+            .add(InfoText(title: values[0], value: values[1], date: values[2]));
+      }
+
+      List<SiteFilter> filters = [];
+      for (String filter in List<String>.from(document.data()["filters"])) {
+        filters.add(_siteFilters.firstWhere((element) => element.name == filter,
+            orElse: () => SiteFilter(name: "Other")));
+      }
+
+      HistSite site = HistSite(
+        name: document.data()["name"] as String,
+        description: document.data()["description"] as String,
+        blurbs: newBlurbs,
+        imageUrls: List<String>.from(document.data()["images"]),
+        lat: document.data()["lat"] as double,
+        lng: document.data()["lng"] as double,
+        filters: filters,
+        avgRating: document.data()["avgRating"] != null
+            ? (document.data()["avgRating"] as num).toDouble()
+            : 0.0,
+        ratingAmount: document.data()["ratingCount"] != null
+            ? document.data()["ratingCount"] as int
+            : 0,
+      );
+      _historicalSites.add(site);
+      loadImageToHistSite(document, site);
+    }
+    notifyListeners();
+
+    // Listen to auth state changes to update the app state accordingly
     FirebaseAuth.instance.userChanges().listen((user) async {
+      print("🔵 Auth state changed at ${DateTime.now()}  user: ${user?.uid}");
       if (user != null) {
         _loggedIn = true;
 
         // Check if user is admin and update status
         await checkAdminStatus(user);
-
-        // Load filters
-        await loadFilters();
 
         // Set up real-time listener for progress achievements
         _progressAchievementsSubscription = FirebaseFirestore.instance
@@ -103,62 +144,27 @@ class ApplicationState extends ChangeNotifier {
             notifyListeners();
           }
         });
-
-        _siteSubscription = FirebaseFirestore.instance
-            .collection('sites')
-            .snapshots()
-            .listen((snapshot) async {
-          _historicalSites = [];
-          for (final document in snapshot.docs) {
-            var blurbCont = document.data()["blurbs"];
-            List<String> blurbStrings = blurbCont.split("{ListDiv}");
-            List<InfoText> newBlurbs = [];
-            for (var blurb in blurbStrings) {
-              List<String> values = blurb.split("{IFDIV}");
-              newBlurbs.add(InfoText(
-                  title: values[0], value: values[1], date: values[2]));
-            }
-
-            List<SiteFilter> filters = [];
-            for (String filter
-                in List<String>.from(document.data()["filters"])) {
-              filters.add(_siteFilters.firstWhere(
-                  (element) => element.name == filter,
-                  orElse: () => SiteFilter(name: "Other")));
-            }
-
-            HistSite site = HistSite(
-              name: document.data()["name"] as String,
-              description: document.data()["description"] as String,
-              blurbs: newBlurbs,
-              imageUrls: List<String>.from(document.data()["images"]),
-              lat: document.data()["lat"] as double,
-              lng: document.data()["lng"] as double,
-              filters: filters,
-              avgRating: document.data()["avgRating"] != null
-                  ? (document.data()["avgRating"] as num).toDouble()
-                  : 0.0,
-              ratingAmount: document.data()["ratingCount"] != null
-                  ? document.data()["ratingCount"] as int
-                  : 0,
-            );
-            _historicalSites.add(site);
-            loadImageToHistSite(document, site);
-          }
-          notifyListeners();
-        });
       } else {
         _loggedIn = false;
-        _historicalSites = [];
         _visitedPlaces = {};
         _progressAchievements = [];
-        _siteSubscription?.cancel();
         _achievementsSubscription?.cancel();
         _userAchievementsSubscription?.cancel();
         _progressAchievementsSubscription?.cancel();
       }
-      notifyListeners();
     });
+    notifyListeners();
+  }
+
+  Future<List<String>> convertPathsToUrls(List<String> paths) async {
+    final storage = FirebaseStorage.instance;
+
+    final futures = paths.map((path) async {
+      final ref = storage.ref(path);
+      return await ref.getDownloadURL();
+    });
+
+    return await Future.wait(futures);
   }
 
   // Check if user is an admin and update the static flag
@@ -189,8 +195,8 @@ class ApplicationState extends ChangeNotifier {
     final imageRef = storageRef.child("$s");
     Uint8List? data;
     try {
-      const oneMegabyte = 1024 * 1024 * 1000000;
-      data = await imageRef.getData(oneMegabyte).timeout(Duration(minutes: 2));
+      const oneMegabyte = 1024 * 1024 * 5;
+      data = await imageRef.getData(oneMegabyte).timeout(Duration(seconds: 20));
       // Data for "images/island.jpg" is returned, use this as needed.
     } catch (e) {
       // Handle any errors.
@@ -201,11 +207,8 @@ class ApplicationState extends ChangeNotifier {
   }
 
   Future<List<Uint8List?>> getImageList(List<String> lst) async {
-    List<Uint8List?> rList = [];
-    for (String s in lst) {
-      Uint8List? item = await getImage(s);
-      rList.add(item);
-    }
+    List<Uint8List?> rList = await Future.wait(lst.map(getImage));
+
     return rList;
   }
 
@@ -338,6 +341,29 @@ class ApplicationState extends ChangeNotifier {
     }
   }
 
+  void updateLocalSite(HistSite updated, [List<Uint8List?>? files]) {
+    final index = _historicalSites.indexWhere((s) => s.name == updated.name);
+    if (index != -1) {
+      _historicalSites[index] = updated;
+    } else {
+      _historicalSites.add(updated);
+    }
+
+    if (files != null) {
+      for (final file in files) {
+        if (file != null) {
+          _historicalSites[index].images.add(file);
+        }
+      }
+    }
+    notifyListeners();
+  }
+
+  void removeLocalSite(String name) {
+    _historicalSites.removeWhere((s) => s.name == name);
+    notifyListeners();
+  }
+
   // Achievement Management Methods
   Future<void> loadAchievements() async {
     if (!_loggedIn) return;
@@ -366,11 +392,6 @@ class ApplicationState extends ChangeNotifier {
   }
 
   Future<void> loadFilters() async {
-    if (!_loggedIn) return;
-
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
-
     try {
       _siteFilters.clear();
 
@@ -412,7 +433,8 @@ class ApplicationState extends ChangeNotifier {
       for (final document in snapshot.docs) {
         final title = document.get('title') as String;
         final description = document.get('description') as String;
-        final requiredSites = List<String>.from(document.get('requiredSites') as List);
+        final requiredSites =
+            List<String>.from(document.get('requiredSites') as List);
 
         _progressAchievements.add(ProgressAchievement(
           title: title,
@@ -526,5 +548,4 @@ class ApplicationState extends ChangeNotifier {
     }
     return sites;
   }
-
 }
