@@ -40,8 +40,9 @@ class _MapDisplay2State extends State<MapDisplay2> {
 
   void _initializeMap() {
     final target = widget.centerPosition ?? widget.currentPosition;
+    final appState = Provider.of<ApplicationState>(context, listen: false);
     _mapController.move(target, 14.0);
-    if (!_dialogShown) {
+    if (!_dialogShown && appState.loggedIn) {
       locationDialog(context);
       _dialogShown = true;
     }
@@ -139,9 +140,8 @@ class _MapDisplay2State extends State<MapDisplay2> {
     nearBySites.sort((a, b) => a.value.compareTo(b.value));
 
     // Filter out already visited sites
-    final newSites = nearBySites
-        .where((entry) => !appState.hasVisited(entry.key))
-        .toList();
+    final newSites =
+        nearBySites.where((entry) => !appState.hasVisited(entry.key)).toList();
 
     // If no new sites, return
     if (newSites.isEmpty) {
