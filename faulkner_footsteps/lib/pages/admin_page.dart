@@ -486,24 +486,27 @@ class _AdminListPageState extends State<AdminListPage> {
                 showDialog(
                     context: context,
                     builder: (context) {
-                      return SearchWidget(
-                          searchController: _selectedIndex == 0
-                              ? _sitesSearchController
-                              : _achievementsSearchController,
-                          onSearchSubmitted: () {
-                            setState(() {});
-                          },
-                          itemNames: _selectedIndex == 0
-                              ? context
-                                  .read<ApplicationState>()
-                                  .historicalSites
-                                  .map((site) => site.name)
-                                  .toList()
-                              : context
-                                  .read<ApplicationState>()
-                                  .progressAchievements
-                                  .map((achievement) => achievement.title)
-                                  .toList());
+                      return Theme(
+                        data: faulknerFootstepsTheme,
+                        child: SearchWidget(
+                            searchController: _selectedIndex == 0
+                                ? _sitesSearchController
+                                : _achievementsSearchController,
+                            onSearchSubmitted: () {
+                              setState(() {});
+                            },
+                            itemNames: _selectedIndex == 0
+                                ? context
+                                    .read<ApplicationState>()
+                                    .historicalSites
+                                    .map((site) => site.name)
+                                    .toList()
+                                : context
+                                    .read<ApplicationState>()
+                                    .progressAchievements
+                                    .map((achievement) => achievement.title)
+                                    .toList()),
+                      );
                     });
               },
               icon: const Icon(Icons.search))

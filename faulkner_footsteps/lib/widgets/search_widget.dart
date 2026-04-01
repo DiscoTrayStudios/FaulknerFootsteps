@@ -31,6 +31,7 @@ class SearchWidget extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.primary,
       alignment: Alignment.topCenter,
       content: SearchAnchor(
+        shrinkWrap: true,
         searchController: searchController,
         isFullScreen: false,
         viewBackgroundColor: Theme.of(context).colorScheme.primary,
