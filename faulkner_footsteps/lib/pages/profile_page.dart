@@ -747,6 +747,141 @@ class _ProfilePageState extends State<ProfilePage>
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(
+                        height: 24,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Container(
+                          width: cardWidth / 1.05,
+                          child: Card(
+                            elevation: 2.0,
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            margin: EdgeInsets.zero,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      icon: Icon(
+                                        Icons.logout,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      onPressed: () async {
+                                        // Show confirmation dialog
+                                        final bool? shouldDelete =
+                                            await showDialog<bool>(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
+                                              title: Text(
+                                                'DeleteAccount',
+                                                style: GoogleFonts.ultra(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              content: Text(
+                                                'Are you sure you want to delete your account?',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(false),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style: GoogleFonts.rakkas(
+                                                      textStyle: TextStyle(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(true),
+                                                  child: Text(
+                                                    'Delete Account',
+                                                    style: GoogleFonts.rakkas(
+                                                      textStyle: TextStyle(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+
+                                        if (shouldDelete == true) {
+                                          deleteUserAccount();
+                                          if (mounted) {
+                                            // Navigate to login page and clear the navigation stack
+                                            Navigator.pushNamedAndRemoveUntil(
+                                              context,
+                                              AppRouter.list,
+                                              (route) => false,
+                                            );
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                      ),
+                                      label: Text(
+                                        'Delete Account',
+                                        style: GoogleFonts.rakkas(
+                                          textStyle: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       )
                     ]),
               ],
@@ -755,6 +890,46 @@ class _ProfilePageState extends State<ProfilePage>
         },
       ),
     );
+  }
+
+  Future<void> deleteUserAccount() async {
+    try {
+      print("attempting delete");
+      await FirebaseAuth.instance.currentUser!.delete();
+    } on FirebaseAuthException catch (e) {
+      print(e);
+
+      if (e.code == "requires-recent-login") {
+        print("reauthentication called");
+        await _reauthenticateAndDelete();
+      } else {
+        // Handle other Firebase exceptions
+      }
+    } catch (e) {
+      print("Error: ${e}");
+
+      // Handle general exception
+    }
+  }
+
+  Future<void> _reauthenticateAndDelete() async {
+    try {
+      var firebaseAuth = FirebaseAuth.instance;
+      final providerData = firebaseAuth.currentUser?.providerData.first;
+
+      if (AppleAuthProvider().providerId == providerData!.providerId) {
+        await firebaseAuth.currentUser!
+            .reauthenticateWithProvider(AppleAuthProvider());
+      } else if (GoogleAuthProvider().providerId == providerData.providerId) {
+        await firebaseAuth.currentUser!
+            .reauthenticateWithProvider(GoogleAuthProvider());
+      }
+
+      await firebaseAuth.currentUser?.delete();
+    } catch (e) {
+      print("reauthentication error: ${e}");
+      // Handle exceptions
+    }
   }
 
   @override
