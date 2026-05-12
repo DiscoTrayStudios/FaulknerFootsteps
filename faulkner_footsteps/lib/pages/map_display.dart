@@ -44,7 +44,7 @@ class _MapDisplay2State extends State<MapDisplay2> {
     final target = widget.centerPosition ?? widget.currentPosition;
     final zoom = 18.00;
     _mapController.move(target, zoom);
-    if (!_dialogShown) {
+      if (!_dialogShown) {
       locationDialog(context);
       _dialogShown = true;
     }
@@ -359,6 +359,10 @@ class _MapDisplay2State extends State<MapDisplay2> {
             widget
                 .currentPosition), // will force an update when map changes its centerPosition
         options: MapOptions(
+          cameraConstraint: CameraConstraint.contain(bounds: LatLngBounds(
+            LatLng(34.809385, -92.687277), // Southwest corner
+            LatLng(35.401455, -92.050070),  // Northeast corner
+            )),
           initialCenter: widget.centerPosition == null
               ? widget.currentPosition
               : widget.centerPosition!,
