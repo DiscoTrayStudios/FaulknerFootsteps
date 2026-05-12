@@ -742,6 +742,112 @@ class _ProfilePageState extends State<ProfilePage>
                                       ),
                                     ),
                                   ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      icon: Icon(
+                                        Icons.delete,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      onPressed: () async {
+                                        // Show confirmation dialog
+                                        final bool? shouldDelete =
+                                            await showDialog<bool>(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
+                                              title: Text(
+                                                'Delete Account',
+                                                style: GoogleFonts.ultra(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              content: Text(
+                                                'Are you sure you want to delete your account? This action cannot be undone.',
+                                                style: GoogleFonts.rakkas(
+                                                  textStyle: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(false),
+                                                  child: Text(
+                                                    'Cancel',
+                                                    style: GoogleFonts.rakkas(
+                                                      textStyle: TextStyle(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(true),
+                                                  child: Text(
+                                                    'Delete',
+                                                    style: GoogleFonts.rakkas(
+                                                      textStyle: const TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+
+                                        if (shouldDelete == true) {
+                                          await appState.deleteUserAccount();
+                                          if (mounted) {
+                                            // Navigate to login page and clear the navigation stack
+                                            Navigator.pushNamedAndRemoveUntil(
+                                              context,
+                                              AppRouter.list,
+                                              (route) => false,
+                                            );
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                      ),
+                                      label: Text(
+                                        'Delete Account',
+                                        style: GoogleFonts.rakkas(
+                                          textStyle: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),

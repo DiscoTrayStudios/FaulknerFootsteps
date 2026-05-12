@@ -621,4 +621,36 @@ class ApplicationState extends ChangeNotifier {
       return;
     }
   }
+  //https://medium.com/@Ruben.Aster/delete-user-accounts-in-flutter-apps-with-firebase-auth-de3740d3ba54
+    Future<void> deleteUserAccount() async {
+      try {
+        await FirebaseAuth.instance.currentUser!.delete();
+
+      } on FirebaseAuthException catch (e) {
+      print(e);
+
+      if (e.code == "requires-recent-login") {
+        await _reauthenticateAndDelete();
+      } else {
+      }
+    } catch (e) {
+        print(e);
+    }
+}
+  Future<void> _reauthenticateAndDelete() async {
+  try {
+    final providerData = FirebaseAuth.instance.currentUser?.providerData.first;
+
+    if (AppleAuthProvider().providerId == providerData!.providerId) {
+      await FirebaseAuth.instance.currentUser!
+          .reauthenticateWithProvider(AppleAuthProvider());
+    } else if (GoogleAuthProvider().providerId == providerData.providerId) {
+      await FirebaseAuth.instance.currentUser!
+          .reauthenticateWithProvider(GoogleAuthProvider());
+    }
+
+    await FirebaseAuth.instance.currentUser?.delete();
+  } catch (e) {
+  }
+}
 }
