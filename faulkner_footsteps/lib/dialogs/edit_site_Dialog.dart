@@ -107,9 +107,9 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     descriptionController =
         TextEditingController(text: widget.existingSite?.description ?? "");
     latController = TextEditingController(
-        text: widget.existingSite?.lat.toString() ?? "0.0");
+        text: widget.existingSite?.lat.toString() ?? "35.0");
     lngController = TextEditingController(
-        text: widget.existingSite?.lng.toString() ?? "0.0");
+        text: widget.existingSite?.lng.toString() ?? "-92.0");
 
     // Data initialization
     blurbs = widget.existingSite?.blurbs ?? [];
