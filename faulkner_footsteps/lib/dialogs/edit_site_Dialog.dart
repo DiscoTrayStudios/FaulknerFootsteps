@@ -107,9 +107,9 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     descriptionController =
         TextEditingController(text: widget.existingSite?.description ?? "");
     latController = TextEditingController(
-        text: widget.existingSite?.lat.toString() ?? "0.0");
+        text: widget.existingSite?.lat.toString() ?? "35.0");
     lngController = TextEditingController(
-        text: widget.existingSite?.lng.toString() ?? "0.0");
+        text: widget.existingSite?.lng.toString() ?? "-92.0");
 
     // Data initialization
     blurbs = widget.existingSite?.blurbs ?? [];
@@ -120,7 +120,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     latFocus.addListener(() {
       if (!latFocus.hasFocus) {
         if (latController.text.isEmpty) {
-          latController.text = "0.0";
+          latController.text = "35.0";
           latController.selection = TextSelection.fromPosition(
             TextPosition(offset: latController.text.length),
           );
@@ -131,7 +131,7 @@ class _EditSiteDialogState extends State<EditSiteDialog> {
     lngFocus.addListener(() {
       if (!lngFocus.hasFocus) {
         if (lngController.text.isEmpty) {
-          lngController.text = "0.0";
+          lngController.text = "-92.0";
           lngController.selection = TextSelection.fromPosition(
             TextPosition(offset: lngController.text.length),
           );
