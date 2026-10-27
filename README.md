@@ -25,7 +25,9 @@ which can be obtained once a user has visited a site and selected the correspond
 Visitors who want to explore historic Faulkner County
 Locals who want to learn more about the history of their County
 
+## Support
 
+Contact discotraystudios@gmail.com with any questions or comments.
 
 # Screenshots
 
